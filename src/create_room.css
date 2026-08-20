@@ -1,0 +1,591 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  overflow: hidden;
+  font-family: "Pixelify Sans", sans-serif;
+  background: #1d1733;
+}
+
+.create-room-screen {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 35px 20px 130px;
+
+  background: linear-gradient(
+    180deg,
+    #ffe8a3 0%,
+    #ffcf8a 16%,
+    #ffab7a 34%,
+    #f4757e 52%,
+    #a862c9 72%,
+    #4b3496 100%
+  );
+}
+
+.create-room-screen::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    transparent 45%,
+    rgba(15, 8, 35, 0.55) 100%
+  );
+}
+
+.create-room-screen::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+  opacity: 0.05;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0 3px,
+    #000 3px 4px
+  );
+}
+
+.create-room-sun {
+  position: absolute;
+  left: 50%;
+  top: 7%;
+  transform: translateX(-50%);
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  z-index: 1;
+
+  background: radial-gradient(
+    circle at 35% 30%,
+    #fff6d8 0%,
+    #ffe9a0 40%,
+    #ffcf6b 75%,
+    #ffb64f 100%
+  );
+
+  box-shadow:
+    0 0 0 6px rgba(255, 235, 170, 0.25),
+    0 0 90px 30px rgba(255, 220, 140, 0.55);
+}
+
+.create-room-cloud {
+  position: absolute;
+  width: 170px;
+  height: 50px;
+  background: #fff4de;
+  border: 4px solid #3d2a5c;
+  box-shadow: 6px 6px 0 rgba(35, 15, 60, 0.18);
+  z-index: 2;
+  animation: createRoomFloat 46s linear infinite;
+}
+
+.create-room-cloud::before,
+.create-room-cloud::after {
+  content: "";
+  position: absolute;
+  background: #fff4de;
+  border: 4px solid #3d2a5c;
+}
+
+.create-room-cloud::before {
+  width: 56px;
+  height: 56px;
+  left: 16px;
+  top: -24px;
+}
+
+.create-room-cloud::after {
+  width: 66px;
+  height: 66px;
+  right: 16px;
+  top: -30px;
+}
+
+.create-room-cloud-1 {
+  top: 14%;
+  left: -220px;
+}
+
+.create-room-cloud-2 {
+  top: 29%;
+  left: -450px;
+  animation-duration: 62s;
+  opacity: 0.85;
+}
+
+@keyframes createRoomFloat {
+  to {
+    transform: translateX(calc(100vw + 700px));
+  }
+}
+
+.create-room-grass {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 90px;
+  z-index: 4;
+  pointer-events: none;
+
+  background: repeating-linear-gradient(
+    90deg,
+    #4bab4d 0 12px,
+    #5fc45b 12px 24px
+  );
+
+  border-top: 6px solid #205e28;
+
+  box-shadow:
+    inset 0 8px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -60px 40px -20px rgba(0, 0, 0, 0.25);
+}
+
+.create-room-panel {
+  position: relative;
+  z-index: 10;
+  width: min(650px, 94vw);
+  margin: 35px auto 50px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  padding: 34px 32px 30px;
+
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.10), transparent 30%),
+    linear-gradient(155deg, #3a2748 0%, #2a1c3a 60%, #1f1530 100%);
+
+  border: 4px solid #17101f;
+  border-radius: 10px;
+
+  box-shadow:
+    0 0 0 4px #7c5cff33,
+    0 0 0 8px #17101f,
+    0 20px 0 -6px rgba(10,5,20,.55),
+    0 28px 40px -10px rgba(0,0,0,.55),
+    inset 0 2px 0 rgba(255,255,255,.06);
+
+  animation: createRoomBob 4.5s ease-in-out infinite;
+}
+
+@keyframes createRoomBob {
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.create-room-logo {
+  font-family: "Press Start 2P", cursive;
+  font-size: clamp(25px, 5vw, 38px);
+  text-align: center;
+  letter-spacing: 2px;
+
+  background: linear-gradient(
+    180deg,
+    #fff6cf 0%,
+    #ffe27a 35%,
+    #ffb93e 65%,
+    #ff9a2e 100%
+  );
+
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+
+  filter:
+    drop-shadow(0 3px 0 #7a3d00)
+    drop-shadow(0 6px 0 #4a2200)
+    drop-shadow(0 10px 14px rgba(0,0,0,.5));
+}
+
+.create-room-subtitle {
+  text-align: center;
+  color: #d9c9f2;
+  font-size: 15px;
+  letter-spacing: .5px;
+  text-shadow: 0 2px 0 #1a0f28;
+}
+
+.create-room-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.create-room-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-family: "Press Start 2P";
+  font-size: 12px;
+  color: #fff6cf;
+  text-shadow: 0 3px 0 #1a0f28;
+}
+
+.create-room-label span {
+  color: #ffbf4d;
+}
+
+.player-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.player-button {
+  min-height: 76px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+
+  font-family: "Pixelify Sans", sans-serif;
+  color: #3a2748;
+
+  background: #fdf3d9;
+  border: 3px solid #17101f;
+  border-radius: 7px;
+
+  box-shadow:
+    inset 0 3px 0 rgba(255,255,255,.5),
+    0 4px 0 #6b4a12;
+
+  cursor: pointer;
+  transition: transform .1s, box-shadow .1s, background .1s;
+}
+
+.player-button strong {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.player-button span {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.player-button:hover {
+  transform: translateY(-2px);
+  background: #fff8e4;
+}
+
+.player-button:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #6b4a12;
+}
+
+.player-button.selected {
+  color: #fff;
+  background: linear-gradient(
+    180deg,
+    #a887ff 0%,
+    #7554e8 55%,
+    #5634bd 100%
+  );
+
+  box-shadow:
+    0 5px 0 #342078,
+    0 0 0 3px #c9b9ff66;
+}
+
+.game-help {
+  color: #cdbbe9;
+  font-size: 14px;
+}
+
+.game-help b {
+  float: right;
+  color: #ffcf68;
+}
+
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.game-card {
+  min-height: 64px;
+
+  display: grid;
+  grid-template-columns: 34px 1fr 28px;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 12px;
+
+  text-align: left;
+  font-family: "Pixelify Sans", sans-serif;
+  color: #fff;
+
+  background: linear-gradient(
+    180deg,
+    #49345d 0%,
+    #332344 100%
+  );
+
+  border: 3px solid #17101f;
+  border-radius: 7px;
+
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.06),
+    0 4px 0 #17101f;
+
+  cursor: pointer;
+  transition: transform .1s, background .1s, box-shadow .1s;
+}
+
+.game-card:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: linear-gradient(
+    180deg,
+    #604776 0%,
+    #433052 100%
+  );
+}
+
+.game-card:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #17101f;
+}
+
+.game-card.selected {
+  background: linear-gradient(
+    180deg,
+    #7de89a 0%,
+    #3fb968 55%,
+    #1f8f47 100%
+  );
+
+  box-shadow:
+    0 4px 0 #146332,
+    0 0 0 2px #b9ffca55;
+}
+
+.game-card.disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+.game-number {
+  font-family: "Press Start 2P";
+  font-size: 9px;
+  color: #c4b4d9;
+}
+
+.game-name {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.game-check {
+  width: 25px;
+  height: 25px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 2px solid rgba(255,255,255,.25);
+  border-radius: 4px;
+
+  font-family: "Press Start 2P";
+  font-size: 11px;
+  color: #fff;
+}
+
+.create-room-button {
+  position: relative;
+  overflow: hidden;
+
+  width: 100%;
+  padding: 17px;
+
+  font-family: "Press Start 2P";
+  font-size: 13px;
+  color: #fff;
+
+  border-radius: 7px;
+  border: 3px solid rgba(0,0,0,.35);
+
+  cursor: pointer;
+  letter-spacing: .5px;
+  text-shadow: 0 2px 0 rgba(0,0,0,.35);
+
+  background: linear-gradient(
+    180deg,
+    #7fb2ff,
+    #3f7fe6 55%,
+    #255fc4 100%
+  );
+
+  box-shadow:
+    0 6px 0 #143f8f,
+    0 10px 18px -6px rgba(20,63,143,.6);
+
+  transition: transform .1s, box-shadow .1s;
+}
+
+.create-room-button::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 56%;
+
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,.45),
+    rgba(255,255,255,0)
+  );
+
+  pointer-events: none;
+}
+
+.create-room-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 0 #143f8f,
+    0 14px 22px -6px rgba(20,63,143,.65);
+}
+
+.create-room-button:active:not(:disabled) {
+  transform: translateY(5px);
+  box-shadow: 0 1px 0 #143f8f;
+}
+
+.create-room-button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  box-shadow: 0 3px 0 #143f8f;
+}
+
+.room-created {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding-top: 20px;
+  border-top: 3px dashed #59446f;
+}
+
+.room-created-title {
+  font-family: "Press Start 2P";
+  font-size: 14px;
+  color: #7de89a;
+  text-shadow:
+    0 3px 0 #146332,
+    0 6px 10px rgba(0,0,0,.4);
+}
+
+.room-code {
+  width: 100%;
+  margin: 14px 0;
+  padding: 18px 10px;
+
+  text-align: center;
+
+  font-family: "Press Start 2P";
+  font-size: clamp(24px, 7vw, 42px);
+  letter-spacing: 7px;
+
+  color: #3a2748;
+  background: #fdf3d9;
+
+  border: 4px solid #17101f;
+  border-radius: 7px;
+
+  box-shadow:
+    inset 0 4px 0 rgba(0,0,0,.1),
+    0 5px 0 #6b4a12;
+}
+
+.room-created p {
+  text-align: center;
+  color: #d9c9f2;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.selected-game-list {
+  width: 100%;
+
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+
+  margin-top: 12px;
+}
+
+.selected-game-list span {
+  padding: 6px 10px;
+
+  color: #fff;
+  background: #49345d;
+
+  border: 2px solid #17101f;
+  border-radius: 5px;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .create-room-screen {
+    padding: 25px 14px 110px;
+  }
+
+  .create-room-panel {
+    width: 96vw;
+    margin-top: 25px;
+    padding: 28px 20px 26px;
+  }
+
+  .create-room-logo {
+    font-size: 24px;
+  }
+
+  .create-room-subtitle {
+    font-size: 13px;
+  }
+
+  .game-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .game-name {
+    font-size: 17px;
+  }
+
+  .create-room-button {
+    font-size: 11px;
+  }
+
+  .create-room-grass {
+    height: 70px;
+  }
+}

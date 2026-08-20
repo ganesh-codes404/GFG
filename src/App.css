@@ -132,3 +132,261 @@ body{overflow:hidden;font-family:"Pixelify Sans",sans-serif;background:#1d1733}
   .panel button{font-size:11px}
   .panel{padding:32px 24px 28px}
 }
+
+/* ---------- JOIN ROOM POPUP ---------- */
+
+.join-overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 100;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(15, 8, 35, 0.72);
+  backdrop-filter: blur(3px);
+
+  animation: popupFadeIn 0.15s ease-out;
+}
+
+@keyframes popupFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.join-popup {
+  position: relative;
+
+  width: min(420px, 92vw);
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  padding: 36px 32px 30px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.1),
+      transparent 30%
+    ),
+    linear-gradient(
+      155deg,
+      #3a2748 0%,
+      #2a1c3a 60%,
+      #1f1530 100%
+    );
+
+  border: 4px solid #17101f;
+  border-radius: 10px;
+
+  box-shadow:
+    0 0 0 4px #7c5cff33,
+    0 0 0 8px #17101f,
+    0 20px 40px rgba(0, 0, 0, 0.55);
+
+  animation: popupScale 0.18s ease-out;
+}
+
+@keyframes popupScale {
+  from {
+    transform: scale(0.92);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+.join-popup-title {
+  font-family: "Press Start 2P", cursive;
+
+  text-align: center;
+
+  font-size: clamp(22px, 6vw, 30px);
+
+  background:
+    linear-gradient(
+      180deg,
+      #fff6cf 0%,
+      #ffe27a 35%,
+      #ffb93e 65%,
+      #ff9a2e 100%
+    );
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  color: transparent;
+
+  filter:
+    drop-shadow(0 3px 0 #7a3d00)
+    drop-shadow(0 6px 0 #4a2200);
+}
+
+.join-popup-subtitle {
+  text-align: center;
+
+  color: #d9c9f2;
+
+  font-size: 16px;
+
+  margin-top: -5px;
+}
+
+.popup-close {
+  position: absolute;
+
+  top: 12px;
+  right: 12px;
+
+  width: 34px;
+  height: 34px;
+
+  font-family: "Press Start 2P";
+  font-size: 11px;
+
+  color: white;
+
+  background: #d95467;
+
+  border: 3px solid #17101f;
+  border-radius: 5px;
+
+  cursor: pointer;
+
+  box-shadow: 0 4px 0 #7d2635;
+
+  transition: 0.1s;
+}
+
+.popup-close:hover {
+  transform: translateY(-2px);
+}
+
+.popup-close:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #7d2635;
+}
+
+.room-code-input {
+  width: 100%;
+
+  padding: 17px 14px;
+
+  text-align: center;
+
+  font-family: "Press Start 2P";
+  font-size: 20px;
+
+  letter-spacing: 5px;
+
+  color: #3a2748;
+
+  background: #fdf3d9;
+
+  border: 3px solid #17101f;
+  border-radius: 6px;
+
+  outline: none;
+
+  box-shadow:
+    inset 0 3px 0 rgba(0, 0, 0, 0.12),
+    0 4px 0 #6b4a12;
+
+  transition: 0.15s;
+}
+
+.room-code-input::placeholder {
+  color: #a99872;
+  letter-spacing: 4px;
+}
+
+.room-code-input:focus {
+  background: #fff8e4;
+
+  box-shadow:
+    inset 0 3px 0 rgba(0, 0, 0, 0.1),
+    0 3px 0 #6b4a12,
+    0 0 0 3px #7c5cff77;
+}
+
+.popup-join-button {
+  position: relative;
+  overflow: hidden;
+
+  width: 100%;
+
+  padding: 16px;
+
+  font-family: "Press Start 2P";
+  font-size: 13px;
+
+  color: white;
+
+  background:
+    linear-gradient(
+      180deg,
+      #7de89a,
+      #3fb968 55%,
+      #1f8f47 100%
+    );
+
+  border: 3px solid rgba(0, 0, 0, 0.35);
+  border-radius: 7px;
+
+  cursor: pointer;
+
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+
+  box-shadow:
+    0 6px 0 #146332,
+    0 10px 18px -6px rgba(20, 99, 50, 0.6);
+
+  transition:
+    transform 0.1s,
+    box-shadow 0.1s;
+}
+
+.popup-join-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 8px 0 #146332,
+    0 14px 22px -6px rgba(20, 99, 50, 0.65);
+}
+
+.popup-join-button:active:not(:disabled) {
+  transform: translateY(5px);
+  box-shadow: 0 1px 0 #146332;
+}
+
+.popup-join-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: 0 3px 0 #146332;
+}
+
+@media (max-width: 600px) {
+  .join-popup {
+    padding: 32px 22px 26px;
+  }
+
+  .room-code-input {
+    font-size: 17px;
+  }
+
+  .popup-join-button {
+    font-size: 11px;
+  }
+}

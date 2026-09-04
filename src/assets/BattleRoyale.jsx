@@ -1,20 +1,13 @@
 import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./BattleRoyale.css";
+
+const REQUIRED_PLAYERS = 7;
 
 const MAX_ATTACKS = 20;
 const MAX_HEALS = 10;
 const ATTACK_DAMAGE = 3;
 const HEAL_AMOUNT = 10;
-
-const INITIAL_PLAYERS = [
-  { id: 1, name: "Player 1", hp: 100, alive: true, damageDealt: 0, healed: 0, faction: null },
-  { id: 2, name: "Player 2", hp: 100, alive: true, damageDealt: 0, healed: 0, faction: null },
-  { id: 3, name: "Player 3", hp: 100, alive: true, damageDealt: 0, healed: 0, faction: null },
-  { id: 4, name: "Player 4", hp: 100, alive: true, damageDealt: 0, healed: 0, faction: null },
-  { id: 5, name: "Player 5", hp: 100, alive: true, damageDealt: 0, healed: 0, faction: null },
-  { id: 6, name: "Player 6", hp: 100, alive: true, damageDealt: 0, healed: 0, faction: null },
-  { id: 7, name: "Player 7", hp: 100, alive: true, damageDealt: 0, healed: 0, faction: null },
-];
 
 const COLORS = [
   "#ff6b6b",
@@ -26,12 +19,63 @@ const COLORS = [
   "#5ce1e6",
 ];
 
-function createInitialPlayers() {
-  return INITIAL_PLAYERS.map((player) => ({ ...player }));
+function createInitialPlayers(names) {
+  return names.map((name, index) => ({
+    id: index + 1,
+    name,
+    hp: 100,
+    alive: true,
+    damageDealt: 0,
+    healed: 0,
+    faction: null,
+  }));
 }
 
 export default function BattleRoyale() {
-  const [players, setPlayers] = useState(createInitialPlayers);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const room = location.state?.room;
+
+  // A room was handed off from the lobby, but it isn't full yet.
+  if (room && room.players.length !== REQUIRED_PLAYERS) {
+    return (
+      <NotEnoughPlayers
+        joined={room.players.length}
+        onBack={() => navigate("/create-room")}
+      />
+    );
+  }
+
+  const names = room
+    ? room.players.map((player) => player.nickname)
+    : Array.from({ length: REQUIRED_PLAYERS }, (_, i) => `Player ${i + 1}`);
+
+  return <BattleRoyaleGame names={names} />;
+}
+
+function NotEnoughPlayers({ joined, onBack }) {
+  return (
+    <div className="battle-screen battle-gate">
+      <div className="game-popup">
+        <h2>NEED {REQUIRED_PLAYERS} PLAYERS</h2>
+
+        <p>
+          Battle Royale only starts with exactly {REQUIRED_PLAYERS} players.
+          <br />
+          {joined}/{REQUIRED_PLAYERS} have joined so far.
+        </p>
+
+        <button className="reset-button" onClick={onBack}>
+          BACK TO LOBBY
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function BattleRoyaleGame({ names }) {
+  const [players, setPlayers] = useState(() => createInitialPlayers(names));
 
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [selectedTarget, setSelectedTarget] = useState(null);
@@ -65,7 +109,7 @@ export default function BattleRoyale() {
   };
 
   const resetGame = () => {
-    setPlayers(createInitialPlayers());
+    setPlayers(createInitialPlayers(names));
     setSelectedPlayer(null);
     setSelectedTarget(null);
     setRound(1);

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./create_room.css";
 import { socket } from "./socket";
 
@@ -13,30 +14,21 @@ const GAMES_BY_PLAYERS = {
 
 const MAX_GAMES = 4;
 
-function generateRoomCode() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  return Array.from(
-    { length: 6 },
-    () => chars[Math.floor(Math.random() * chars.length)]
-  ).join("");
-}
+export default function CreateRoom() {
+  const navigate = useNavigate();
 
-export default function CreateRoom({ onRoomCreated }) {
+  const [nickname, setNickname] = useState("");
   const [playerCount, setPlayerCount] = useState(null);
   const [selectedGames, setSelectedGames] = useState([]);
-  const [roomCode, setRoomCode] = useState("");
 
   const games = playerCount ? GAMES_BY_PLAYERS[playerCount] : [];
 
   const selectPlayers = (count) => {
     setPlayerCount(count);
     setSelectedGames([]);
-    setRoomCode("");
   };
 
   const toggleGame = (game) => {
-    setRoomCode("");
-
     setSelectedGames((current) => {
       if (current.includes(game)) {
         return current.filter((item) => item !== game);
@@ -48,25 +40,25 @@ export default function CreateRoom({ onRoomCreated }) {
     });
   };
 
-const createRoom = () => {
-  if (!playerCount || selectedGames.length === 0) return;
+  const createRoom = () => {
+    if (!nickname.trim() || !playerCount || selectedGames.length === 0) return;
 
-  socket.emit(
-    "create-room",
-    {
-      nickname: "YOUR_NICKNAME_HERE",
-      playerCount,
-      games: selectedGames,
-    },
-    (response) => {
-      if (!response.success) return;
+    socket.emit(
+      "create-room",
+      {
+        nickname: nickname.trim(),
+        playerCount,
+        games: selectedGames,
+      },
+      (response) => {
+        if (!response.success) return;
 
-      console.log("Room created:", response.room);
-
-      setRoomCode(response.room.code);
-    }
-  );
-};
+        navigate(`/room/${response.room.code}`, {
+          state: { room: response.room },
+        });
+      }
+    );
+  };
 
   return (
     <main className="create-room-screen">
@@ -83,7 +75,21 @@ const createRoom = () => {
 
         <div className="create-room-section">
           <div className="create-room-label">
-            <span>1.</span> PLAYERS
+            <span>1.</span> YOUR NICKNAME
+          </div>
+
+          <input
+            className="create-room-nickname"
+            placeholder="Nickname"
+            maxLength={20}
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+          />
+        </div>
+
+        <div className="create-room-section">
+          <div className="create-room-label">
+            <span>2.</span> PLAYERS
           </div>
 
           <div className="player-grid">
@@ -106,7 +112,7 @@ const createRoom = () => {
         {playerCount && (
           <div className="create-room-section games-section">
             <div className="create-room-label">
-              <span>2.</span> CHOOSE GAMES
+              <span>3.</span> CHOOSE GAMES
             </div>
 
             <div className="game-help">
@@ -147,32 +153,11 @@ const createRoom = () => {
             <button
               type="button"
               className="create-room-button"
-              disabled={selectedGames.length === 0}
+              disabled={!nickname.trim() || selectedGames.length === 0}
               onClick={createRoom}
             >
               CREATE ROOM
             </button>
-          </div>
-        )}
-
-        {roomCode && (
-          <div className="room-created">
-            <div className="room-created-title">ROOM CREATED!</div>
-
-            <div className="room-code">{roomCode}</div>
-
-            <p>
-              Share this code with your friends.
-              <br />
-              {playerCount} players · {selectedGames.length} game
-              {selectedGames.length !== 1 ? "s" : ""}
-            </p>
-
-            <div className="selected-game-list">
-              {selectedGames.map((game) => (
-                <span key={game}>{game}</span>
-              ))}
-            </div>
           </div>
         )}
       </section>

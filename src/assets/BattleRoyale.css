@@ -154,6 +154,14 @@ button {
   }
 }
 
+/* GATE (not enough players yet) */
+
+.battle-gate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* HEADER */
 
 .battle-header {

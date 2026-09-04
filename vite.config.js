@@ -7,4 +7,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    // Expose on the LAN by default so a friend can open your IP address
+    // and reach the same dev server, instead of only localhost.
+    host: true,
+  },
 })

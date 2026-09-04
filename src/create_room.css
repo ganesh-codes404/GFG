@@ -249,6 +249,30 @@ body {
   color: #ffbf4d;
 }
 
+.create-room-nickname {
+  width: 100%;
+  padding: 14px;
+
+  font-family: "Pixelify Sans", sans-serif;
+  font-size: 16px;
+  color: #fff;
+
+  background: #211631;
+  border: 3px solid #17101f;
+  border-radius: 7px;
+
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.35);
+}
+
+.create-room-nickname::placeholder {
+  color: #7a6a92;
+}
+
+.create-room-nickname:focus {
+  outline: none;
+  border-color: #ffe27a;
+}
+
 .player-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -552,6 +576,116 @@ body {
 
   font-size: 13px;
   font-weight: 600;
+}
+
+.lobby-players {
+  width: 100%;
+
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+
+  margin-top: 14px;
+}
+
+.lobby-player {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 10px;
+
+  color: #fff7e1;
+  background: #2a1c3a;
+
+  border: 2px solid #17101f;
+  border-radius: 5px;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.lobby-player em {
+  padding: 2px 5px;
+
+  font-style: normal;
+  font-family: "Press Start 2P";
+  font-size: 7px;
+  color: #17101f;
+  background: #ffe27a;
+  border-radius: 3px;
+}
+
+.lobby-games {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  margin-top: 18px;
+  padding-top: 18px;
+
+  border-top: 3px dashed #59446f;
+}
+
+.lobby-game-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lobby-game-name {
+  color: #fff7e1;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.lobby-start-button {
+  padding: 10px 14px;
+
+  font-family: "Press Start 2P";
+  font-size: 9px;
+  color: #fff;
+  white-space: nowrap;
+
+  background: linear-gradient(180deg, #7de89a, #3fb968 60%, #1f8f47);
+  border: 3px solid #17101f;
+  border-radius: 6px;
+
+  box-shadow: 0 4px 0 #146332;
+
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.lobby-start-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.lobby-start-button:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #146332;
+}
+
+.lobby-start-button:disabled {
+  color: #d9c9f2;
+  background: #49345d;
+  box-shadow: 0 4px 0 #17101f;
+  cursor: not-allowed;
+}
+
+.lobby-start-button.waiting {
+  display: inline-flex;
+  align-items: center;
+
+  color: #a997ba;
+  background: transparent;
+  border-color: #49345d;
+  box-shadow: none;
+  cursor: default;
 }
 
 @media (max-width: 600px) {

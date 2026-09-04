@@ -1,9 +1,19 @@
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
 import "./App.css";
 import CreateRoom from "./create_room";
+import Lobby from "./Lobby";
 import { socket } from "./socket";
 import BattleRoyale from "./assets/BattleRoyale";
+import SecretAgent from "./assets/SecretAgent";
+import Chess from "./assets/Chess";
+import Connect4 from "./assets/Connect4";
 import Catan from "./assets/Catan";
 
 function Home() {
@@ -51,13 +61,11 @@ const handleJoin = () => {
         return;
       }
 
-      console.log("Joined room:", response.room);
-
-      // Close popup
       setShowJoinPopup(false);
 
-      // Next step:
-      // navigate(`/room/${code}`);
+      navigate(`/room/${response.room.code}`, {
+        state: { room: response.room },
+      });
     }
   );
 };
@@ -175,14 +183,36 @@ export default function App() {
         />
 
         <Route
-  path="/battle-royale"
-  element={<BattleRoyale />}
+          path="/room/:code"
+          element={<Lobby />}
+        />
 
-/>
-<Route
-  path="/catan"
-  element={<Catan />}
-/>
+        <Route
+          path="/battle-royale"
+          element={<BattleRoyale />}
+        />
+
+        <Route
+          path="/secret-agent"
+          element={<SecretAgent />}
+        />
+
+        <Route
+          path="/chess"
+          element={<Chess />}
+        />
+
+        <Route
+          path="/connect-4"
+          element={<Connect4 />}
+        />
+
+        <Route
+          path="/catan"
+          element={<Catan />}
+        />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
 
       </Routes>
     </BrowserRouter>

@@ -4,12 +4,12 @@ import "./create_room.css";
 import { socket } from "./socket";
 
 const GAMES_BY_PLAYERS = {
-  2: ["Chess", "Connect 4", "Tic Tac Toe", "Checkers", "Pong","Cricket"],
-  3: ["Ludo", "UNO", "Dots & Boxes", "Carrom", "Word Rush","Snakes and Ladders","Catan"],
-  4: ["Codenames", "Monopoly", "Pictionary", "Trivia","Ludo","Snakes and Ladders","Catan","UNO"],
-  5: ["Werewolf", "Mafia", "Musical Chairs", "Quiz Battle", "Snakes and Ladders","Imposter","UNO","Catan","Monopoly"],
-  6: ["Among Us", "Hide & Seek", "Team Trivia", "Bomb Tag", "Capture the Flag","Chinese Whisper","Pictonary"],
-  7: ["Battle Royale", "Secret Agent", "UNO","Snakes and Ladders","Pictonary","Word Rush"],
+  2: ["Chess", "Connect 4", "One and Only", "Tic Tac Toe", "Checkers", "Pong","Cricket"],
+  3: ["Ludo", "One and Only", "Dots & Boxes", "Carrom", "Word Rush","Snakes and Ladders","Catan"],
+  4: ["Codenames", "Andhra Business", "Pictionary", "Trivia","Ludo","Snakes and Ladders","Catan","One and Only"],
+  5: ["Werewolf", "Mafia", "Musical Chairs", "Quiz Battle", "Snakes and Ladders","Imposter","One and Only","Catan","Andhra Business"],
+  6: ["Among Us", "Hide & Seek", "Team Trivia", "Bomb Tag", "Capture the Flag","Chinese Whisper","Andhra Business","Snakes and Ladders"],
+  7: ["Battle Royale", "Secret Agent", "Andhra Business","Snakes and Ladders","Pictonary","Word Rush"],
 };
 
 const MAX_GAMES = 4;

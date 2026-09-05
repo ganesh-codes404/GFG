@@ -102,7 +102,15 @@ function NetworkedChess({ code, room }) {
     : ["White", "Black"];
 
   const sendMove = (from, to, promotion) => {
-    socket.emit("game-action", { code, action: "move", payload: { from, to, promotion } });
+    socket.emit(
+      "game-action",
+      { code, action: "move", payload: { from, to, promotion } },
+      (response) => {
+        if (!response?.success) {
+          console.warn("Move rejected:", response?.error);
+        }
+      }
+    );
   };
 
   const resetGame = () => {
@@ -135,6 +143,7 @@ function ChessBoard({ names, networkState, mySeat, onMove, onReset }) {
   const [pendingPromotion, setPendingPromotion] = useState(null);
   const [flipped, setFlipped] = useState(false);
   const [localFinished, setLocalFinished] = useState(null);
+  const [confirmingReset, setConfirmingReset] = useState(false);
 
   const playerNames = { w: names[0], b: names[1] };
 
@@ -332,7 +341,10 @@ function ChessBoard({ names, networkState, mySeat, onMove, onReset }) {
               ⟲ FLIP BOARD
             </button>
 
-            <button className="chess-reset-button" onClick={resetGame}>
+            <button
+              className="chess-reset-button"
+              onClick={() => setConfirmingReset(true)}
+            >
               RESTART GAME
             </button>
           </div>
@@ -358,6 +370,37 @@ function ChessBoard({ names, networkState, mySeat, onMove, onReset }) {
           </div>
         </aside>
       </main>
+
+      {confirmingReset && (
+        <div className="chess-overlay">
+          <div className="chess-popup">
+            <h2>RESTART GAME?</h2>
+            <p>
+              This will end the current game
+              {isNetworked ? " for both players" : ""} and start over.
+            </p>
+
+            <div className="chess-promotion-grid">
+              <button
+                className="chess-promotion-button confirm-yes"
+                onClick={() => {
+                  setConfirmingReset(false);
+                  resetGame();
+                }}
+              >
+                YES, RESTART
+              </button>
+
+              <button
+                className="chess-promotion-button confirm-no"
+                onClick={() => setConfirmingReset(false)}
+              >
+                CANCEL
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {pendingPromotion && (
         <div className="chess-overlay">

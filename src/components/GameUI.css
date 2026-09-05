@@ -1,0 +1,316 @@
+/* ---------- ROUND TABLE ---------- */
+
+.round-table {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.15;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.round-table-center {
+  position: absolute;
+  inset: 18% 18%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.15), transparent 70%);
+  border-radius: 50%;
+}
+
+.round-table-seat {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+}
+
+/* ---------- DIRECTION INDICATOR ---------- */
+
+.direction-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 8px 14px;
+  background: linear-gradient(180deg, #4d345c, #251932);
+  border: 3px solid #17101f;
+  border-radius: 20px;
+
+  font-size: 13px;
+  color: #d9c9f2;
+}
+
+.direction-arrow {
+  font-size: 20px;
+  display: inline-block;
+  animation: direction-spin 3s linear infinite;
+}
+
+.direction-arrow.ccw {
+  animation-direction: reverse;
+}
+
+.direction-indicator.flash .direction-arrow {
+  animation: direction-pulse 0.7s ease;
+}
+
+@keyframes direction-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes direction-pulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.6); color: #ffe27a; }
+  100% { transform: scale(1); }
+}
+
+.direction-label {
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* ---------- PLAYER STATUS ---------- */
+
+.player-status {
+  display: inline-block;
+  padding: 3px 8px;
+  margin-top: 4px;
+
+  font-family: "Press Start 2P";
+  font-size: 8px;
+  border-radius: 4px;
+}
+
+.player-status.your-turn {
+  color: #17101f;
+  background: #ffe27a;
+  animation: status-glow 1.2s ease-in-out infinite;
+}
+
+.player-status.waiting {
+  color: #9f8ab9;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@keyframes status-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 226, 122, 0.6); }
+  50% { box-shadow: 0 0 10px 3px rgba(255, 226, 122, 0.6); }
+}
+
+/* ---------- ACTION NOTIFICATIONS ---------- */
+
+.action-notification-stack {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  padding-top: 6px;
+  z-index: 40;
+}
+
+.action-notification-chip {
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: #4c459c;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+  animation: notification-float 2.2s ease forwards;
+  white-space: nowrap;
+}
+
+.action-notification-chip.danger {
+  background: #d94457;
+}
+
+.action-notification-chip.good {
+  background: #3fb968;
+}
+
+.action-notification-chip.info {
+  background: #3f7fe6;
+}
+
+@keyframes notification-float {
+  0% { opacity: 0; transform: translateY(6px); }
+  15% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+/* ---------- GAME LOG ---------- */
+
+.game-log-title {
+  font-family: "Press Start 2P";
+  font-size: 10px;
+  color: #ffe27a;
+  margin-bottom: 8px;
+}
+
+.game-log-body {
+  height: 180px;
+  overflow-y: auto;
+  padding: 8px;
+  background: #161021;
+  border: 2px solid #17101f;
+  border-radius: 5px;
+}
+
+.game-log-line {
+  padding: 4px 2px;
+  font-size: 12px;
+  color: #d9c9f2;
+  border-bottom: 1px solid #342346;
+}
+
+/* ---------- DICE ---------- */
+
+.dice-pair {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dice-die {
+  width: 46px;
+  height: 46px;
+}
+
+.dice-die.rolling svg {
+  animation: dice-roll 0.5s ease;
+}
+
+@keyframes dice-roll {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.15); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.dice-total {
+  font-family: "Press Start 2P";
+  font-size: 14px;
+  color: #ffe27a;
+}
+
+/* ---------- SHARED MODAL ---------- */
+
+.shared-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+
+  background: rgba(15, 8, 35, 0.8);
+  backdrop-filter: blur(4px);
+  overflow-y: auto;
+}
+
+.shared-popup {
+  width: min(480px, 94vw);
+  max-height: 90vh;
+  overflow-y: auto;
+
+  padding: 28px 24px;
+  text-align: center;
+
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 30%),
+    linear-gradient(155deg, #3a2748, #2a1c3a 60%, #1f1530);
+
+  border: 4px solid #17101f;
+  border-radius: 10px;
+  box-shadow: 0 0 0 5px #7c5cff33, 0 12px 0 #17101f, 0 30px 50px rgba(0, 0, 0, 0.6);
+  color: #fff;
+}
+
+.shared-popup h2 {
+  font-family: "Press Start 2P";
+  font-size: clamp(15px, 4vw, 20px);
+  color: #ffe27a;
+  text-shadow: 0 3px #7a3d00;
+}
+
+.shared-popup p {
+  margin: 12px 0 16px;
+  color: #d9c9f2;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.shared-button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+
+  font-family: "Press Start 2P";
+  font-size: 11px;
+  color: #fff;
+
+  background: linear-gradient(180deg, #7de89a, #3fb968, #1f8f47);
+  border: 3px solid #17101f;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.shared-button.secondary {
+  background: linear-gradient(180deg, #777080, #504858, #332d3c);
+}
+
+.shared-button.danger {
+  background: linear-gradient(180deg, #ff7777, #d94457, #9d293c);
+}
+
+.shared-confirm-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.shared-confirm-row .shared-button {
+  margin-top: 0;
+}
+
+/* ---------- RULES MODAL ---------- */
+
+.rules-modal {
+  text-align: left;
+  width: min(560px, 94vw);
+}
+
+.rules-modal-body {
+  max-height: 50vh;
+  overflow-y: auto;
+  margin: 10px 0;
+}
+
+.rules-modal-body section {
+  margin-bottom: 12px;
+}
+
+.rules-modal-body h3 {
+  font-size: 13px;
+  color: #ffe27a;
+  margin-bottom: 4px;
+}
+
+.rules-modal-body p {
+  font-size: 13px;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .round-table {
+    aspect-ratio: 1;
+  }
+}

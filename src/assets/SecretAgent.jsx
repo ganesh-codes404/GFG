@@ -156,6 +156,7 @@ function SecretAgentGame({ names }) {
   const [guess, setGuess] = useState("");
 
   const [phase, setPhase] = useState("playing");
+  const [confirmingReset, setConfirmingReset] = useState(false);
   const [ending, setEnding] = useState(null);
   const [outcome, setOutcome] = useState(null);
 
@@ -495,11 +496,44 @@ function SecretAgentGame({ names }) {
             </div>
           </div>
 
-          <button className="agent-reset-button" onClick={resetGame}>
+          <button
+            className="agent-reset-button"
+            onClick={() => setConfirmingReset(true)}
+          >
             RESTART MISSION
           </button>
         </aside>
       </main>
+
+      {/* RESTART CONFIRMATION */}
+
+      {confirmingReset && (
+        <div className="agent-overlay">
+          <div className="agent-popup">
+            <h2>RESTART MISSION?</h2>
+            <p>This will end the current mission and start a new one.</p>
+
+            <div className="agent-confirm-grid">
+              <button
+                className="agent-confirm-yes"
+                onClick={() => {
+                  setConfirmingReset(false);
+                  resetGame();
+                }}
+              >
+                YES, RESTART
+              </button>
+
+              <button
+                className="agent-confirm-no"
+                onClick={() => setConfirmingReset(false)}
+              >
+                CANCEL
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* KILL POPUP */}
 

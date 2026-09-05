@@ -1,0 +1,244 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body, #root { width: 100%; min-height: 100%; }
+body { overflow-x: hidden; font-family: "Pixelify Sans", sans-serif; background: #1d1733; }
+button { font-family: inherit; }
+
+.snl-screen {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 16px;
+  color: #fff;
+  background: linear-gradient(180deg, #241a3d 0%, #34204f 45%, #4a2160 100%);
+}
+
+.snl-gate { display: flex; align-items: center; justify-content: center; }
+
+.snl-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 900px;
+  margin: 0 auto 12px;
+}
+
+.snl-logo {
+  font-family: "Press Start 2P", cursive;
+  font-size: clamp(14px, 3.5vw, 24px);
+  color: #ffe27a;
+}
+
+.snl-info-button {
+  width: 34px; height: 34px;
+  font-size: 15px; color: #17101f;
+  background: linear-gradient(180deg, #ffe27a, #ffb93e);
+  border: 3px solid #17101f; border-radius: 50%;
+  cursor: pointer;
+}
+
+/* TABLE */
+
+.snl-table { max-width: 760px; margin: 0 auto; }
+
+.snl-seat {
+  position: relative;
+  min-width: 90px;
+  padding: 6px 8px;
+  text-align: center;
+  background: linear-gradient(180deg, #3a2748, #241833);
+  border: 3px solid #17101f;
+  border-top: 4px solid var(--player-color, #7de89a);
+  border-radius: 8px;
+}
+
+.snl-seat.self {
+  border-left-color: #ffe27a;
+  border-right-color: #ffe27a;
+  border-bottom-color: #ffe27a;
+}
+
+.snl-seat-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.snl-seat-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--player-color, #7de89a);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #17101f;
+  flex-shrink: 0;
+}
+
+.snl-seat-position { font-size: 10px; color: #d9c9f2; margin-top: 3px; }
+
+/* BOARD */
+
+.snl-board {
+  position: relative;
+  width: min(640px, 82vw);
+  aspect-ratio: 1;
+  background: #f4ecd8;
+  border: 4px solid #17101f;
+  border-radius: 6px;
+  /* The round-table's center slot is deliberately much smaller than the
+     board -- without this the surrounding flexbox would silently shrink
+     the board down to fit that slot instead of rendering at full size. */
+  flex-shrink: 0;
+}
+
+.snl-grid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  width: 100%;
+  height: 100%;
+}
+
+.snl-board-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.snl-cell {
+  position: relative;
+  border: 1px solid rgba(23, 16, 31, 0.15);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 1px 2px;
+}
+
+.snl-cell-number {
+  font-size: 6.5px;
+  color: #6b5a3a;
+  font-weight: 700;
+}
+
+.snl-cell-tokens {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding-top: 4px;
+}
+
+.snl-token {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #17101f, 0 2px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* CONTROLS */
+
+.snl-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 16px 0;
+}
+
+.snl-action-button {
+  padding: 12px 18px;
+  font-family: "Press Start 2P";
+  font-size: 11px;
+  color: #17101f;
+  background: linear-gradient(180deg, #ffe27a, #ffb93e);
+  border: 3px solid #17101f;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.snl-action-button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* POPUPS */
+
+.snl-popup {
+  width: min(460px, 94vw);
+  padding: 30px 26px;
+  text-align: center;
+  background: linear-gradient(155deg, #3a2748, #2a1c3a 60%, #1f1530);
+  border: 4px solid #17101f;
+  border-radius: 10px;
+  box-shadow: 0 0 0 5px #7c5cff33, 0 12px 0 #17101f;
+}
+
+.snl-popup h2 {
+  font-family: "Press Start 2P";
+  font-size: 18px;
+  color: #ffe27a;
+}
+
+.snl-popup p { margin: 12px 0 16px; color: #d9c9f2; }
+
+.snl-button {
+  padding: 12px 20px;
+  font-family: "Press Start 2P";
+  font-size: 11px;
+  color: #fff;
+  background: linear-gradient(180deg, #7de89a, #3fb968, #1f8f47);
+  border: 3px solid #17101f;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.snl-victory h1 {
+  font-family: "Press Start 2P";
+  font-size: clamp(15px, 5vw, 22px);
+  color: #fff6cf;
+  margin-top: 10px;
+}
+
+.snl-trophy { font-size: 44px; }
+
+.snl-final-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.snl-final-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #211631;
+  border: 2px solid #17101f;
+  border-left: 5px solid var(--player-color, #7de89a);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .snl-board { width: 96vw; }
+
+  .snl-token {
+    width: 12px;
+    height: 12px;
+    border-width: 2px;
+  }
+
+  .snl-cell-number { font-size: 7px; }
+}

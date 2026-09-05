@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./create_room.css";
 import { socket } from "./socket";
-import { GAME_ROUTES, GAME_EXACT_PLAYERS } from "./gameConfig";
+import {
+  GAME_ROUTES,
+  playerCountRequirementLabel,
+  playerCountSatisfied,
+} from "./gameConfig";
 
 export default function Lobby() {
   const { code } = useParams();
@@ -59,6 +63,32 @@ export default function Lobby() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]);
 
+  // If a game is already in progress (e.g. the player hit "back" mid-game,
+  // or reloaded the lobby), rejoin it instead of showing a stale "pick a
+  // game" screen -- clicking Start again here would otherwise wipe out the
+  // game everyone's already playing.
+  useEffect(() => {
+    if (!room?.activeGame) return;
+
+    const route = GAME_ROUTES[room.activeGame];
+    if (!route) return;
+
+    navigate(route, {
+      replace: true,
+      state: { code, room, game: room.activeGame },
+    });
+  }, [room, code, navigate]);
+
+  if (room?.activeGame) {
+    return (
+      <main className="create-room-screen">
+        <section className="create-room-panel">
+          <h1 className="create-room-logo">REJOINING...</h1>
+        </section>
+      </main>
+    );
+  }
+
   if (notFound) {
     return (
       <main className="create-room-screen">
@@ -92,9 +122,7 @@ export default function Lobby() {
   const canStart = (game) => {
     if (!GAME_ROUTES[game]) return false;
 
-    const required = GAME_EXACT_PLAYERS[game] ?? room.maxPlayers;
-
-    return room.players.length === required;
+    return playerCountSatisfied(game, room.players.length, room.maxPlayers);
   };
 
   const startGame = (game) => {
@@ -144,7 +172,6 @@ export default function Lobby() {
             {room.games.map((game) => {
               const hasRoute = Boolean(GAME_ROUTES[game]);
               const ready = canStart(game);
-              const required = GAME_EXACT_PLAYERS[game];
 
               return (
                 <div key={game} className="lobby-game-row">
@@ -161,9 +188,7 @@ export default function Lobby() {
                         ? "COMING SOON"
                         : ready
                         ? "START GAME"
-                        : required
-                        ? `NEEDS ${required} PLAYERS`
-                        : "WAITING FOR PLAYERS"}
+                        : playerCountRequirementLabel(game)}
                     </button>
                   ) : (
                     <span className="lobby-start-button waiting">

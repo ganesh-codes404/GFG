@@ -98,6 +98,7 @@ function BattleRoyaleGame({ names }) {
 
   const [showFactionPopup, setShowFactionPopup] = useState(false);
   const [showBetrayPopup, setShowBetrayPopup] = useState(false);
+  const [confirmingReset, setConfirmingReset] = useState(false);
 
   const alivePlayers = players.filter((player) => player.alive);
 
@@ -965,7 +966,7 @@ function BattleRoyaleGame({ names }) {
 
           <button
             className="reset-button"
-            onClick={resetGame}
+            onClick={() => setConfirmingReset(true)}
           >
             RESTART GAME
           </button>
@@ -973,6 +974,43 @@ function BattleRoyaleGame({ names }) {
         </aside>
 
       </main>
+
+      {/* RESTART CONFIRMATION */}
+
+      {confirmingReset && (
+        <div className="game-overlay">
+
+          <div className="game-popup">
+
+            <h2>RESTART GAME?</h2>
+
+            <p>
+              This will end the current battle and start a new one.
+            </p>
+
+            <div className="confirm-grid">
+              <button
+                className="confirm-yes"
+                onClick={() => {
+                  setConfirmingReset(false);
+                  resetGame();
+                }}
+              >
+                YES, RESTART
+              </button>
+
+              <button
+                className="confirm-no"
+                onClick={() => setConfirmingReset(false)}
+              >
+                CANCEL
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+      )}
 
       {/* FACTION POPUP */}
 

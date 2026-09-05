@@ -1,0 +1,448 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body, #root { width: 100%; min-height: 100%; }
+body { overflow-x: hidden; font-family: "Pixelify Sans", sans-serif; background: #1d1733; }
+button, input { font-family: inherit; }
+
+.ab-screen {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 14px;
+  color: #fff;
+  background: linear-gradient(180deg, #1f2937 0%, #14532d 50%, #1f2937 100%);
+}
+
+.ab-gate { display: flex; align-items: center; justify-content: center; }
+
+.ab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1100px;
+  margin: 0 auto 10px;
+}
+
+.ab-logo {
+  font-family: "Press Start 2P", cursive;
+  font-size: clamp(14px, 3vw, 22px);
+  color: #ffe27a;
+}
+
+.ab-header-right { display: flex; align-items: center; gap: 10px; }
+
+.ab-info-button {
+  width: 34px; height: 34px;
+  font-size: 15px; color: #17101f;
+  background: linear-gradient(180deg, #ffe27a, #ffb93e);
+  border: 3px solid #17101f; border-radius: 50%;
+  cursor: pointer;
+}
+
+.ab-section-title {
+  font-family: "Press Start 2P";
+  font-size: 9px;
+  color: #ffe27a;
+  margin: 10px 0 6px;
+}
+
+/* TABLE */
+
+.ab-table {
+  max-width: 900px;
+}
+
+.ab-seat {
+  min-width: 90px;
+  padding: 6px 8px;
+  text-align: center;
+  background: linear-gradient(180deg, #2a3a2f, #1a2620);
+  border: 3px solid #0e1712;
+  border-radius: 8px;
+}
+
+.ab-seat.self { border-color: #ffe27a; }
+.ab-seat.bankrupt { opacity: 0.5; }
+
+.ab-seat-name {
+  font-size: 11px;
+  font-weight: 700;
+  border-bottom: 3px solid var(--player-color, #7de89a);
+  padding-bottom: 2px;
+}
+
+.ab-seat-cash { font-size: 11px; color: #d9e8d9; margin-top: 3px; }
+.ab-seat-bankrupt { font-size: 10px; color: #ff9c9c; margin-top: 3px; }
+
+/* BOARD */
+
+.ab-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(11, 1fr);
+  grid-template-rows: repeat(11, 1fr);
+  width: min(560px, 80vw);
+  aspect-ratio: 1;
+  background: #f4ecd8;
+  border: 4px solid #17101f;
+  border-radius: 6px;
+  gap: 1px;
+}
+
+.ab-board-center-label {
+  grid-row: 4 / 8;
+  grid-column: 4 / 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: "Press Start 2P";
+  font-size: clamp(8px, 1.6vw, 13px);
+  color: #14532d;
+  opacity: 0.5;
+  padding: 6px;
+}
+
+.ab-cell {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 2px;
+  font-size: 6px;
+  color: #17101f;
+  border: 1px solid #ccc4a8;
+}
+
+.ab-cell-bar {
+  height: 6px;
+  margin: -2px -2px 2px;
+}
+
+.ab-cell-name {
+  font-weight: 700;
+  font-size: 6.5px;
+  line-height: 1.1;
+}
+
+.ab-cell-price {
+  font-size: 6px;
+  color: #555;
+}
+
+.ab-cell-owner {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  border: 1px solid #17101f;
+}
+
+.ab-cell-houses {
+  font-size: 6px;
+  line-height: 1;
+}
+
+.ab-cell-mortgaged {
+  font-size: 5px;
+  color: #d94457;
+  font-weight: 700;
+}
+
+.ab-cell-tokens {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  max-width: 16px;
+}
+
+.ab-token {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid #17101f;
+}
+
+.ab-cell-go, .ab-cell-jail, .ab-cell-free-parking, .ab-cell-go-to-jail {
+  background: #e8e0c8;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.ab-cell-event { background: #ffe8b0; }
+.ab-cell-community { background: #b0d8ff; }
+.ab-cell-tax { background: #f0b0b0; }
+
+/* CONTROLS */
+
+.ab-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.ab-dice-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ab-action-button {
+  padding: 10px 14px;
+  font-family: "Press Start 2P";
+  font-size: 9px;
+  color: #fff;
+  background: linear-gradient(180deg, #7fb2ff, #3f7fe6, #255fc4);
+  border: 3px solid #17101f;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ab-action-button:disabled { opacity: 0.4; cursor: not-allowed; }
+.ab-action-button.roll { background: linear-gradient(180deg, #ffe27a, #ffb93e); color: #17101f; }
+.ab-action-button.end-turn { background: linear-gradient(180deg, #ff9f7a, #e8734a, #b8502b); }
+
+.ab-my-status {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  align-items: baseline;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.ab-my-status strong { color: #ffe27a; font-size: 16px; }
+
+/* TRADE REQUESTS */
+
+.ab-trade-requests {
+  max-width: 500px;
+  margin: 12px auto 0;
+}
+
+.ab-trade-offer {
+  padding: 8px;
+  margin-bottom: 8px;
+  background: #211631;
+  border: 2px solid #17101f;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.ab-trade-line { color: #d9c9f2; margin-top: 2px; }
+
+.ab-trade-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.ab-trade-actions button {
+  flex: 1;
+  padding: 6px;
+  font-size: 11px;
+  color: #fff;
+  background: #4c459c;
+  border: 2px solid #17101f;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* POPUPS */
+
+.ab-popup {
+  width: min(460px, 94vw);
+  padding: 28px 24px;
+  text-align: center;
+  background: linear-gradient(155deg, #223a2c, #14261c 60%, #0e1712);
+  border: 4px solid #17101f;
+  border-radius: 10px;
+  box-shadow: 0 0 0 5px #3fb96833, 0 12px 0 #17101f;
+}
+
+.ab-popup h2 {
+  font-family: "Press Start 2P";
+  font-size: 16px;
+  color: #ffe27a;
+}
+
+.ab-popup p { margin: 10px 0 16px; color: #d9e8d9; font-size: 13px; }
+
+.ab-button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  font-family: "Press Start 2P";
+  font-size: 10px;
+  color: #fff;
+  background: linear-gradient(180deg, #7de89a, #3fb968, #1f8f47);
+  border: 3px solid #17101f;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ab-button:disabled { opacity: 0.4; cursor: not-allowed; }
+.ab-button.secondary { background: linear-gradient(180deg, #777080, #504858, #332d3c); }
+
+.ab-confirm-row {
+  display: flex;
+  gap: 8px;
+}
+
+.ab-confirm-row button {
+  flex: 1;
+  padding: 10px;
+  font-family: "Press Start 2P";
+  font-size: 9px;
+  color: #fff;
+  border: 3px solid #17101f;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ab-confirm-row .ab-button {
+  background: linear-gradient(180deg, #7de89a, #3fb968, #1f8f47);
+}
+
+/* DEBT / DEVELOP LISTS */
+
+.ab-debt-list, .ab-develop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  text-align: left;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.ab-debt-row, .ab-develop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  background: #1a2620;
+  border: 2px solid #0e1712;
+  border-radius: 5px;
+  font-size: 12px;
+}
+
+.ab-debt-row button, .ab-develop-row button {
+  padding: 5px 8px;
+  font-size: 10px;
+  color: #fff;
+  background: #3f7fe6;
+  border: 2px solid #17101f;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* TRADE MODAL */
+
+.ab-trade-modal { width: min(560px, 94vw); text-align: left; }
+
+.ab-player-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+  justify-content: center;
+}
+
+.ab-player-select button {
+  padding: 8px 12px;
+  color: #fff;
+  background: #1a2620;
+  border: 2px solid #17101f;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ab-player-select button.selected {
+  background: linear-gradient(180deg, #7de89a, #3fb968);
+  color: #17101f;
+}
+
+.ab-trade-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.ab-trade-col-title {
+  font-family: "Press Start 2P";
+  font-size: 9px;
+  color: #ffe27a;
+  margin-bottom: 8px;
+}
+
+.ab-trade-columns label {
+  display: block;
+  font-size: 12px;
+  color: #d9e8d9;
+  margin-bottom: 6px;
+}
+
+.ab-trade-columns input[type="number"] {
+  width: 100%;
+  padding: 6px;
+  margin-top: 3px;
+  background: #1a2620;
+  color: #fff;
+  border: 2px solid #17101f;
+  border-radius: 5px;
+}
+
+.ab-checkbox-row {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+}
+
+/* VICTORY */
+
+.ab-trophy { font-size: 48px; }
+
+.ab-victory h1 {
+  font-family: "Press Start 2P";
+  font-size: clamp(14px, 4vw, 20px);
+  color: #fff6cf;
+  margin-top: 8px;
+}
+
+.ab-final-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.ab-final-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: #1a2620;
+  border: 2px solid #17101f;
+  border-left: 5px solid var(--player-color, #7de89a);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+@media (max-width: 700px) {
+  .ab-board { width: 92vw; }
+  .ab-trade-columns { grid-template-columns: 1fr; }
+}

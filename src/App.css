@@ -1,12 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600;700&display=swap');
 
 *{margin:0;padding:0;box-sizing:border-box}
-html,body,#root{width:100%;height:100%}
-body{overflow:hidden;font-family:"Pixelify Sans",sans-serif;background:#1d1733}
+html,body,#root{width:100%;min-height:100%}
+body{overflow-x:hidden;font-family:"Pixelify Sans",sans-serif;background:#1d1733}
 
 .screen{
   position:relative;
-  width:100vw;height:100vh;overflow:hidden;
+  width:100%;min-height:100vh;min-height:100dvh;overflow-x:hidden;overflow-y:auto;
   background:linear-gradient(180deg,#ffe8a3 0%,#ffcf8a 16%,#ffab7a 34%,#f4757e 52%,#a862c9 72%,#4b3496 100%);
 }
 

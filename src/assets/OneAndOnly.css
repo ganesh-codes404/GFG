@@ -1,0 +1,357 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  overflow-x: hidden;
+  font-family: "Pixelify Sans", sans-serif;
+  background: #1d1733;
+}
+
+button { font-family: inherit; }
+
+.ooo-screen {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 16px;
+  color: #fff;
+
+  background: linear-gradient(180deg, #241a3d 0%, #34204f 45%, #4a2160 100%);
+}
+
+.ooo-gate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ooo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 900px;
+  margin: 0 auto 10px;
+}
+
+.ooo-logo {
+  font-family: "Press Start 2P", cursive;
+  font-size: clamp(18px, 4vw, 28px);
+  letter-spacing: 1px;
+  background: linear-gradient(180deg, #fff6cf, #ffe27a 40%, #ff9a2e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.ooo-info-button {
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  color: #17101f;
+  background: linear-gradient(180deg, #ffe27a, #ffb93e);
+  border: 3px solid #17101f;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.ooo-direction-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+/* TABLE */
+
+.ooo-table {
+  margin-bottom: 16px;
+}
+
+.ooo-seat {
+  position: relative;
+  min-width: 100px;
+  padding: 8px 10px;
+  text-align: center;
+
+  background: linear-gradient(180deg, #3a2748, #241833);
+  border: 3px solid #17101f;
+  border-radius: 8px;
+}
+
+.ooo-seat.self {
+  border-color: #ffe27a;
+}
+
+.ooo-seat-name {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ooo-seat-count {
+  font-size: 11px;
+  color: #d9c9f2;
+  margin-top: 2px;
+}
+
+.ooo-piles {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ooo-draw-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  width: 74px;
+  height: 100px;
+  padding: 8px;
+
+  font-family: "Press Start 2P";
+  font-size: 10px;
+  color: #fff;
+
+  background: linear-gradient(155deg, #4c459c, #332d6e);
+  border: 3px dashed rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.ooo-draw-pile:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ooo-draw-pile small {
+  font-family: "Pixelify Sans";
+  font-size: 9px;
+  color: #d9c9f2;
+}
+
+.ooo-discard-top {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.ooo-active-color {
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #17101f;
+  text-shadow: none;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+.ooo-pass-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+/* CARD DESIGN -- original, not UNO-styled */
+
+.ooo-card {
+  position: relative;
+  width: 68px;
+  height: 96px;
+  border-radius: 12px;
+  border: 2px solid rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), inset 0 2px 6px rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.ooo-card-main {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-family: "Press Start 2P";
+  font-size: 16px;
+  color: #fff;
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+}
+
+.ooo-card-corner {
+  position: absolute;
+  top: 6px;
+  left: 7px;
+  font-family: "Press Start 2P";
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.ooo-card.wild {
+  background: #17101f;
+}
+
+.ooo-card-quad {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.wild-text {
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.4);
+  width: 100%;
+  height: 100%;
+}
+
+/* HAND */
+
+.ooo-hand-wrap {
+  position: sticky;
+  bottom: 0;
+  padding: 12px 4px 4px;
+  margin-top: 10px;
+}
+
+.ooo-hand {
+  display: flex;
+  gap: -18px;
+  overflow-x: auto;
+  padding: 10px 4px 16px;
+  justify-content: center;
+}
+
+.ooo-hand-card {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: -18px;
+  transition: transform 0.15s;
+}
+
+.ooo-hand-card:first-child {
+  margin-left: 0;
+}
+
+.ooo-hand-card.playable:hover:not(:disabled) {
+  transform: translateY(-14px) scale(1.06);
+  z-index: 5;
+}
+
+.ooo-hand-card.dim .ooo-card {
+  opacity: 0.45;
+  filter: grayscale(0.3);
+}
+
+.ooo-hand-card:disabled {
+  cursor: not-allowed;
+}
+
+/* COLOR PICKER */
+
+.ooo-color-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.ooo-color-choice {
+  padding: 20px;
+  border: 3px solid #17101f;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* POPUPS (gate / victory) */
+
+.ooo-popup {
+  width: min(480px, 94vw);
+  padding: 30px 26px;
+  text-align: center;
+
+  background: linear-gradient(155deg, #3a2748, #2a1c3a 60%, #1f1530);
+  border: 4px solid #17101f;
+  border-radius: 10px;
+  box-shadow: 0 0 0 5px #7c5cff33, 0 12px 0 #17101f;
+}
+
+.ooo-popup h2 {
+  font-family: "Press Start 2P";
+  font-size: 18px;
+  color: #ffe27a;
+}
+
+.ooo-popup p {
+  margin: 12px 0 16px;
+  color: #d9c9f2;
+}
+
+.ooo-button {
+  padding: 12px 20px;
+  font-family: "Press Start 2P";
+  font-size: 11px;
+  color: #fff;
+  background: linear-gradient(180deg, #7de89a, #3fb968, #1f8f47);
+  border: 3px solid #17101f;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ooo-victory h1 {
+  font-family: "Press Start 2P";
+  font-size: clamp(16px, 5vw, 24px);
+  color: #fff6cf;
+  margin-top: 10px;
+}
+
+.ooo-trophy {
+  font-size: 48px;
+}
+
+.ooo-final-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.ooo-final-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #211631;
+  border: 2px solid #17101f;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .ooo-card {
+    width: 58px;
+    height: 84px;
+  }
+
+  .ooo-card-main {
+    font-size: 13px;
+  }
+}

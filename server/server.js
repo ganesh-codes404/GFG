@@ -22,6 +22,12 @@ app.use(express.json());
 
 const rooms = new Map();
 
+// One bad request should never take the whole server (every room, every
+// player) down with it -- log it and keep serving everyone else.
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught exception (server stayed up):", err);
+});
+
 // Games that don't have a server-side engine yet still get a shared
 // "everyone starts together" signal, they just each run their own local
 // simulation once there (see GAMES for the ones that are fully networked).
@@ -30,8 +36,29 @@ const LEGACY_REQUIRED_PLAYERS = {
   "Secret Agent": 7,
 };
 
-function requiredPlayersFor(game) {
-  return GAMES[game]?.requiredPlayers ?? LEGACY_REQUIRED_PLAYERS[game];
+// A game either needs an exact headcount (Chess: exactly 2) or a range
+// (Catan: 3-5). Returns null for a game with no known requirement at all.
+function playerCountRequirement(game) {
+  const engine = GAMES[game];
+
+  if (engine) {
+    if (engine.requiredPlayers !== undefined) return { exact: engine.requiredPlayers };
+    if (engine.minPlayers !== undefined && engine.maxPlayers !== undefined) {
+      return { min: engine.minPlayers, max: engine.maxPlayers };
+    }
+  }
+
+  if (LEGACY_REQUIRED_PLAYERS[game] !== undefined) {
+    return { exact: LEGACY_REQUIRED_PLAYERS[game] };
+  }
+
+  return null;
+}
+
+function playerCountSatisfies(requirement, count) {
+  if (!requirement) return false;
+  if (requirement.exact !== undefined) return count === requirement.exact;
+  return count >= requirement.min && count <= requirement.max;
 }
 
 function publicRoom(room) {
@@ -40,6 +67,10 @@ function publicRoom(room) {
     maxPlayers: room.maxPlayers,
     games: room.games,
     players: room.players,
+    // Which game (if any) is still in progress, so someone who navigates
+    // back to the lobby (or reloads it) mid-game gets bounced straight
+    // back into it instead of seeing a stale "pick a game" screen.
+    activeGame: room.game && !room.game.state.finished ? room.game.type : null,
   };
 }
 
@@ -83,7 +114,7 @@ io.on("connection", (socket) => {
 
     socket.join(code);
 
-    callback({
+    callback?.({
       success: true,
       room: publicRoom(room),
     });
@@ -98,7 +129,7 @@ io.on("connection", (socket) => {
     const room = rooms.get(roomCode);
 
     if (!room) {
-      callback({
+      callback?.({
         success: false,
         error: "ROOM_NOT_FOUND",
       });
@@ -106,8 +137,33 @@ io.on("connection", (socket) => {
       return;
     }
 
+    // Reconnect: this nickname held a seat in a game that's already running
+    // and dropped connection -- give the new socket that same seat back
+    // instead of treating them as a brand-new joiner.
+    const reconnectSeat = room.reconnectSlots?.[nickname.toLowerCase()];
+
+    if (room.game && reconnectSeat !== undefined) {
+      room.game.seats[reconnectSeat] = socket.id;
+      delete room.reconnectSlots[nickname.toLowerCase()];
+
+      const player = { id: socket.id, nickname, isHost: reconnectSeat === 0 };
+      room.players.push(player);
+
+      socket.join(roomCode);
+
+      callback?.({ success: true, room: publicRoom(room) });
+
+      socket.to(roomCode).emit("player-joined", {
+        player,
+        players: room.players,
+      });
+
+      console.log(`${nickname} reconnected to ${roomCode}`);
+      return;
+    }
+
     if (room.players.length >= room.maxPlayers) {
-      callback({
+      callback?.({
         success: false,
         error: "ROOM_FULL",
       });
@@ -120,7 +176,7 @@ io.on("connection", (socket) => {
     );
 
     if (alreadyJoined) {
-      callback({
+      callback?.({
         success: false,
         error: "NICKNAME_TAKEN",
       });
@@ -138,7 +194,7 @@ io.on("connection", (socket) => {
 
     socket.join(roomCode);
 
-    callback({
+    callback?.({
       success: true,
       room: publicRoom(room),
     });
@@ -157,13 +213,13 @@ io.on("connection", (socket) => {
     const room = rooms.get((code || "").trim().toUpperCase());
 
     if (!room) {
-      callback({ success: false, error: "ROOM_NOT_FOUND" });
+      callback?.({ success: false, error: "ROOM_NOT_FOUND" });
       return;
     }
 
     socket.join(room.code);
 
-    callback({ success: true, room: publicRoom(room) });
+    callback?.({ success: true, room: publicRoom(room) });
   });
 
   // START GAME (host only) -- everyone in the room gets pushed to the
@@ -173,26 +229,26 @@ io.on("connection", (socket) => {
     const room = rooms.get((code || "").trim().toUpperCase());
 
     if (!room) {
-      callback({ success: false, error: "ROOM_NOT_FOUND" });
+      callback?.({ success: false, error: "ROOM_NOT_FOUND" });
       return;
     }
 
     const requester = room.players.find((player) => player.id === socket.id);
 
     if (!requester?.isHost) {
-      callback({ success: false, error: "NOT_HOST" });
+      callback?.({ success: false, error: "NOT_HOST" });
       return;
     }
 
-    const required = requiredPlayersFor(game);
+    const requirement = playerCountRequirement(game);
 
-    if (!required) {
-      callback({ success: false, error: "UNKNOWN_GAME" });
+    if (!requirement) {
+      callback?.({ success: false, error: "UNKNOWN_GAME" });
       return;
     }
 
-    if (room.players.length !== required) {
-      callback({ success: false, error: "WRONG_PLAYER_COUNT" });
+    if (!playerCountSatisfies(requirement, room.players.length)) {
+      callback?.({ success: false, error: "WRONG_PLAYER_COUNT" });
       return;
     }
 
@@ -202,7 +258,7 @@ io.on("connection", (socket) => {
       ? {
           type: game,
           engine,
-          state: engine.createInitialState(),
+          state: engine.createInitialState(room.players.length),
           // Snapshot of socket ids in join order -- this is what "seat 0",
           // "seat 1", etc. mean for the lifetime of this game session.
           seats: room.players.map((player) => player.id),
@@ -211,7 +267,7 @@ io.on("connection", (socket) => {
 
     io.to(room.code).emit("game-started", { code: room.code, game });
 
-    callback({ success: true });
+    callback?.({ success: true });
 
     console.log(`Room ${room.code} started ${game}`);
   });
@@ -222,20 +278,20 @@ io.on("connection", (socket) => {
     const room = rooms.get((code || "").trim().toUpperCase());
 
     if (!room?.game) {
-      callback({ success: false, error: "GAME_NOT_FOUND" });
+      callback?.({ success: false, error: "GAME_NOT_FOUND" });
       return;
     }
 
     const seat = room.game.seats.indexOf(socket.id);
 
     if (seat === -1) {
-      callback({ success: false, error: "NOT_A_PLAYER" });
+      callback?.({ success: false, error: "NOT_A_PLAYER" });
       return;
     }
 
     socket.join(room.code);
 
-    callback({
+    callback?.({
       success: true,
       seat,
       state: room.game.engine.viewFor(room.game.state, seat),
@@ -249,14 +305,14 @@ io.on("connection", (socket) => {
     const room = rooms.get((code || "").trim().toUpperCase());
 
     if (!room?.game) {
-      callback({ success: false, error: "GAME_NOT_FOUND" });
+      callback?.({ success: false, error: "GAME_NOT_FOUND" });
       return;
     }
 
     const seat = room.game.seats.indexOf(socket.id);
 
     if (seat === -1) {
-      callback({ success: false, error: "NOT_A_PLAYER" });
+      callback?.({ success: false, error: "NOT_A_PLAYER" });
       return;
     }
 
@@ -268,7 +324,7 @@ io.on("connection", (socket) => {
         payload
       );
     } catch (err) {
-      callback({ success: false, error: err.message });
+      callback?.({ success: false, error: err.message });
       return;
     }
 
@@ -279,7 +335,7 @@ io.on("connection", (socket) => {
       );
     });
 
-    callback({ success: true });
+    callback?.({ success: true });
   });
 
   // RESET GAME -- either player can start a rematch once a game exists.
@@ -287,14 +343,14 @@ io.on("connection", (socket) => {
     const room = rooms.get((code || "").trim().toUpperCase());
 
     if (!room?.game) {
-      callback({ success: false, error: "GAME_NOT_FOUND" });
+      callback?.({ success: false, error: "GAME_NOT_FOUND" });
       return;
     }
 
     const seat = room.game.seats.indexOf(socket.id);
 
     if (seat === -1) {
-      callback({ success: false, error: "NOT_A_PLAYER" });
+      callback?.({ success: false, error: "NOT_A_PLAYER" });
       return;
     }
 
@@ -307,7 +363,7 @@ io.on("connection", (socket) => {
       );
     });
 
-    callback({ success: true });
+    callback?.({ success: true });
   });
 
   // DISCONNECT
@@ -321,13 +377,24 @@ io.on("connection", (socket) => {
 
       const [player] = room.players.splice(playerIndex, 1);
 
+      // If a game is running, remember which seat this nickname held so a
+      // reconnect (see join-room) can hand it straight back to them.
+      if (room.game) {
+        const seatIndex = room.game.seats.indexOf(player.id);
+        if (seatIndex !== -1) {
+          room.reconnectSlots ||= {};
+          room.reconnectSlots[player.nickname.toLowerCase()] = seatIndex;
+        }
+      }
+
       io.to(code).emit("player-left", {
         player,
         players: room.players,
       });
 
-      // Delete empty rooms
-      if (room.players.length === 0) {
+      // Delete empty rooms -- but not one with a game in progress, so a
+      // disconnected player still has somewhere to reconnect to.
+      if (room.players.length === 0 && !room.game) {
         rooms.delete(code);
       }
 

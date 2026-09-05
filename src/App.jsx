@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  BrowserRouter,
+  HashRouter,
   Routes,
   Route,
   Navigate,
@@ -9,12 +9,16 @@ import {
 import "./App.css";
 import CreateRoom from "./create_room";
 import Lobby from "./Lobby";
+import ServerStatusBanner from "./ServerStatusBanner";
 import { socket } from "./socket";
 import BattleRoyale from "./assets/BattleRoyale";
 import SecretAgent from "./assets/SecretAgent";
 import Chess from "./assets/Chess";
 import Connect4 from "./assets/Connect4";
 import Catan from "./assets/Catan";
+import OneAndOnly from "./assets/OneAndOnly";
+import AndhraBusiness from "./assets/AndhraBusiness";
+import SnakesAndLadders from "./assets/SnakesAndLadders";
 
 function Home() {
   const navigate = useNavigate();
@@ -89,10 +93,6 @@ const handleJoin = () => {
 
         <input
           placeholder="Nickname"
-        />
-
-        <input
-          placeholder="Room Code"
         />
 
         <button
@@ -172,7 +172,8 @@ const handleJoin = () => {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
+      <ServerStatusBanner />
       <Routes>
 
         <Route path="/" element={<Home />} />
@@ -212,9 +213,24 @@ export default function App() {
           element={<Catan />}
         />
 
+        <Route
+          path="/one-and-only"
+          element={<OneAndOnly />}
+        />
+
+        <Route
+          path="/andhra-business"
+          element={<AndhraBusiness />}
+        />
+
+        <Route
+          path="/snakes-and-ladders"
+          element={<SnakesAndLadders />}
+        />
+
         <Route path="*" element={<Navigate to="/" replace />} />
 
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }

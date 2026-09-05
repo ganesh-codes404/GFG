@@ -120,7 +120,15 @@ function NetworkedConnect4({ code, room }) {
     : ["Player 1", "Player 2"];
 
   const dropDisc = (col) => {
-    socket.emit("game-action", { code, action: "drop", payload: { col } });
+    socket.emit(
+      "game-action",
+      { code, action: "drop", payload: { col } },
+      (response) => {
+        if (!response?.success) {
+          console.warn("Move rejected:", response?.error);
+        }
+      }
+    );
   };
 
   const resetGame = () => {
@@ -148,6 +156,7 @@ function Connect4Board({ names, networkState, mySeat, onDrop, onReset }) {
   const [localWinLine, setLocalWinLine] = useState(null);
   const [localFinished, setLocalFinished] = useState(null);
   const [hoverCol, setHoverCol] = useState(null);
+  const [confirmingReset, setConfirmingReset] = useState(false);
 
   let board, currentPlayer, winLine, finished;
 
@@ -287,10 +296,44 @@ function Connect4Board({ names, networkState, mySeat, onDrop, onReset }) {
           <p className="c4-waiting">WAITING FOR OPPONENT...</p>
         )}
 
-        <button className="c4-reset-button" onClick={resetGame}>
+        <button
+          className="c4-reset-button"
+          onClick={() => setConfirmingReset(true)}
+        >
           RESTART GAME
         </button>
       </main>
+
+      {confirmingReset && (
+        <div className="c4-overlay">
+          <div className="c4-popup">
+            <h2>RESTART GAME?</h2>
+            <p>
+              This will end the current game
+              {isNetworked ? " for both players" : ""} and start over.
+            </p>
+
+            <div className="c4-confirm-grid">
+              <button
+                className="c4-confirm-yes"
+                onClick={() => {
+                  setConfirmingReset(false);
+                  resetGame();
+                }}
+              >
+                YES, RESTART
+              </button>
+
+              <button
+                className="c4-confirm-no"
+                onClick={() => setConfirmingReset(false)}
+              >
+                CANCEL
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {finished && (
         <div className="c4-overlay">

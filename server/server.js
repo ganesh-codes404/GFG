@@ -357,7 +357,7 @@ io.on("connection", (socket) => {
       return;
     }
 
-    room.game.state = room.game.engine.createInitialState();
+    room.game.state = room.game.engine.createInitialState(room.game.seats.length);
 
     room.game.seats.forEach((playerId, seatIndex) => {
       io.to(playerId).emit(

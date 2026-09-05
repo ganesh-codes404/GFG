@@ -9,7 +9,10 @@ import PlayerStatus from "../components/PlayerStatus";
 import RulesModal from "../components/RulesModal";
 import Modal from "../components/Modal";
 import { useNotifications } from "../hooks/useNotifications";
+import { useGameTransitions } from "../hooks/useGameTransitions";
 import "./OneAndOnly.css";
+
+const CURRENT_GAME = "One and Only";
 
 const COLOR_HEX = {
   ember: "#e0453f",
@@ -56,6 +59,7 @@ export default function OneAndOnly() {
   const location = useLocation();
   const navigate = useNavigate();
   const code = location.state?.code;
+  const room = location.state?.room;
 
   if (!code) {
     return (
@@ -71,13 +75,19 @@ export default function OneAndOnly() {
     );
   }
 
-  return <NetworkedOneAndOnly code={code} />;
+  return <NetworkedOneAndOnly code={code} room={room} />;
 }
 
-function NetworkedOneAndOnly({ code }) {
+function NetworkedOneAndOnly({ code, room }) {
   const [seat, setSeat] = useState(null);
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
+
+  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+    code,
+    room,
+    currentGame: CURRENT_GAME,
+  });
 
   useEffect(() => {
     socket.emit("join-game", { code }, (response) => {
@@ -120,10 +130,20 @@ function NetworkedOneAndOnly({ code }) {
     );
   }
 
-  return <OneAndOnlyGame state={state} mySeat={seat} dispatch={dispatch} />;
+  return (
+    <OneAndOnlyGame
+      state={state}
+      mySeat={seat}
+      dispatch={dispatch}
+      isHost={isHost}
+      nextGame={nextGame}
+      onNextGame={requestNextGame}
+      onRematch={() => socket.emit("reset-game", { code })}
+    />
+  );
 }
 
-function OneAndOnlyGame({ state, mySeat, dispatch }) {
+function OneAndOnlyGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, onRematch }) {
   const [showRules, setShowRules] = useState(false);
   const [pendingWildCardId, setPendingWildCardId] = useState(null);
   const { notifications, push } = useNotifications();
@@ -171,7 +191,16 @@ function OneAndOnlyGame({ state, mySeat, dispatch }) {
   };
 
   if (state.finished) {
-    return <VictoryScreen state={state} mySeat={mySeat} />;
+    return (
+      <VictoryScreen
+        state={state}
+        mySeat={mySeat}
+        isHost={isHost}
+        nextGame={nextGame}
+        onNextGame={onNextGame}
+        onRematch={onRematch}
+      />
+    );
   }
 
   const players = Array.from({ length: state.handCounts.length }, (_, seat) => ({
@@ -301,7 +330,7 @@ function PlayingCard({ card }) {
   );
 }
 
-function VictoryScreen({ state, mySeat }) {
+function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch }) {
   return (
     <div className="ooo-screen ooo-gate">
       <div className="ooo-popup ooo-victory">
@@ -318,6 +347,21 @@ function VictoryScreen({ state, mySeat }) {
             </div>
           ))}
         </div>
+
+        {isHost ? (
+          <div className="ooo-postgame-actions">
+            <button className="ooo-button" onClick={onRematch}>
+              REMATCH
+            </button>
+            {nextGame && (
+              <button className="ooo-button next" onClick={onNextGame}>
+                NEXT GAME: {nextGame.toUpperCase()}
+              </button>
+            )}
+          </div>
+        ) : (
+          <p className="ooo-waiting-host">Waiting for the host to choose what's next...</p>
+        )}
       </div>
     </div>
   );

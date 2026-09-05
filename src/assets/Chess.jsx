@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Chess as ChessEngine } from "chess.js";
 import { socket } from "../socket";
+import { useGameTransitions } from "../hooks/useGameTransitions";
 import "./Chess.css";
+
+const CURRENT_GAME = "Chess";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
@@ -58,6 +61,12 @@ function NetworkedChess({ code, room }) {
   const [seat, setSeat] = useState(null);
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
+
+  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+    code,
+    room,
+    currentGame: CURRENT_GAME,
+  });
 
   useEffect(() => {
     socket.emit("join-game", { code }, (response) => {
@@ -124,13 +133,27 @@ function NetworkedChess({ code, room }) {
       mySeat={seat}
       onMove={sendMove}
       onReset={resetGame}
+      isNetworkedRoom={Boolean(room)}
+      isHost={isHost}
+      nextGame={nextGame}
+      onNextGame={requestNextGame}
     />
   );
 }
 
 /* ---------- shared board UI (local hot-seat or server-driven) ---------- */
 
-function ChessBoard({ names, networkState, mySeat, onMove, onReset }) {
+function ChessBoard({
+  names,
+  networkState,
+  mySeat,
+  onMove,
+  onReset,
+  isNetworkedRoom,
+  isHost,
+  nextGame,
+  onNextGame,
+}) {
   const isNetworked = Boolean(networkState);
 
   const localRef = useRef(null);
@@ -439,9 +462,26 @@ function ChessBoard({ names, networkState, mySeat, onMove, onReset }) {
                 : "IT'S A DRAW!"}
             </h1>
 
-            <button className="chess-restart-winning" onClick={resetGame}>
-              PLAY AGAIN
-            </button>
+            {isNetworkedRoom ? (
+              isHost ? (
+                <div className="chess-postgame-actions">
+                  <button className="chess-restart-winning" onClick={resetGame}>
+                    REMATCH
+                  </button>
+                  {nextGame && (
+                    <button className="chess-restart-winning next" onClick={onNextGame}>
+                      NEXT GAME: {nextGame.toUpperCase()}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <p className="chess-waiting-host">Waiting for the host to choose what's next...</p>
+              )
+            ) : (
+              <button className="chess-restart-winning" onClick={resetGame}>
+                PLAY AGAIN
+              </button>
+            )}
           </div>
         </div>
       )}

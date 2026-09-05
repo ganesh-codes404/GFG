@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { socket } from "../socket";
+import { useGameTransitions } from "../hooks/useGameTransitions";
 import "./Connect4.css";
+
+const CURRENT_GAME = "Connect 4";
 
 const ROWS = 6;
 const COLS = 7;
@@ -77,6 +80,12 @@ function NetworkedConnect4({ code, room }) {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
 
+  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+    code,
+    room,
+    currentGame: CURRENT_GAME,
+  });
+
   useEffect(() => {
     socket.emit("join-game", { code }, (response) => {
       if (!response.success) {
@@ -142,13 +151,27 @@ function NetworkedConnect4({ code, room }) {
       mySeat={seat}
       onDrop={dropDisc}
       onReset={resetGame}
+      isNetworkedRoom={Boolean(room)}
+      isHost={isHost}
+      nextGame={nextGame}
+      onNextGame={requestNextGame}
     />
   );
 }
 
 /* ---------- shared board UI (local hot-seat or server-driven) ---------- */
 
-function Connect4Board({ names, networkState, mySeat, onDrop, onReset }) {
+function Connect4Board({
+  names,
+  networkState,
+  mySeat,
+  onDrop,
+  onReset,
+  isNetworkedRoom,
+  isHost,
+  nextGame,
+  onNextGame,
+}) {
   const isNetworked = Boolean(networkState);
 
   const [localBoard, setLocalBoard] = useState(makeEmptyBoard);
@@ -360,9 +383,26 @@ function Connect4Board({ names, networkState, mySeat, onDrop, onReset }) {
                 : "The board filled up with no winner."}
             </p>
 
-            <button className="c4-restart-winning" onClick={resetGame}>
-              PLAY AGAIN
-            </button>
+            {isNetworkedRoom ? (
+              isHost ? (
+                <div className="c4-postgame-actions">
+                  <button className="c4-restart-winning" onClick={resetGame}>
+                    REMATCH
+                  </button>
+                  {nextGame && (
+                    <button className="c4-restart-winning next" onClick={onNextGame}>
+                      NEXT GAME: {nextGame.toUpperCase()}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <p className="c4-waiting-host">Waiting for the host to choose what's next...</p>
+              )
+            ) : (
+              <button className="c4-restart-winning" onClick={resetGame}>
+                PLAY AGAIN
+              </button>
+            )}
           </div>
         </div>
       )}

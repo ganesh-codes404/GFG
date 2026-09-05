@@ -8,7 +8,10 @@ import PlayerStatus from "../components/PlayerStatus";
 import RulesModal from "../components/RulesModal";
 import Dice from "../components/Dice";
 import { useNotifications } from "../hooks/useNotifications";
+import { useGameTransitions } from "../hooks/useGameTransitions";
 import "./SnakesAndLadders.css";
+
+const CURRENT_GAME = "Snakes and Ladders";
 
 const PLAYER_COLORS = ["#e74c3c", "#3498db", "#f1c40f", "#2ecc71", "#9b59b6", "#e67e22", "#1abc9c"];
 
@@ -41,6 +44,7 @@ export default function SnakesAndLadders() {
   const location = useLocation();
   const navigate = useNavigate();
   const code = location.state?.code;
+  const room = location.state?.room;
 
   if (!code) {
     return (
@@ -56,13 +60,19 @@ export default function SnakesAndLadders() {
     );
   }
 
-  return <NetworkedSnakesAndLadders code={code} />;
+  return <NetworkedSnakesAndLadders code={code} room={room} />;
 }
 
-function NetworkedSnakesAndLadders({ code }) {
+function NetworkedSnakesAndLadders({ code, room }) {
   const [seat, setSeat] = useState(null);
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
+
+  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+    code,
+    room,
+    currentGame: CURRENT_GAME,
+  });
 
   useEffect(() => {
     socket.emit("join-game", { code }, (response) => {
@@ -105,10 +115,20 @@ function NetworkedSnakesAndLadders({ code }) {
     );
   }
 
-  return <SnakesAndLaddersGame state={state} mySeat={seat} dispatch={dispatch} />;
+  return (
+    <SnakesAndLaddersGame
+      state={state}
+      mySeat={seat}
+      dispatch={dispatch}
+      isHost={isHost}
+      nextGame={nextGame}
+      onNextGame={requestNextGame}
+      onRematch={() => socket.emit("reset-game", { code })}
+    />
+  );
 }
 
-function SnakesAndLaddersGame({ state, mySeat, dispatch }) {
+function SnakesAndLaddersGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, onRematch }) {
   const [showRules, setShowRules] = useState(false);
   const [rolling, setRolling] = useState(false);
   const { notifications, push } = useNotifications();
@@ -137,7 +157,16 @@ function SnakesAndLaddersGame({ state, mySeat, dispatch }) {
   };
 
   if (state.finished) {
-    return <VictoryScreen state={state} mySeat={mySeat} />;
+    return (
+      <VictoryScreen
+        state={state}
+        mySeat={mySeat}
+        isHost={isHost}
+        nextGame={nextGame}
+        onNextGame={onNextGame}
+        onRematch={onRematch}
+      />
+    );
   }
 
   const players = state.players.map((p) => ({ ...p, seat: p.seat }));
@@ -256,7 +285,7 @@ function Board({ state }) {
   );
 }
 
-function VictoryScreen({ state, mySeat }) {
+function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch }) {
   return (
     <div className="snl-screen snl-gate">
       <div className="snl-popup snl-victory">
@@ -273,6 +302,21 @@ function VictoryScreen({ state, mySeat }) {
             </div>
           ))}
         </div>
+
+        {isHost ? (
+          <div className="snl-postgame-actions">
+            <button className="snl-button" onClick={onRematch}>
+              REMATCH
+            </button>
+            {nextGame && (
+              <button className="snl-button next" onClick={onNextGame}>
+                NEXT GAME: {nextGame.toUpperCase()}
+              </button>
+            )}
+          </div>
+        ) : (
+          <p className="snl-waiting-host">Waiting for the host to choose what's next...</p>
+        )}
       </div>
     </div>
   );

@@ -588,6 +588,28 @@ button {
   box-shadow: 0 5px 0 #143f8f;
 }
 
+.chess-postgame-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.chess-postgame-actions .chess-restart-winning {
+  margin-top: 0;
+}
+
+.chess-restart-winning.next {
+  background: linear-gradient(180deg, #7de89a, #3fb968, #1f8f47);
+  box-shadow: 0 5px 0 #146332;
+}
+
+.chess-waiting-host {
+  margin-top: 24px;
+  color: #d9c9f2;
+  font-size: 14px;
+}
+
 /* GRASS */
 
 .chess-grass {

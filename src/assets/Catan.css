@@ -764,6 +764,23 @@ select {
   font-size: 13px;
 }
 
+.catan-postgame-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.catan-button.next {
+  background: linear-gradient(180deg, #9fd9ff, #3f7fe6, #255fc4);
+}
+
+.catan-waiting-host {
+  margin-top: 20px;
+  color: #d9c9f2;
+  font-size: 14px;
+}
+
 /* RESPONSIVE */
 
 @media (max-width: 1100px) {

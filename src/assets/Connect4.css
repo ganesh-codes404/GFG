@@ -484,6 +484,28 @@ button {
   width: 100%;
 }
 
+.c4-postgame-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.c4-postgame-actions .c4-restart-winning {
+  margin-top: 0;
+}
+
+.c4-restart-winning.next {
+  background: linear-gradient(180deg, #7de89a, #3fb968, #1f8f47);
+  box-shadow: 0 5px 0 #146332;
+}
+
+.c4-waiting-host {
+  margin-top: 20px;
+  color: #d9c9f2;
+  font-size: 14px;
+}
+
 /* GRASS */
 
 .c4-grass {

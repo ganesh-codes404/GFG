@@ -10,7 +10,10 @@ import RulesModal from "../components/RulesModal";
 import Modal from "../components/Modal";
 import Dice from "../components/Dice";
 import { useNotifications } from "../hooks/useNotifications";
+import { useGameTransitions } from "../hooks/useGameTransitions";
 import "./AndhraBusiness.css";
+
+const CURRENT_GAME = "Andhra Business";
 
 const GROUP_TYPES = ["property", "transport", "utility"];
 
@@ -46,6 +49,7 @@ export default function AndhraBusiness() {
   const location = useLocation();
   const navigate = useNavigate();
   const code = location.state?.code;
+  const room = location.state?.room;
 
   if (!code) {
     return (
@@ -61,13 +65,19 @@ export default function AndhraBusiness() {
     );
   }
 
-  return <NetworkedAndhraBusiness code={code} />;
+  return <NetworkedAndhraBusiness code={code} room={room} />;
 }
 
-function NetworkedAndhraBusiness({ code }) {
+function NetworkedAndhraBusiness({ code, room }) {
   const [seat, setSeat] = useState(null);
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
+
+  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+    code,
+    room,
+    currentGame: CURRENT_GAME,
+  });
 
   useEffect(() => {
     socket.emit("join-game", { code }, (response) => {
@@ -110,10 +120,20 @@ function NetworkedAndhraBusiness({ code }) {
     );
   }
 
-  return <AndhraBusinessGame state={state} mySeat={seat} dispatch={dispatch} />;
+  return (
+    <AndhraBusinessGame
+      state={state}
+      mySeat={seat}
+      dispatch={dispatch}
+      isHost={isHost}
+      nextGame={nextGame}
+      onNextGame={requestNextGame}
+      onRematch={() => socket.emit("reset-game", { code })}
+    />
+  );
 }
 
-function AndhraBusinessGame({ state, mySeat, dispatch }) {
+function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, onRematch }) {
   const [showRules, setShowRules] = useState(false);
   const [showTrade, setShowTrade] = useState(false);
   const [showDevelop, setShowDevelop] = useState(false);
@@ -147,7 +167,16 @@ function AndhraBusinessGame({ state, mySeat, dispatch }) {
   };
 
   if (state.finished) {
-    return <VictoryScreen state={state} mySeat={mySeat} />;
+    return (
+      <VictoryScreen
+        state={state}
+        mySeat={mySeat}
+        isHost={isHost}
+        nextGame={nextGame}
+        onNextGame={onNextGame}
+        onRematch={onRematch}
+      />
+    );
   }
 
   const showBuyPrompt =
@@ -513,7 +542,7 @@ function TradeModal({ state, mySeat, dispatch, onClose }) {
   );
 }
 
-function VictoryScreen({ state, mySeat }) {
+function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch }) {
   const winner = state.players.find((p) => p.seat === state.winner);
   const propertyCounts = state.players.map(
     (p) => Object.values(state.properties).filter((prop) => prop.owner === p.seat).length
@@ -542,6 +571,21 @@ function VictoryScreen({ state, mySeat }) {
             </div>
           ))}
         </div>
+
+        {isHost ? (
+          <div className="ab-postgame-actions">
+            <button className="ab-button" onClick={onRematch}>
+              REMATCH
+            </button>
+            {nextGame && (
+              <button className="ab-button next" onClick={onNextGame}>
+                NEXT GAME: {nextGame.toUpperCase()}
+              </button>
+            )}
+          </div>
+        ) : (
+          <p className="ab-waiting-host">Waiting for the host to choose what's next...</p>
+        )}
       </div>
     </div>
   );

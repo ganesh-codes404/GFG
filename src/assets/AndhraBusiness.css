@@ -442,6 +442,23 @@ button, input { font-family: inherit; }
   font-size: 12px;
 }
 
+.ab-postgame-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.ab-button.next {
+  background: linear-gradient(180deg, #9fd9ff, #3f7fe6, #255fc4);
+}
+
+.ab-waiting-host {
+  margin-top: 20px;
+  color: #d9e8d9;
+  font-size: 14px;
+}
+
 @media (max-width: 700px) {
   .ab-board { width: 92vw; }
   .ab-trade-columns { grid-template-columns: 1fr; }

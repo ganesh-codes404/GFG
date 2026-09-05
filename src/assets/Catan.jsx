@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { socket } from "../socket";
+import { useGameTransitions } from "../hooks/useGameTransitions";
 import "./Catan.css";
+
+const CURRENT_GAME = "Catan";
 
 const RESOURCES = ["cattle", "cement", "timber", "grain", "steel"];
 
@@ -56,6 +59,7 @@ export default function Catan() {
   const location = useLocation();
   const navigate = useNavigate();
   const code = location.state?.code;
+  const room = location.state?.room;
 
   if (!code) {
     return (
@@ -74,13 +78,19 @@ export default function Catan() {
     );
   }
 
-  return <NetworkedCatan code={code} />;
+  return <NetworkedCatan code={code} room={room} />;
 }
 
-function NetworkedCatan({ code }) {
+function NetworkedCatan({ code, room }) {
   const [seat, setSeat] = useState(null);
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
+
+  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+    code,
+    room,
+    currentGame: CURRENT_GAME,
+  });
 
   useEffect(() => {
     socket.emit("join-game", { code }, (response) => {
@@ -142,6 +152,10 @@ function NetworkedCatan({ code }) {
       mySeat={seat}
       dispatch={(action, payload) => dispatch(action, payload)}
       toast={toast}
+      isHost={isHost}
+      nextGame={nextGame}
+      onNextGame={requestNextGame}
+      onRematch={() => socket.emit("reset-game", { code })}
     />
   );
 }
@@ -176,7 +190,7 @@ function portOutwardPoint(mid, scale = 1.35) {
 
 /* ---------------- main game screen ---------------- */
 
-function CatanGame({ state, mySeat, dispatch, toast }) {
+function CatanGame({ state, mySeat, dispatch, toast, isHost, nextGame, onNextGame, onRematch }) {
   const [placementMode, setPlacementMode] = useState(null); // 'road' | 'settlement' | 'city' | null
   const [showTrade, setShowTrade] = useState(false);
   const [showRules, setShowRules] = useState(false);
@@ -291,7 +305,16 @@ function CatanGame({ state, mySeat, dispatch, toast }) {
   };
 
   if (state.phase === "finished") {
-    return <VictoryScreen state={state} mySeat={mySeat} />;
+    return (
+      <VictoryScreen
+        state={state}
+        mySeat={mySeat}
+        isHost={isHost}
+        nextGame={nextGame}
+        onNextGame={onNextGame}
+        onRematch={onRematch}
+      />
+    );
   }
 
   return (
@@ -1043,7 +1066,7 @@ function RulesModal({ onClose }) {
   );
 }
 
-function VictoryScreen({ state, mySeat }) {
+function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch }) {
   const winner = state.players.find((p) => p.seat === state.winner);
 
   return (
@@ -1064,6 +1087,21 @@ function VictoryScreen({ state, mySeat }) {
             </div>
           ))}
         </div>
+
+        {isHost ? (
+          <div className="catan-postgame-actions">
+            <button className="catan-button" onClick={onRematch}>
+              REMATCH
+            </button>
+            {nextGame && (
+              <button className="catan-button next" onClick={onNextGame}>
+                NEXT GAME: {nextGame.toUpperCase()}
+              </button>
+            )}
+          </div>
+        ) : (
+          <p className="catan-waiting-host">Waiting for the host to choose what's next...</p>
+        )}
       </div>
     </div>
   );

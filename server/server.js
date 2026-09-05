@@ -14,6 +14,9 @@ const io = new Server(server, {
     // "localhost", without hardcoding every possible address here.
     origin: true,
     methods: ["GET", "POST"],
+    // Without this, the browser's CORS preflight would reject the custom
+    // header the client sends to skip ngrok's browser-warning interstitial.
+    allowedHeaders: ["Content-Type", "ngrok-skip-browser-warning"],
   },
 });
 

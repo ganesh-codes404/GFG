@@ -14,4 +14,11 @@ export const socket = io(SERVER_URL, {
   // coming back online) reflects reality within a couple of seconds.
   reconnectionDelay: 1500,
   reconnectionDelayMax: 5000,
+  // A free ngrok tunnel serves an HTML "are you a human" interstitial page
+  // to any request that looks like it's from a browser, instead of proxying
+  // it through -- this header is ngrok's documented way to skip that for a
+  // real client like this one. Harmless (ignored) when not using ngrok.
+  extraHeaders: {
+    "ngrok-skip-browser-warning": "true",
+  },
 });

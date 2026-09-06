@@ -117,8 +117,6 @@ export default function Lobby() {
     );
   }
 
-  const isHost = room.players.find((player) => player.id === socket.id)?.isHost;
-
   const canStart = (game) => {
     if (!GAME_ROUTES[game]) return false;
 
@@ -131,8 +129,6 @@ export default function Lobby() {
 
       if (response.error === "WRONG_PLAYER_COUNT") {
         alert("Wrong number of players to start this game.");
-      } else if (response.error === "NOT_HOST") {
-        alert("Only the host can start the game.");
       } else {
         alert("Could not start the game.");
       }
@@ -177,23 +173,17 @@ export default function Lobby() {
                 <div key={game} className="lobby-game-row">
                   <span className="lobby-game-name">{game}</span>
 
-                  {isHost ? (
+                  {hasRoute ? (
                     <button
                       type="button"
                       className="lobby-start-button"
                       disabled={!ready}
                       onClick={() => startGame(game)}
                     >
-                      {!hasRoute
-                        ? "COMING SOON"
-                        : ready
-                        ? "START GAME"
-                        : playerCountRequirementLabel(game)}
+                      {ready ? "START GAME" : playerCountRequirementLabel(game)}
                     </button>
                   ) : (
-                    <span className="lobby-start-button waiting">
-                      {hasRoute ? "WAITING FOR HOST" : "COMING SOON"}
-                    </span>
+                    <span className="lobby-start-button waiting">COMING SOON</span>
                   )}
                 </div>
               );

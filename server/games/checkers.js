@@ -124,13 +124,14 @@ function checkWin(state) {
   }
 }
 
-function createInitialState() {
+function createInitialState(seatCount, rng = Math.random) {
+  const startingSeat = Math.floor(rng() * 2);
   return {
     board: createBoard(),
-    currentSeat: 0,
+    currentSeat: startingSeat,
     mustContinueFrom: null,
     winner: null,
-    log: ["Checkers begins! Player 1 moves first."],
+    log: [`Checkers begins! ${playerLabel(startingSeat)} moves first.`],
   };
 }
 

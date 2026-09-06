@@ -10,13 +10,14 @@ import Modal from "../components/Modal";
 import Dice from "../components/Dice";
 import { useNotifications } from "../hooks/useNotifications";
 import { useGameTransitions } from "../hooks/useGameTransitions";
+import { nameFor, logWithNicknames } from "../utils/nicknames";
 import "./AndhraBusiness.css";
 
 const CURRENT_GAME = "Andhra Business";
 
 const BOARD_SIZE = 48;
 const BOARD_GRID = 13; // 13x13 perimeter grid (12 squares per side)
-const MOVE_STEP_MS = 90;
+const MOVE_STEP_MS = 220;
 const MAX_ANIMATED_HOPS = 12; // normal dice rolls only go 2-12 -- anything
 // longer (cards, jail teleports) just jumps straight there instead of a
 // long crawl around the board.
@@ -121,6 +122,46 @@ function usePlayerDisplayPositions(players) {
   return players.map((p) => posRef.current[p.seat] ?? p.position);
 }
 
+// Tracks each player's cash between renders and produces a short-lived
+// floating "+1,200" / "-500" badge whenever it changes, keyed by an
+// incrementing id so a second change before the first badge finishes still
+// re-triggers the CSS animation.
+function useCashDeltas(players) {
+  const prevRef = useRef({});
+  const idRef = useRef(0);
+  const [deltas, setDeltas] = useState({});
+
+  const cashKey = players.map((p) => `${p.seat}:${p.cash}`).join(",");
+
+  useEffect(() => {
+    const changed = {};
+    for (const p of players) {
+      const prev = prevRef.current[p.seat];
+      if (prev !== undefined && prev !== p.cash) {
+        changed[p.seat] = { amount: p.cash - prev, id: idRef.current++ };
+      }
+      prevRef.current[p.seat] = p.cash;
+    }
+    if (Object.keys(changed).length === 0) return;
+
+    setDeltas((d) => ({ ...d, ...changed }));
+    const timers = Object.entries(changed).map(([seat, { id }]) =>
+      setTimeout(() => {
+        setDeltas((d) => {
+          if (d[seat]?.id !== id) return d;
+          const next = { ...d };
+          delete next[seat];
+          return next;
+        });
+      }, 1600)
+    );
+    return () => timers.forEach(clearTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cashKey]);
+
+  return deltas;
+}
+
 export default function AndhraBusiness() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -149,7 +190,7 @@ function NetworkedAndhraBusiness({ code, room }) {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
 
-  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+  const { nextGame, requestNextGame, canControl } = useGameTransitions({
     code,
     room,
     currentGame: CURRENT_GAME,
@@ -201,7 +242,7 @@ function NetworkedAndhraBusiness({ code, room }) {
       state={state}
       mySeat={seat}
       dispatch={dispatch}
-      isHost={isHost}
+      canControl={canControl}
       nextGame={nextGame}
       onNextGame={requestNextGame}
       onRematch={() => socket.emit("reset-game", { code })}
@@ -209,7 +250,7 @@ function NetworkedAndhraBusiness({ code, room }) {
   );
 }
 
-function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, onRematch }) {
+function AndhraBusinessGame({ state, mySeat, dispatch, canControl, nextGame, onNextGame, onRematch }) {
   const [showRules, setShowRules] = useState(false);
   const [showTrade, setShowTrade] = useState(false);
   const [showDevelop, setShowDevelop] = useState(false);
@@ -223,6 +264,7 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
   const mySpace = state.spaces[me?.position ?? 0];
 
   const displayPositions = usePlayerDisplayPositions(state.players);
+  const cashDeltas = useCashDeltas(state.players);
 
   const deadline = state.decisionDeadline || state.turnEndDeadline || null;
 
@@ -248,8 +290,17 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
   }, [state.log, push]);
 
   const handleRoll = async () => {
+    if (rolling) return; // guard against a fast double-click firing two rolls
     setRolling(true);
-    await dispatch("roll-dice", {});
+    const response = await dispatch("roll-dice", {});
+    if (!response?.success) {
+      // Nothing actually rolled (stale button state, not really your turn,
+      // etc.) -- don't play the roll animation over the old dice values,
+      // that looks exactly like "the dice are stuck on the same number".
+      setRolling(false);
+      push(response?.error || "Could not roll", { tone: "danger", seat: mySeat });
+      return;
+    }
     setTimeout(() => setRolling(false), 500);
   };
 
@@ -258,7 +309,7 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
       <VictoryScreen
         state={state}
         mySeat={mySeat}
-        isHost={isHost}
+        canControl={canControl}
         nextGame={nextGame}
         onNextGame={onNextGame}
         onRematch={onRematch}
@@ -271,7 +322,7 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
   const showJailPanel = isMyTurn && me?.inJail && state.phase !== "roll" && !showBuyPrompt && !showDevelopPrompt;
   const showDebtPanel = state.pendingDebt?.seat === mySeat;
 
-  const canDevelopNow = isMyTurn && state.phase === "ending";
+  const canDevelopNow = isMyTurn && state.phase !== "debt";
   const canTradeNow = !me?.bankrupt;
 
   const players = state.players.map((p) => ({ seat: p.seat, ...p }));
@@ -303,14 +354,19 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
                 style={{ "--player-color": player.color }}
               >
                 <div className="ab-player-card-name">
-                  Player {player.seat + 1}
+                  {nameFor(state, player.seat)}
                   {player.seat === mySeat ? " (you)" : ""}
                 </div>
                 {player.bankrupt ? (
                   <div className="ab-player-card-bankrupt">OUT</div>
                 ) : (
                   <>
-                    <div className="ab-player-card-cash">{formatRupees(player.cash)}</div>
+                    <div className="ab-player-card-cash">
+                      {formatRupees(player.cash)}
+                      {cashDeltas[player.seat] && (
+                        <CashDelta amount={cashDeltas[player.seat].amount} deltaId={cashDeltas[player.seat].id} />
+                      )}
+                    </div>
                     <PlayerStatus isActive={state.currentSeat === player.seat} />
                   </>
                 )}
@@ -325,7 +381,7 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
             {state.lastRoll && (
               <Dice values={[state.lastRoll.d1, state.lastRoll.d2]} rolling={rolling} total={state.lastRoll.total} />
             )}
-            <button className="ab-action-button roll" disabled={!isMyTurn || state.phase !== "roll"} onClick={handleRoll}>
+            <button className="ab-action-button roll" disabled={!isMyTurn || state.phase !== "roll" || rolling} onClick={handleRoll}>
               🎲 ROLL DICE
             </button>
           </div>
@@ -348,7 +404,12 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
           {me && (
             <div className="ab-my-status">
               <span>YOUR CASH</span>
-              <strong>{formatRupees(me.cash)}</strong>
+              <strong>
+                {formatRupees(me.cash)}
+                {cashDeltas[me.seat] && (
+                  <CashDelta amount={cashDeltas[me.seat].amount} deltaId={cashDeltas[me.seat].id} />
+                )}
+              </strong>
             </div>
           )}
         </aside>
@@ -356,7 +417,7 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
         <section className="ab-board-col">
           <Board state={state} displayPositions={displayPositions} />
 
-          <GameLog entries={state.log} title="EVENTS" />
+          <GameLog entries={logWithNicknames(state.log, state)} title="EVENTS" />
 
           {state.tradeOffers.filter((t) => t.toSeat === mySeat || t.fromSeat === mySeat).length > 0 && (
             <div className="ab-trade-requests">
@@ -368,7 +429,7 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
                 .map((trade) => (
                   <div key={trade.id} className="ab-trade-offer">
                     <div>
-                      Player {trade.fromSeat + 1} → Player {trade.toSeat + 1}
+                      {nameFor(state, trade.fromSeat)} → {nameFor(state, trade.toSeat)}
                     </div>
                     <div className="ab-trade-line">
                       Gives: {formatRupees(trade.giveCash)}
@@ -467,7 +528,7 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
                 get-out card.
               </p>
               <div className="ab-confirm-row">
-                <button className="ab-button" onClick={handleRoll}>
+                <button className="ab-button" disabled={rolling} onClick={handleRoll}>
                   🎲 ROLL
                 </button>
                 <button className="ab-button secondary" disabled={me.cash < 10000} onClick={() => dispatch("pay-jail-fine", {})}>
@@ -513,6 +574,16 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
   );
 }
 
+function CashDelta({ amount, deltaId }) {
+  const positive = amount > 0;
+  return (
+    <span key={deltaId} className={`ab-cash-delta ${positive ? "gain" : "loss"}`}>
+      {positive ? "+" : "-"}
+      {formatRupees(Math.abs(amount))}
+    </span>
+  );
+}
+
 function Board({ state, displayPositions }) {
   const currentPlayer = state.players[state.currentSeat];
 
@@ -554,7 +625,7 @@ function Board({ state, displayPositions }) {
         {currentPlayer && !currentPlayer.bankrupt && (
           <div className="ab-board-center-turn" style={{ "--player-color": currentPlayer.color }}>
             <span className="ab-board-center-dot" />
-            Player {state.currentSeat + 1}'s turn
+            {nameFor(state, state.currentSeat)}'s turn
           </div>
         )}
 
@@ -595,7 +666,7 @@ function Board({ state, displayPositions }) {
                 top: `${topPct}%`,
                 background: p.color,
               }}
-              title={`Player ${p.seat + 1}`}
+              title={nameFor(state, p.seat)}
             />
           );
         })}
@@ -700,7 +771,7 @@ function TradeModal({ state, mySeat, dispatch, onClose }) {
           .filter((p) => p.seat !== mySeat && !p.bankrupt)
           .map((p) => (
             <button key={p.seat} className={toSeat === p.seat ? "selected" : ""} onClick={() => setToSeat(p.seat)}>
-              Player {p.seat + 1}
+              {nameFor(state, p.seat)}
             </button>
           ))}
       </div>
@@ -753,7 +824,7 @@ function TradeModal({ state, mySeat, dispatch, onClose }) {
   );
 }
 
-function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch }) {
+function VictoryScreen({ state, mySeat, canControl, nextGame, onNextGame, onRematch }) {
   const winner = state.players.find((p) => p.seat === state.winner);
   const propertyCounts = state.players.map(
     (p) => Object.values(state.properties).filter((prop) => prop.owner === p.seat).length
@@ -765,7 +836,7 @@ function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch 
         <div className="ab-trophy">🏆</div>
         <h1>ANDHRA BUSINESS WINNER</h1>
         <p>
-          Player {state.winner + 1} · {formatRupees(winner?.cash ?? 0)} ·{" "}
+          {nameFor(state, state.winner)} · {formatRupees(winner?.cash ?? 0)} ·{" "}
           {propertyCounts[state.winner]} properties
         </p>
 
@@ -773,7 +844,7 @@ function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch 
           {state.players.map((p, i) => (
             <div key={p.seat} className="ab-final-row" style={{ "--player-color": p.color }}>
               <span>
-                Player {p.seat + 1}
+                {nameFor(state, p.seat)}
                 {p.seat === mySeat ? " (you)" : ""}
                 {p.bankrupt ? " (bankrupt)" : ""}
               </span>
@@ -783,7 +854,7 @@ function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch 
           ))}
         </div>
 
-        {isHost ? (
+        {canControl ? (
           <div className="ab-postgame-actions">
             <button className="ab-button" onClick={onRematch}>
               REMATCH

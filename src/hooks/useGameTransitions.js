@@ -5,7 +5,7 @@ import { GAME_ROUTES, NETWORKED_GAMES } from "../gameConfig";
 
 /**
  * Shared "what happens after this game ends" logic for every networked
- * game: listens for the host starting a different game from this room's
+ * game: listens for anyone starting a different game from this room's
  * list (so everyone sitting on the finished screen gets carried along),
  * and works out which game is "next" in the room's selection to offer as
  * a one-click option alongside a plain rematch.
@@ -41,9 +41,11 @@ export function useGameTransitions({ code, room, currentGame }) {
       ? playableGames[(currentIndex + 1) % playableGames.length]
       : null;
 
-  const isHost = Boolean(
-    room?.players?.find((player) => player.id === socket.id)?.isHost
-  );
+  // Any player can trigger a rematch or start the next game -- not just
+  // the host. Kept as its own value (rather than inlining `true` at every
+  // call site) so the postgame-actions gate has one obvious place to
+  // change if that ever needs to be restricted again.
+  const canControl = true;
 
   const requestNextGame = () => {
     if (!nextGame) return;
@@ -59,5 +61,5 @@ export function useGameTransitions({ code, room, currentGame }) {
     });
   };
 
-  return { nextGame, requestNextGame, isHost };
+  return { nextGame, requestNextGame, canControl };
 }

@@ -278,10 +278,12 @@ function createInitialState(seatCount, rng = Math.random) {
 
   const players = Array.from({ length: seatCount }, (_, seat) => makePlayer(seat));
 
-  const setupQueue = [
-    ...players.map((p) => p.seat),
-    ...players.map((p) => p.seat).reverse(),
-  ];
+  // Randomize who starts (and thus the whole snake-draft order) instead of
+  // always seating player 0 first -- rotate rather than fully shuffle so
+  // the draft's forward/reverse fairness structure is preserved.
+  const startOffset = Math.floor(rng() * seatCount);
+  const forwardOrder = Array.from({ length: seatCount }, (_, i) => (i + startOffset) % seatCount);
+  const setupQueue = [...forwardOrder, ...forwardOrder.slice().reverse()];
 
   return {
     board: generatedBoard,
@@ -325,7 +327,7 @@ function endSetupPlacement(state) {
   state.setupIndex += 1;
 
   if (state.setupIndex >= state.setupQueue.length) {
-    state.currentSeat = 0;
+    state.currentSeat = state.setupQueue[0];
     startMainTurn(state);
     return;
   }

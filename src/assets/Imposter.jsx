@@ -8,6 +8,7 @@ import PlayerStatus from "../components/PlayerStatus";
 import RulesModal from "../components/RulesModal";
 import { useNotifications } from "../hooks/useNotifications";
 import { useGameTransitions } from "../hooks/useGameTransitions";
+import { nameFor, logWithNicknames } from "../utils/nicknames";
 import "./Imposter.css";
 
 const CURRENT_GAME = "Imposter";
@@ -49,7 +50,7 @@ function NetworkedImposter({ code, room }) {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
 
-  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+  const { nextGame, requestNextGame, canControl } = useGameTransitions({
     code,
     room,
     currentGame: CURRENT_GAME,
@@ -101,7 +102,7 @@ function NetworkedImposter({ code, room }) {
       state={state}
       mySeat={seat}
       dispatch={dispatch}
-      isHost={isHost}
+      canControl={canControl}
       nextGame={nextGame}
       onNextGame={requestNextGame}
       onRematch={() => socket.emit("reset-game", { code })}
@@ -116,7 +117,7 @@ function formatCountdown(ms) {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-function ImposterGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, onRematch }) {
+function ImposterGame({ state, mySeat, dispatch, canControl, nextGame, onNextGame, onRematch }) {
   const [showRules, setShowRules] = useState(false);
   const [now, setNow] = useState(Date.now());
   const { notifications, push } = useNotifications();
@@ -166,7 +167,7 @@ function ImposterGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, o
       <VictoryScreen
         state={state}
         mySeat={mySeat}
-        isHost={isHost}
+        canControl={canControl}
         nextGame={nextGame}
         onNextGame={onNextGame}
         onRematch={onRematch}
@@ -193,7 +194,7 @@ function ImposterGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, o
 
       {state.lastElimination && (
         <div className={`imp-reveal ${state.lastElimination.wasImposter ? "danger" : "good"}`}>
-          Player {state.lastElimination.seat + 1} was voted out -- they{" "}
+          {nameFor(state, state.lastElimination.seat)} was voted out -- they{" "}
           {state.lastElimination.wasImposter ? "WERE an imposter!" : "were NOT an imposter."}
         </div>
       )}
@@ -233,7 +234,7 @@ function ImposterGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, o
               onClick={() => votable && handleVote(player.seat)}
             >
               <div className="imp-seat-name">
-                Player {player.seat + 1}
+                {nameFor(state, player.seat)}
                 {isMe ? " (you)" : ""}
               </div>
               {!player.alive ? (
@@ -257,7 +258,7 @@ function ImposterGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, o
         </div>
       )}
 
-      <GameLog entries={state.log} title="EVENTS" />
+      <GameLog entries={logWithNicknames(state.log, state)} title="EVENTS" />
 
       {showRules && (
         <RulesModal title="HOW TO PLAY" sections={RULES_SECTIONS} onClose={() => setShowRules(false)} />
@@ -266,7 +267,7 @@ function ImposterGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, o
   );
 }
 
-function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch }) {
+function VictoryScreen({ state, mySeat, canControl, nextGame, onNextGame, onRematch }) {
   const { winner, topicMain, topicImposter, imposterSeats } = state.finished;
 
   return (
@@ -290,7 +291,7 @@ function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch 
           {state.players.map((p) => (
             <div key={p.seat} className={`imp-final-row ${imposterSeats.includes(p.seat) ? "was-imposter" : ""}`}>
               <span>
-                Player {p.seat + 1}
+                {nameFor(state, p.seat)}
                 {p.seat === mySeat ? " (you)" : ""}
               </span>
               <strong>{imposterSeats.includes(p.seat) ? "IMPOSTER" : "CREW"}</strong>
@@ -298,7 +299,7 @@ function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch 
           ))}
         </div>
 
-        {isHost ? (
+        {canControl ? (
           <div className="imp-postgame-actions">
             <button className="imp-button" onClick={onRematch}>
               REMATCH

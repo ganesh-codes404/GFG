@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { socket } from "../socket";
 import { useGameTransitions } from "../hooks/useGameTransitions";
+import { nameFor } from "../utils/nicknames";
 import "./Checkers.css";
 
 const CURRENT_GAME = "Checkers";
@@ -35,7 +36,7 @@ function NetworkedCheckers({ code, room }) {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
 
-  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+  const { nextGame, requestNextGame, canControl } = useGameTransitions({
     code,
     room,
     currentGame: CURRENT_GAME,
@@ -87,7 +88,7 @@ function NetworkedCheckers({ code, room }) {
       state={state}
       mySeat={seat}
       dispatch={dispatch}
-      isHost={isHost}
+      canControl={canControl}
       nextGame={nextGame}
       onNextGame={requestNextGame}
       onRematch={() => socket.emit("reset-game", { code })}
@@ -95,7 +96,7 @@ function NetworkedCheckers({ code, room }) {
   );
 }
 
-function CheckersBoard({ state, mySeat, dispatch, isHost, nextGame, onNextGame, onRematch }) {
+function CheckersBoard({ state, mySeat, dispatch, canControl, nextGame, onNextGame, onRematch }) {
   const [selected, setSelected] = useState(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
 
@@ -227,9 +228,9 @@ function CheckersBoard({ state, mySeat, dispatch, isHost, nextGame, onNextGame, 
         <div className="chk-overlay">
           <div className="chk-popup chk-victory">
             <div className="chk-trophy">🏆</div>
-            <h1>Player {state.finished.winner + 1} Wins!</h1>
+            <h1>{nameFor(state, state.finished.winner)} Wins!</h1>
 
-            {isHost ? (
+            {canControl ? (
               <div className="chk-postgame-actions">
                 <button className="chk-button" onClick={onRematch}>
                   REMATCH

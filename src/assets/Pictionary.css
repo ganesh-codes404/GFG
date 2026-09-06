@@ -80,7 +80,13 @@ button, input { font-family: inherit; }
 .pic-score-chip.self { border-color: #ffe27a; }
 .pic-score-chip.drawing { border-color: #ff9a2e; box-shadow: 0 0 0 2px #ff9a2e55; }
 
-.pic-score-name { font-size: 9px; }
+.pic-score-name {
+  font-size: 9px;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .pic-score-value { font-size: 10px; color: #7de89a; }
 
 /* SETUP / CHOOSING PANELS */

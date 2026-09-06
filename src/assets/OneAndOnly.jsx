@@ -10,6 +10,7 @@ import RulesModal from "../components/RulesModal";
 import Modal from "../components/Modal";
 import { useNotifications } from "../hooks/useNotifications";
 import { useGameTransitions } from "../hooks/useGameTransitions";
+import { nameFor, logWithNicknames } from "../utils/nicknames";
 import "./OneAndOnly.css";
 
 const CURRENT_GAME = "One and Only";
@@ -83,7 +84,7 @@ function NetworkedOneAndOnly({ code, room }) {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
 
-  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+  const { nextGame, requestNextGame, canControl } = useGameTransitions({
     code,
     room,
     currentGame: CURRENT_GAME,
@@ -135,7 +136,7 @@ function NetworkedOneAndOnly({ code, room }) {
       state={state}
       mySeat={seat}
       dispatch={dispatch}
-      isHost={isHost}
+      canControl={canControl}
       nextGame={nextGame}
       onNextGame={requestNextGame}
       onRematch={() => socket.emit("reset-game", { code })}
@@ -143,7 +144,7 @@ function NetworkedOneAndOnly({ code, room }) {
   );
 }
 
-function OneAndOnlyGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, onRematch }) {
+function OneAndOnlyGame({ state, mySeat, dispatch, canControl, nextGame, onNextGame, onRematch }) {
   const [showRules, setShowRules] = useState(false);
   const [pendingWildCardId, setPendingWildCardId] = useState(null);
   const { notifications, push } = useNotifications();
@@ -195,7 +196,7 @@ function OneAndOnlyGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame,
       <VictoryScreen
         state={state}
         mySeat={mySeat}
-        isHost={isHost}
+        canControl={canControl}
         nextGame={nextGame}
         onNextGame={onNextGame}
         onRematch={onRematch}
@@ -244,7 +245,7 @@ function OneAndOnlyGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame,
         renderPlayer={(player) => (
           <div className={`ooo-seat ${player.seat === mySeat ? "self" : ""}`}>
             <div className="ooo-seat-name">
-              Player {player.seat + 1}
+              {nameFor(state, player.seat)}
               {player.seat === mySeat ? " (you)" : ""}
             </div>
             <div className="ooo-seat-count">{player.count} cards</div>
@@ -280,7 +281,7 @@ function OneAndOnlyGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame,
         </div>
       </footer>
 
-      <GameLog entries={state.log} title="EVENTS" />
+      <GameLog entries={logWithNicknames(state.log, state)} title="EVENTS" />
 
       {pendingWildCardId && (
         <Modal onClose={() => setPendingWildCardId(null)}>
@@ -330,17 +331,17 @@ function PlayingCard({ card }) {
   );
 }
 
-function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch }) {
+function VictoryScreen({ state, mySeat, canControl, nextGame, onNextGame, onRematch }) {
   return (
     <div className="ooo-screen ooo-gate">
       <div className="ooo-popup ooo-victory">
         <div className="ooo-trophy">🎉</div>
-        <h1>Player {state.winner + 1} Wins!</h1>
+        <h1>{nameFor(state, state.winner)} Wins!</h1>
         <div className="ooo-final-stats">
           {state.handCounts.map((count, seat) => (
             <div key={seat} className="ooo-final-row">
               <span>
-                Player {seat + 1}
+                {nameFor(state, seat)}
                 {seat === mySeat ? " (you)" : ""}
               </span>
               <strong>{count} cards left</strong>
@@ -348,7 +349,7 @@ function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch 
           ))}
         </div>
 
-        {isHost ? (
+        {canControl ? (
           <div className="ooo-postgame-actions">
             <button className="ooo-button" onClick={onRematch}>
               REMATCH

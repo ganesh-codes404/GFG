@@ -62,7 +62,7 @@ function NetworkedChess({ code, room }) {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
 
-  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+  const { nextGame, requestNextGame, canControl } = useGameTransitions({
     code,
     room,
     currentGame: CURRENT_GAME,
@@ -106,9 +106,9 @@ function NetworkedChess({ code, room }) {
     );
   }
 
-  const names = room
-    ? room.players.map((player) => player.nickname)
-    : ["White", "Black"];
+  const names =
+    state.seatNicknames ||
+    (room ? room.players.map((player) => player.nickname) : ["White", "Black"]);
 
   const sendMove = (from, to, promotion) => {
     socket.emit(
@@ -134,7 +134,7 @@ function NetworkedChess({ code, room }) {
       onMove={sendMove}
       onReset={resetGame}
       isNetworkedRoom={Boolean(room)}
-      isHost={isHost}
+      canControl={canControl}
       nextGame={nextGame}
       onNextGame={requestNextGame}
     />
@@ -150,7 +150,7 @@ function ChessBoard({
   onMove,
   onReset,
   isNetworkedRoom,
-  isHost,
+  canControl,
   nextGame,
   onNextGame,
 }) {
@@ -168,8 +168,6 @@ function ChessBoard({
   const [localFinished, setLocalFinished] = useState(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
 
-  const playerNames = { w: names[0], b: names[1] };
-
   // Normalize local vs. networked state into one shape the render below uses.
   let board, turn, isCheck, history, legalMovesForTurn, finished;
 
@@ -185,7 +183,13 @@ function ChessBoard({
     finished = localFinished;
   }
 
-  const mySeatColor = mySeat === 0 ? "w" : mySeat === 1 ? "b" : null;
+  // Which seat plays white is randomized server-side each game; local
+  // hot-seat demo mode has no such concept, so seat 0 is white there.
+  const whiteSeat = isNetworked ? networkState.whiteSeat : 0;
+  const blackSeat = whiteSeat === 0 ? 1 : 0;
+  const playerNames = { w: names[whiteSeat] ?? names[0], b: names[blackSeat] ?? names[1] };
+
+  const mySeatColor = isNetworked ? (mySeat === whiteSeat ? "w" : mySeat !== null ? "b" : null) : null;
   const myTurn = isNetworked ? turn === mySeatColor : true;
 
   const clearSelection = () => {
@@ -463,7 +467,7 @@ function ChessBoard({
             </h1>
 
             {isNetworkedRoom ? (
-              isHost ? (
+              canControl ? (
                 <div className="chess-postgame-actions">
                   <button className="chess-restart-winning" onClick={resetGame}>
                     REMATCH

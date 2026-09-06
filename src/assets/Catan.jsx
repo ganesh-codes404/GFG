@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { socket } from "../socket";
 import { useGameTransitions } from "../hooks/useGameTransitions";
+import { nameFor } from "../utils/nicknames";
 import "./Catan.css";
 
 const CURRENT_GAME = "Catan";
@@ -86,7 +87,7 @@ function NetworkedCatan({ code, room }) {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
 
-  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+  const { nextGame, requestNextGame, canControl } = useGameTransitions({
     code,
     room,
     currentGame: CURRENT_GAME,
@@ -152,7 +153,7 @@ function NetworkedCatan({ code, room }) {
       mySeat={seat}
       dispatch={(action, payload) => dispatch(action, payload)}
       toast={toast}
-      isHost={isHost}
+      canControl={canControl}
       nextGame={nextGame}
       onNextGame={requestNextGame}
       onRematch={() => socket.emit("reset-game", { code })}
@@ -190,7 +191,7 @@ function portOutwardPoint(mid, scale = 1.35) {
 
 /* ---------------- main game screen ---------------- */
 
-function CatanGame({ state, mySeat, dispatch, toast, isHost, nextGame, onNextGame, onRematch }) {
+function CatanGame({ state, mySeat, dispatch, toast, canControl, nextGame, onNextGame, onRematch }) {
   const [placementMode, setPlacementMode] = useState(null); // 'road' | 'settlement' | 'city' | null
   const [showTrade, setShowTrade] = useState(false);
   const [showRules, setShowRules] = useState(false);
@@ -326,7 +327,7 @@ function CatanGame({ state, mySeat, dispatch, toast, isHost, nextGame, onNextGam
       <VictoryScreen
         state={state}
         mySeat={mySeat}
-        isHost={isHost}
+        canControl={canControl}
         nextGame={nextGame}
         onNextGame={onNextGame}
         onRematch={onRematch}
@@ -342,7 +343,7 @@ function CatanGame({ state, mySeat, dispatch, toast, isHost, nextGame, onNextGam
         <div className="catan-header-right">
           <div className="catan-turn-indicator">
             <span>TURN</span>
-            <strong>{state.players.find((p) => p.seat === state.currentSeat)?.seat + 1}</strong>
+            <strong>{nameFor(state, state.currentSeat)}</strong>
           </div>
 
           <button className="catan-info-button" onClick={() => setShowRules(true)} title="Rules">
@@ -364,7 +365,7 @@ function CatanGame({ state, mySeat, dispatch, toast, isHost, nextGame, onNextGam
               style={{ "--player-color": player.color }}
             >
               <div className="catan-player-name">
-                Player {player.seat + 1}
+                {nameFor(state, player.seat)}
                 {player.seat === mySeat ? " (you)" : ""}
               </div>
 
@@ -558,7 +559,7 @@ function CatanGame({ state, mySeat, dispatch, toast, isHost, nextGame, onNextGam
             <div className="catan-setup-banner">
               {isMyTurn
                 ? `Place your ${isSetupSettlement ? "settlement" : "road"}.`
-                : `Waiting for Player ${state.currentSeat + 1}...`}
+                : `Waiting for ${nameFor(state, state.currentSeat)}...`}
             </div>
           )}
 
@@ -618,7 +619,7 @@ function CatanGame({ state, mySeat, dispatch, toast, isHost, nextGame, onNextGam
                   .map((trade) => (
                     <div key={trade.id} className="catan-trade-offer">
                       <div>
-                        Player {trade.fromSeat + 1} → Player {trade.toSeat + 1}
+                        {nameFor(state, trade.fromSeat)} → {nameFor(state, trade.toSeat)}
                       </div>
                       <div className="catan-trade-line">
                         Gives: {costEntries(trade.give).map(([r, q]) => `${q} ${RESOURCE_LABEL[r]}`).join(", ")}
@@ -759,7 +760,7 @@ function CatanGame({ state, mySeat, dispatch, toast, isHost, nextGame, onNextGam
             <div className="catan-steal-grid">
               {robberPrompt.eligible.map((seat) => (
                 <button key={seat} className="catan-button" onClick={() => confirmRobber(seat)}>
-                  Player {seat + 1}
+                  {nameFor(state, seat)}
                 </button>
               ))}
             </div>
@@ -963,7 +964,7 @@ function TradeModal({ state, mySeat, myResources, onClose, dispatch }) {
                     className={toSeat === p.seat ? "selected" : ""}
                     onClick={() => setToSeat(p.seat)}
                   >
-                    Player {p.seat + 1}
+                    {nameFor(state, p.seat)}
                   </button>
                 ))}
             </div>
@@ -1103,20 +1104,20 @@ function RulesModal({ onClose }) {
   );
 }
 
-function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch }) {
+function VictoryScreen({ state, mySeat, canControl, nextGame, onNextGame, onRematch }) {
   const winner = state.players.find((p) => p.seat === state.winner);
 
   return (
     <div className="catan-screen catan-gate">
       <div className="catan-popup catan-victory">
         <div className="catan-trophy">🏆</div>
-        <h1>Player {state.winner + 1} Wins!</h1>
+        <h1>{nameFor(state, state.winner)} Wins!</h1>
         <p>{winner?.victoryPoints} victory points</p>
 
         <div className="catan-final-stats">
           {state.players.map((p) => (
             <div key={p.seat} className="catan-final-player" style={{ "--player-color": p.color }}>
-              <span>Player {p.seat + 1}{p.seat === mySeat ? " (you)" : ""}</span>
+              <span>{nameFor(state, p.seat)}{p.seat === mySeat ? " (you)" : ""}</span>
               <strong>{p.victoryPoints} VP</strong>
               <small>
                 🛣 {p.roads.length} · 🏠 {p.settlements.length} · 🏛 {p.cities.length}
@@ -1125,7 +1126,7 @@ function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch 
           ))}
         </div>
 
-        {isHost ? (
+        {canControl ? (
           <div className="catan-postgame-actions">
             <button className="catan-button" onClick={onRematch}>
               REMATCH

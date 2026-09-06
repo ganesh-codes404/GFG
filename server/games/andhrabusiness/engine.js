@@ -18,8 +18,10 @@ const COLORS = ["#e74c3c", "#3498db", "#f1c40f", "#2ecc71", "#9b59b6", "#e67e22"
 // buy/develop decision it triggers is answered), the server waits this long
 // before automatically passing to the next player. That pause is also the
 // window where TRADE and developing OTHER properties remain available.
-const DECISION_TIME_MS = 15 * 1000;
-const TURN_END_DELAY_MS = 6 * 1000;
+// 30s per person, both for making a buy/develop call and for the
+// post-decision window before the turn auto-advances.
+const DECISION_TIME_MS = 30 * 1000;
+const TURN_END_DELAY_MS = 30 * 1000;
 
 function fail(message) {
   throw new Error(message);
@@ -165,9 +167,8 @@ function createInitialState(seatCount, rng = Math.random) {
   return {
     players,
     properties,
-    eventDeck: shuffle(EVENT_CARDS, rng),
     communityDeck: shuffle(COMMUNITY_CARDS, rng),
-    currentSeat: 0,
+    currentSeat: Math.floor(rng() * seatCount),
     // roll | buy-decision | develop-decision | ending | debt | finished
     phase: "roll",
     lastRoll: null,
@@ -202,13 +203,28 @@ function sendToJail(state, seat, reason) {
   log(state, `${playerLabel(seat)} ${reason || "was sent to"} Traffic Halt.`);
 }
 
+// Event cards are picked deterministically off the dice total that landed
+// the player there (2-12), not off a shuffled deck -- so "what happens"
+// visibly follows from the roll instead of feeling arbitrary.
+function drawEventCardByRoll(state, seat) {
+  const total = state.lastRoll?.total ?? 2;
+  const card = EVENT_CARDS[(total - 2) % EVENT_CARDS.length];
+  log(state, `${playerLabel(seat)} rolled ${total} and drew: ${card.text}`);
+  applyCardEffect(state, seat, card);
+  checkDebt(state, seat);
+}
+
 function drawCard(state, seat, deckName) {
   const deck = state[deckName];
   const card = deck.shift();
   deck.push(card);
 
   log(state, `${playerLabel(seat)} drew: ${card.text}`);
+  applyCardEffect(state, seat, card);
+  checkDebt(state, seat);
+}
 
+function applyCardEffect(state, seat, card) {
   const player = state.players[seat];
 
   if (card.type === "collect") {
@@ -240,8 +256,6 @@ function drawCard(state, seat, deckName) {
     }
     player.cash -= total;
   }
-
-  checkDebt(state, seat);
 }
 
 function resolveLanding(state, seat) {
@@ -261,7 +275,7 @@ function resolveLanding(state, seat) {
   }
 
   if (space.type === "event") {
-    drawCard(state, seat, "eventDeck");
+    drawEventCardByRoll(state, seat);
     return;
   }
 
@@ -491,10 +505,8 @@ function handleUseJailCard(state, seat) {
 }
 
 function handleDevelop(state, seat, pos) {
-  if (state.phase !== "develop-decision" && state.phase !== "ending") {
-    fail("You can only develop right after landing, or during the pause before your turn ends.");
-  }
   if (seat !== state.currentSeat) fail("It's not your turn.");
+  if (state.phase === "debt") fail("Resolve your debt first.");
 
   const space = findSpace(pos);
   if (!space || space.type !== "property") fail("That's not a developable property.");

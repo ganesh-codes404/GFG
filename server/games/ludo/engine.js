@@ -47,17 +47,18 @@ function tokenStatus(steps) {
 }
 
 function createInitialState(seatCount, rng = Math.random) {
+  const startingSeat = Math.floor(rng() * seatCount);
   return {
     players: Array.from({ length: seatCount }, (_, seat) => ({
       seat,
       tokens: Array.from({ length: TOKENS_PER_PLAYER }, () => ({ steps: -1 })),
     })),
-    currentSeat: 0,
+    currentSeat: startingSeat,
     lastRoll: null,
     awaitingMove: false,
     consecutiveSixes: 0,
     winner: null,
-    log: [`Ludo begins! ${playerLabel(0)} rolls first -- roll a 6 to leave the yard.`],
+    log: [`Ludo begins! ${playerLabel(startingSeat)} rolls first -- roll a 6 to leave the yard.`],
     rng,
   };
 }

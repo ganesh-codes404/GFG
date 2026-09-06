@@ -6,6 +6,7 @@ import GameLog from "../components/GameLog";
 import RulesModal from "../components/RulesModal";
 import { useNotifications } from "../hooks/useNotifications";
 import { useGameTransitions } from "../hooks/useGameTransitions";
+import { nameFor, logWithNicknames } from "../utils/nicknames";
 import "./Pictionary.css";
 
 const CURRENT_GAME = "Pictionary";
@@ -59,7 +60,7 @@ function NetworkedPictionary({ code, room }) {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
 
-  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+  const { nextGame, requestNextGame, canControl } = useGameTransitions({
     code,
     room,
     currentGame: CURRENT_GAME,
@@ -111,7 +112,7 @@ function NetworkedPictionary({ code, room }) {
       state={state}
       mySeat={seat}
       dispatch={dispatch}
-      isHost={isHost}
+      canControl={canControl}
       nextGame={nextGame}
       onNextGame={requestNextGame}
       onRematch={() => socket.emit("reset-game", { code })}
@@ -123,7 +124,7 @@ function formatCountdown(ms) {
   return String(Math.max(0, Math.ceil(ms / 1000)));
 }
 
-function PictionaryGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, onRematch }) {
+function PictionaryGame({ state, mySeat, dispatch, canControl, nextGame, onNextGame, onRematch }) {
   const [showRules, setShowRules] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [guessText, setGuessText] = useState("");
@@ -255,7 +256,7 @@ function PictionaryGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame,
       <VictoryScreen
         state={state}
         mySeat={mySeat}
-        isHost={isHost}
+        canControl={canControl}
         nextGame={nextGame}
         onNextGame={onNextGame}
         onRematch={onRematch}
@@ -288,7 +289,7 @@ function PictionaryGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame,
           >
             <span className="pic-score-name">
               {seat === state.currentDrawer && "✏️ "}
-              P{seat + 1}
+              {nameFor(state, seat)}
             </span>
             <span className="pic-score-value">{state.scores[seat]}</span>
             <ActionNotification notifications={notifications.filter((n) => n.seat === seat)} />
@@ -297,7 +298,7 @@ function PictionaryGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame,
       </div>
 
       {state.phase === "setup" && (
-        <SetupPanel isHost={isHost} onSetRounds={handleSetRounds} />
+        <SetupPanel canControl={canControl} onSetRounds={handleSetRounds} />
       )}
 
       {state.phase === "choosing" && (
@@ -390,14 +391,14 @@ function PictionaryGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame,
           <div className="pic-guess-feed">
             {state.guessLog.slice(-8).map((g, i) => (
               <div key={i} className={`pic-guess-entry ${g.correct ? "correct" : ""}`}>
-                <strong>P{g.seat + 1}:</strong> {g.correct ? "guessed the word!" : g.text}
+                <strong>{nameFor(state, g.seat)}:</strong> {g.correct ? "guessed the word!" : g.text}
               </div>
             ))}
           </div>
         </>
       )}
 
-      <GameLog entries={state.log} title="EVENTS" />
+      <GameLog entries={logWithNicknames(state.log, state)} title="EVENTS" />
 
       {showRules && (
         <RulesModal title="HOW TO PLAY" sections={RULES_SECTIONS} onClose={() => setShowRules(false)} />
@@ -406,10 +407,10 @@ function PictionaryGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame,
   );
 }
 
-function SetupPanel({ isHost, onSetRounds }) {
+function SetupPanel({ canControl, onSetRounds }) {
   const [rounds, setRounds] = useState(3);
 
-  if (!isHost) {
+  if (!canControl) {
     return (
       <div className="pic-setup">
         <p>Waiting for the host to choose how many rounds to play...</p>
@@ -442,7 +443,7 @@ function ChoosingPanel({ state, onChooseWord }) {
   if (!state.isDrawer) {
     return (
       <div className="pic-setup">
-        <p>Player {state.currentDrawer + 1} is choosing a word...</p>
+        <p>{nameFor(state, state.currentDrawer)} is choosing a word...</p>
       </div>
     );
   }
@@ -461,7 +462,7 @@ function ChoosingPanel({ state, onChooseWord }) {
   );
 }
 
-function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch }) {
+function VictoryScreen({ state, mySeat, canControl, nextGame, onNextGame, onRematch }) {
   const ranked = state.scores
     .map((score, seat) => ({ seat, score }))
     .sort((a, b) => b.score - a.score);
@@ -470,12 +471,12 @@ function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch 
     <div className="pic-screen pic-gate">
       <div className="pic-popup pic-victory">
         <div className="pic-trophy">🏆</div>
-        <h1>Player {state.finished.winner + 1} Wins!</h1>
+        <h1>{nameFor(state, state.finished.winner)} Wins!</h1>
         <div className="pic-final-stats">
           {ranked.map((p, i) => (
             <div key={p.seat} className="pic-final-row">
               <span>
-                #{i + 1} Player {p.seat + 1}
+                #{i + 1} {nameFor(state, p.seat)}
                 {p.seat === mySeat ? " (you)" : ""}
               </span>
               <strong>{p.score} pts</strong>
@@ -483,7 +484,7 @@ function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch 
           ))}
         </div>
 
-        {isHost ? (
+        {canControl ? (
           <div className="pic-postgame-actions">
             <button className="pic-button" onClick={onRematch}>
               REMATCH

@@ -128,7 +128,7 @@ function createInitialState(seatCount, rng = Math.random) {
     drawPile: rest,
     discardPile: [starter],
     activeColor: starter.color,
-    currentSeat: 0,
+    currentSeat: Math.floor(rng() * seatCount),
     direction: 1,
     hasDrawnThisTurn: false,
     winner: null,

@@ -80,7 +80,7 @@ function NetworkedConnect4({ code, room }) {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
 
-  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+  const { nextGame, requestNextGame, canControl } = useGameTransitions({
     code,
     room,
     currentGame: CURRENT_GAME,
@@ -124,9 +124,9 @@ function NetworkedConnect4({ code, room }) {
     );
   }
 
-  const names = room
-    ? room.players.map((player) => player.nickname)
-    : ["Player 1", "Player 2"];
+  const names =
+    state.seatNicknames ||
+    (room ? room.players.map((player) => player.nickname) : ["Player 1", "Player 2"]);
 
   const dropDisc = (col) => {
     socket.emit(
@@ -152,7 +152,7 @@ function NetworkedConnect4({ code, room }) {
       onDrop={dropDisc}
       onReset={resetGame}
       isNetworkedRoom={Boolean(room)}
-      isHost={isHost}
+      canControl={canControl}
       nextGame={nextGame}
       onNextGame={requestNextGame}
     />
@@ -168,7 +168,7 @@ function Connect4Board({
   onDrop,
   onReset,
   isNetworkedRoom,
-  isHost,
+  canControl,
   nextGame,
   onNextGame,
 }) {
@@ -384,7 +384,7 @@ function Connect4Board({
             </p>
 
             {isNetworkedRoom ? (
-              isHost ? (
+              canControl ? (
                 <div className="c4-postgame-actions">
                   <button className="c4-restart-winning" onClick={resetGame}>
                     REMATCH

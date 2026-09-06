@@ -1,7 +1,7 @@
 const { Chess } = require("chess.js");
 
-function seatColor(seatIndex) {
-  return seatIndex === 0 ? "w" : "b";
+function seatColor(state, seatIndex) {
+  return state.whiteSeat === seatIndex ? "w" : "b";
 }
 
 function determineEnding(engine) {
@@ -32,9 +32,10 @@ function determineEnding(engine) {
 module.exports = {
   requiredPlayers: 2,
 
-  createInitialState() {
+  createInitialState(seatCount, rng = Math.random) {
     return {
       engine: new Chess(),
+      whiteSeat: Math.floor(rng() * 2),
       finished: null,
     };
   },
@@ -48,7 +49,7 @@ module.exports = {
       throw new Error(`Unknown action: ${action}`);
     }
 
-    if (state.engine.turn() !== seatColor(seatIndex)) {
+    if (state.engine.turn() !== seatColor(state, seatIndex)) {
       throw new Error("It's not your turn.");
     }
 
@@ -70,6 +71,7 @@ module.exports = {
     return {
       board: state.engine.board(),
       turn: state.engine.turn(),
+      whiteSeat: state.whiteSeat,
       isCheck: state.engine.isCheck(),
       history: state.engine.history(),
       moves: state.finished ? [] : state.engine.moves({ verbose: true }),

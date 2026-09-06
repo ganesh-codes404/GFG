@@ -46,12 +46,14 @@ function pickWordChoices(state) {
 }
 
 function createInitialState(seatCount, rng = Math.random) {
+  const startOffset = Math.floor(rng() * seatCount);
   return {
     seatCount,
     phase: "setup",
     numRounds: null,
     turnIndex: 0,
-    currentDrawer: 0,
+    startOffset,
+    currentDrawer: startOffset,
     wordChoices: [],
     secretWord: null,
     usedWords: [],
@@ -232,7 +234,7 @@ function advanceTime(state) {
       state.winner = state.scores.findIndex((s) => s === maxScore);
       log(state, `${playerLabel(state.winner)} wins with ${maxScore} points!`);
     } else {
-      state.currentDrawer = state.turnIndex % state.seatCount;
+      state.currentDrawer = (state.turnIndex + state.startOffset) % state.seatCount;
       startChoosingPhase(state);
     }
 

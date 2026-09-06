@@ -9,6 +9,7 @@ import RulesModal from "../components/RulesModal";
 import Dice from "../components/Dice";
 import { useNotifications } from "../hooks/useNotifications";
 import { useGameTransitions } from "../hooks/useGameTransitions";
+import { nameFor, logWithNicknames } from "../utils/nicknames";
 import "./SnakesAndLadders.css";
 
 const CURRENT_GAME = "Snakes and Ladders";
@@ -68,7 +69,7 @@ function NetworkedSnakesAndLadders({ code, room }) {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
 
-  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+  const { nextGame, requestNextGame, canControl } = useGameTransitions({
     code,
     room,
     currentGame: CURRENT_GAME,
@@ -120,7 +121,7 @@ function NetworkedSnakesAndLadders({ code, room }) {
       state={state}
       mySeat={seat}
       dispatch={dispatch}
-      isHost={isHost}
+      canControl={canControl}
       nextGame={nextGame}
       onNextGame={requestNextGame}
       onRematch={() => socket.emit("reset-game", { code })}
@@ -128,7 +129,7 @@ function NetworkedSnakesAndLadders({ code, room }) {
   );
 }
 
-function SnakesAndLaddersGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, onRematch }) {
+function SnakesAndLaddersGame({ state, mySeat, dispatch, canControl, nextGame, onNextGame, onRematch }) {
   const [showRules, setShowRules] = useState(false);
   const [rolling, setRolling] = useState(false);
   const { notifications, push } = useNotifications();
@@ -161,7 +162,7 @@ function SnakesAndLaddersGame({ state, mySeat, dispatch, isHost, nextGame, onNex
       <VictoryScreen
         state={state}
         mySeat={mySeat}
-        isHost={isHost}
+        canControl={canControl}
         nextGame={nextGame}
         onNextGame={onNextGame}
         onRematch={onRematch}
@@ -193,7 +194,7 @@ function SnakesAndLaddersGame({ state, mySeat, dispatch, isHost, nextGame, onNex
           >
             <div className="snl-seat-name">
               <span className="snl-seat-swatch" />
-              Player {player.seat + 1}
+              {nameFor(state, player.seat)}
               {player.seat === mySeat ? " (you)" : ""}
             </div>
             <div className="snl-seat-position">Square {player.position}</div>
@@ -210,7 +211,7 @@ function SnakesAndLaddersGame({ state, mySeat, dispatch, isHost, nextGame, onNex
         </button>
       </div>
 
-      <GameLog entries={state.log} title="EVENTS" />
+      <GameLog entries={logWithNicknames(state.log, state)} title="EVENTS" />
 
       {showRules && (
         <RulesModal title="HOW TO PLAY" sections={RULES_SECTIONS} onClose={() => setShowRules(false)} />
@@ -285,17 +286,17 @@ function Board({ state }) {
   );
 }
 
-function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch }) {
+function VictoryScreen({ state, mySeat, canControl, nextGame, onNextGame, onRematch }) {
   return (
     <div className="snl-screen snl-gate">
       <div className="snl-popup snl-victory">
         <div className="snl-trophy">🎉</div>
-        <h1>Player {state.winner + 1} Wins!</h1>
+        <h1>{nameFor(state, state.winner)} Wins!</h1>
         <div className="snl-final-stats">
           {state.players.map((p) => (
             <div key={p.seat} className="snl-final-row" style={{ "--player-color": PLAYER_COLORS[p.seat] }}>
               <span>
-                Player {p.seat + 1}
+                {nameFor(state, p.seat)}
                 {p.seat === mySeat ? " (you)" : ""}
               </span>
               <strong>Square {p.position}</strong>
@@ -303,7 +304,7 @@ function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch 
           ))}
         </div>
 
-        {isHost ? (
+        {canControl ? (
           <div className="snl-postgame-actions">
             <button className="snl-button" onClick={onRematch}>
               REMATCH

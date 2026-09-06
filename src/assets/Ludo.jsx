@@ -9,6 +9,7 @@ import RulesModal from "../components/RulesModal";
 import Dice from "../components/Dice";
 import { useNotifications } from "../hooks/useNotifications";
 import { useGameTransitions } from "../hooks/useGameTransitions";
+import { nameFor, logWithNicknames } from "../utils/nicknames";
 import "./Ludo.css";
 
 const CURRENT_GAME = "Ludo";
@@ -73,7 +74,7 @@ function NetworkedLudo({ code, room }) {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
 
-  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+  const { nextGame, requestNextGame, canControl } = useGameTransitions({
     code,
     room,
     currentGame: CURRENT_GAME,
@@ -125,7 +126,7 @@ function NetworkedLudo({ code, room }) {
       state={state}
       mySeat={seat}
       dispatch={dispatch}
-      isHost={isHost}
+      canControl={canControl}
       nextGame={nextGame}
       onNextGame={requestNextGame}
       onRematch={() => socket.emit("reset-game", { code })}
@@ -133,7 +134,7 @@ function NetworkedLudo({ code, room }) {
   );
 }
 
-function LudoGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, onRematch }) {
+function LudoGame({ state, mySeat, dispatch, canControl, nextGame, onNextGame, onRematch }) {
   const [showRules, setShowRules] = useState(false);
   const [rolling, setRolling] = useState(false);
   const { notifications, push } = useNotifications();
@@ -171,7 +172,7 @@ function LudoGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, onRem
       <VictoryScreen
         state={state}
         mySeat={mySeat}
-        isHost={isHost}
+        canControl={canControl}
         nextGame={nextGame}
         onNextGame={onNextGame}
         onRematch={onRematch}
@@ -201,7 +202,7 @@ function LudoGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, onRem
           >
             <div className="ldo-seat-name">
               <span className="ldo-seat-swatch" />
-              {state.colorNames[player.seat]}
+              {nameFor(state, player.seat)}
               {player.seat === mySeat ? " (you)" : ""}
             </div>
             <TokenPips tokens={player.tokens} />
@@ -241,7 +242,7 @@ function LudoGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, onRem
         )}
       </div>
 
-      <GameLog entries={state.log} title="EVENTS" />
+      <GameLog entries={logWithNicknames(state.log, state)} title="EVENTS" />
 
       {showRules && (
         <RulesModal title="HOW TO PLAY" sections={RULES_SECTIONS} onClose={() => setShowRules(false)} />
@@ -326,19 +327,19 @@ function Board({ state }) {
   );
 }
 
-function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch }) {
+function VictoryScreen({ state, mySeat, canControl, nextGame, onNextGame, onRematch }) {
   return (
     <div className="ldo-screen ldo-gate">
       <div className="ldo-popup ldo-victory">
         <div className="ldo-trophy">🎉</div>
         <h1 style={{ color: state.colorHex[state.winner] }}>
-          {state.colorNames[state.winner]} Wins!
+          {nameFor(state, state.winner)} Wins!
         </h1>
         <div className="ldo-final-stats">
           {state.players.map((p) => (
             <div key={p.seat} className="ldo-final-row" style={{ "--player-color": state.colorHex[p.seat] }}>
               <span>
-                {state.colorNames[p.seat]}
+                {nameFor(state, p.seat)}
                 {p.seat === mySeat ? " (you)" : ""}
               </span>
               <strong>{p.tokens.filter((t) => t.status === "home").length}/4 home</strong>
@@ -346,7 +347,7 @@ function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch 
           ))}
         </div>
 
-        {isHost ? (
+        {canControl ? (
           <div className="ldo-postgame-actions">
             <button className="ldo-button" onClick={onRematch}>
               REMATCH

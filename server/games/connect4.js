@@ -46,10 +46,10 @@ function findWinningLine(board, row, col, player) {
 module.exports = {
   requiredPlayers: 2,
 
-  createInitialState() {
+  createInitialState(seatCount, rng = Math.random) {
     return {
       board: Array.from({ length: ROWS }, () => Array(COLS).fill(null)),
-      currentPlayer: 0,
+      currentPlayer: Math.floor(rng() * 2),
       winLine: null,
       finished: null,
     };

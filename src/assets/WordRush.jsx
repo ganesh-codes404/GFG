@@ -8,6 +8,7 @@ import PlayerStatus from "../components/PlayerStatus";
 import RulesModal from "../components/RulesModal";
 import { useNotifications } from "../hooks/useNotifications";
 import { useGameTransitions } from "../hooks/useGameTransitions";
+import { nameFor, logWithNicknames } from "../utils/nicknames";
 import "./WordRush.css";
 
 const CURRENT_GAME = "Word Rush";
@@ -73,7 +74,7 @@ function NetworkedWordRush({ code, room }) {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
 
-  const { nextGame, requestNextGame, isHost } = useGameTransitions({
+  const { nextGame, requestNextGame, canControl } = useGameTransitions({
     code,
     room,
     currentGame: CURRENT_GAME,
@@ -125,7 +126,7 @@ function NetworkedWordRush({ code, room }) {
       state={state}
       mySeat={seat}
       dispatch={dispatch}
-      isHost={isHost}
+      canControl={canControl}
       nextGame={nextGame}
       onNextGame={requestNextGame}
       onRematch={() => socket.emit("reset-game", { code })}
@@ -133,7 +134,7 @@ function NetworkedWordRush({ code, room }) {
   );
 }
 
-function WordRushGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, onRematch }) {
+function WordRushGame({ state, mySeat, dispatch, canControl, nextGame, onNextGame, onRematch }) {
   const [showRules, setShowRules] = useState(false);
   const [guess, setGuess] = useState("");
   const { notifications, push } = useNotifications();
@@ -178,7 +179,7 @@ function WordRushGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, o
       <VictoryScreen
         state={state}
         mySeat={mySeat}
-        isHost={isHost}
+        canControl={canControl}
         nextGame={nextGame}
         onNextGame={onNextGame}
         onRematch={onRematch}
@@ -242,7 +243,7 @@ function WordRushGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, o
                   The word was <strong>{state.secretWord?.toUpperCase()}</strong>
                 </p>
                 {state.roundWinner !== null ? (
-                  <p>Player {state.roundWinner + 1} won the round!</p>
+                  <p>{nameFor(state, state.roundWinner)} won the round!</p>
                 ) : (
                   <p>Nobody solved it this round.</p>
                 )}
@@ -261,7 +262,7 @@ function WordRushGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, o
           return (
             <div className={`wr-seat ${isMe ? "self" : ""}`}>
               <div className="wr-seat-name">
-                Player {player.seat + 1}
+                {nameFor(state, player.seat)}
                 {isMe ? " (you)" : ""}
               </div>
               <div className="wr-seat-score">{scoreEntry?.score ?? 0} pts</div>
@@ -288,7 +289,7 @@ function WordRushGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, o
         }}
       />
 
-      <GameLog entries={state.log} title="EVENTS" />
+      <GameLog entries={logWithNicknames(state.log, state)} title="EVENTS" />
 
       {showRules && (
         <RulesModal title="HOW TO PLAY" sections={RULES_SECTIONS} onClose={() => setShowRules(false)} />
@@ -297,19 +298,19 @@ function WordRushGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame, o
   );
 }
 
-function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch }) {
+function VictoryScreen({ state, mySeat, canControl, nextGame, onNextGame, onRematch }) {
   const sorted = [...state.scores].sort((a, b) => b.score - a.score);
 
   return (
     <div className="wr-screen wr-gate">
       <div className="wr-popup wr-victory">
         <div className="wr-trophy">🎉</div>
-        <h1>Player {state.winner + 1} Wins!</h1>
+        <h1>{nameFor(state, state.winner)} Wins!</h1>
         <div className="wr-final-stats">
           {sorted.map((s) => (
             <div key={s.seat} className="wr-final-row">
               <span>
-                Player {s.seat + 1}
+                {nameFor(state, s.seat)}
                 {s.seat === mySeat ? " (you)" : ""}
               </span>
               <strong>{s.score} pts</strong>
@@ -317,7 +318,7 @@ function VictoryScreen({ state, mySeat, isHost, nextGame, onNextGame, onRematch 
           ))}
         </div>
 
-        {isHost ? (
+        {canControl ? (
           <div className="wr-postgame-actions">
             <button className="wr-button" onClick={onRematch}>
               REMATCH

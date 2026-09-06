@@ -77,11 +77,29 @@ function publicRoom(room) {
   };
 }
 
+// Every engine only knows seats, not nicknames -- attaching this generically
+// here (rather than teaching all 11 engines about it) is what lets every
+// game's client show "Alex" instead of "Player 3". Falls back to the seat
+// number for a seat whose player has disconnected and not reconnected yet.
+function seatNicknamesFor(room) {
+  return room.game.seats.map((playerId, seatIndex) => {
+    const player = room.players.find((p) => p.id === playerId);
+    return player ? player.nickname : `Player ${seatIndex + 1}`;
+  });
+}
+
+function viewForSeat(room, seatIndex) {
+  return {
+    ...room.game.engine.viewFor(room.game.state, seatIndex),
+    seatNicknames: seatNicknamesFor(room),
+  };
+}
+
 // Broadcasts the current game state to every seat, each getting its own
 // view (for games with hidden information like who's drawing/guessing).
 function broadcastGameState(room) {
   room.game.seats.forEach((playerId, seatIndex) => {
-    io.to(playerId).emit("game-state", room.game.engine.viewFor(room.game.state, seatIndex));
+    io.to(playerId).emit("game-state", viewForSeat(room, seatIndex));
   });
 }
 
@@ -266,9 +284,9 @@ io.on("connection", (socket) => {
     callback?.({ success: true, room: publicRoom(room) });
   });
 
-  // START GAME (host only) -- everyone in the room gets pushed to the
-  // game's route together. Games with a server engine (see server/games)
-  // also get an authoritative session created here.
+  // START GAME (any player in the room, not just the host) -- everyone
+  // gets pushed to the game's route together. Games with a server engine
+  // (see server/games) also get an authoritative session created here.
   socket.on("start-game", ({ code, game }, callback) => {
     const room = rooms.get((code || "").trim().toUpperCase());
 
@@ -279,8 +297,8 @@ io.on("connection", (socket) => {
 
     const requester = room.players.find((player) => player.id === socket.id);
 
-    if (!requester?.isHost) {
-      callback?.({ success: false, error: "NOT_HOST" });
+    if (!requester) {
+      callback?.({ success: false, error: "NOT_IN_ROOM" });
       return;
     }
 
@@ -343,7 +361,7 @@ io.on("connection", (socket) => {
     callback?.({
       success: true,
       seat,
-      state: room.game.engine.viewFor(room.game.state, seat),
+      state: viewForSeat(room, seat),
     });
   });
 

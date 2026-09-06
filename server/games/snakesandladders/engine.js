@@ -73,7 +73,7 @@ function createInitialState(seatCount, rng = Math.random) {
   return {
     board: generateBoard(rng),
     players: Array.from({ length: seatCount }, (_, seat) => ({ seat, position: 0 })),
-    currentSeat: 0,
+    currentSeat: Math.floor(rng() * seatCount),
     lastRoll: null,
     winner: null,
     log: ["Snakes and Ladders begins! Roll to move."],

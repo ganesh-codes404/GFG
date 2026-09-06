@@ -266,7 +266,7 @@ function AndhraBusinessGame({ state, mySeat, dispatch, canControl, nextGame, onN
   const displayPositions = usePlayerDisplayPositions(state.players);
   const cashDeltas = useCashDeltas(state.players);
 
-  const deadline = state.decisionDeadline || state.turnEndDeadline || null;
+  const deadline = state.decisionDeadline || null;
 
   useEffect(() => {
     if (!deadline) return;
@@ -354,6 +354,7 @@ function AndhraBusinessGame({ state, mySeat, dispatch, canControl, nextGame, onN
                 style={{ "--player-color": player.color }}
               >
                 <div className="ab-player-card-name">
+                  <span className={`ab-player-swatch ab-shape-${player.seat}`} />
                   {nameFor(state, player.seat)}
                   {player.seat === mySeat ? " (you)" : ""}
                 </div>
@@ -396,7 +397,7 @@ function AndhraBusinessGame({ state, mySeat, dispatch, canControl, nextGame, onN
 
           {deadline && (
             <div className="ab-turn-timer">
-              {state.phase === "ending" ? "NEXT TURN IN" : "DECIDE WITHIN"}
+              DECIDE WITHIN
               <strong>{formatCountdown(deadline - now)}s</strong>
             </div>
           )}
@@ -605,7 +606,7 @@ function Board({ state, displayPositions }) {
             {space.price && <div className="ab-cell-price">{formatRupees(space.price)}</div>}
             {prop?.owner !== null && prop?.owner !== undefined && (
               <div
-                className="ab-cell-owner"
+                className={`ab-cell-owner ab-shape-${prop.owner}`}
                 style={{ background: state.players[prop.owner]?.color }}
               />
             )}
@@ -660,7 +661,7 @@ function Board({ state, displayPositions }) {
           return (
             <div
               key={p.seat}
-              className="ab-token-moving"
+              className={`ab-token-moving ab-shape-${p.seat}`}
               style={{
                 left: `${leftPct}%`,
                 top: `${topPct}%`,
@@ -849,6 +850,7 @@ function VictoryScreen({ state, mySeat, canControl, nextGame, onNextGame, onRema
           {state.players.map((p, i) => (
             <div key={p.seat} className="ab-final-row" style={{ "--player-color": p.color }}>
               <span>
+                <span className={`ab-player-swatch ab-shape-${p.seat}`} />
                 {nameFor(state, p.seat)}
                 {p.seat === mySeat ? " (you)" : ""}
                 {p.bankrupt ? " (bankrupt)" : ""}

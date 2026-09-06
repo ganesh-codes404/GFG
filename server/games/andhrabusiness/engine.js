@@ -16,12 +16,10 @@ const COLORS = ["#e74c3c", "#3498db", "#f1c40f", "#2ecc71", "#9b59b6", "#e67e22"
 
 // Turns are no longer ended by the player -- after a roll resolves, the
 // server waits this long for a buy/develop decision before auto-skipping it.
+// The instant the move is actually done (decision answered or timed out, or
+// there was nothing to decide in the first place), the turn passes to the
+// next player right away -- no additional wait.
 const DECISION_TIME_MS = 30 * 1000;
-// Once the player's move is actually done for the turn (decision answered,
-// or nothing to decide in the first place), there's nothing left for them to
-// do -- this is just a short beat to read the outcome before passing to the
-// next player, not another 30s wait.
-const TURN_END_DELAY_MS = 3 * 1000;
 
 function fail(message) {
   throw new Error(message);
@@ -73,14 +71,12 @@ function enterPostLandingPhase(state, seat) {
   if (["property", "transport", "utility"].includes(space.type) && prop && prop.owner === null) {
     state.phase = "buy-decision";
     state.decisionDeadline = Date.now() + DECISION_TIME_MS;
-    state.turnEndDeadline = null;
     return;
   }
 
   if (canDevelopHere(state, seat, space.pos)) {
     state.phase = "develop-decision";
     state.decisionDeadline = Date.now() + DECISION_TIME_MS;
-    state.turnEndDeadline = null;
     return;
   }
 
@@ -91,18 +87,11 @@ function enterPostLandingPhase(state, seat) {
   advanceToNextTurn(state, seat);
 }
 
-function beginTurnEndCountdown(state) {
-  state.phase = "ending";
-  state.decisionDeadline = null;
-  state.turnEndDeadline = Date.now() + TURN_END_DELAY_MS;
-}
-
 function advanceToNextTurn(state, seat) {
   state.players[seat].doublesStreak = 0;
   state.currentSeat = nextActiveSeat(state, seat);
   state.turnNumber += 1;
   state.phase = "roll";
-  state.turnEndDeadline = null;
   state.decisionDeadline = null;
 }
 
@@ -176,14 +165,13 @@ function createInitialState(seatCount, rng = Math.random) {
     properties,
     communityDeck: shuffle(COMMUNITY_CARDS, rng),
     currentSeat: Math.floor(rng() * seatCount),
-    // roll | buy-decision | develop-decision | ending | debt | finished
+    // roll | buy-decision | develop-decision | debt | finished
     phase: "roll",
     lastRoll: null,
     pendingRent: null, // { pos, ownerSeat, amount }
     pendingCard: null,
     pendingDebt: null, // { amount, toSeat|null } -- forces sell/mortgage before continuing
     decisionDeadline: null, // buy/develop decision must be made by this time
-    turnEndDeadline: null, // turn auto-ends at this time once nothing is pending
     winner: null,
     turnNumber: 1,
     log: ["Andhra Business begins! Roll the dice to start."],
@@ -346,7 +334,6 @@ function checkDebt(state, seat) {
   state.pendingDebt = { seat, amount: -player.cash };
   state.phase = "debt";
   state.decisionDeadline = null;
-  state.turnEndDeadline = null;
   log(state, `${playerLabel(seat)} owes money and must mortgage or sell to cover it.`);
 }
 
@@ -378,7 +365,6 @@ function declareBankruptcy(state, seat) {
 
   const remaining = activePlayers(state);
   state.decisionDeadline = null;
-  state.turnEndDeadline = null;
 
   if (remaining.length === 1) {
     state.phase = "finished";
@@ -468,11 +454,11 @@ function handleBuyProperty(state, seat) {
   player.cash -= space.price;
   prop.owner = seat;
   log(state, `${playerLabel(seat)} bought ${space.name} for ₹${space.price.toLocaleString("en-IN")}.`);
-  beginTurnEndCountdown(state);
+  advanceToNextTurn(state, seat);
 }
 
-// Declining the just-landed buy or develop prompt -- either way, the turn's
-// auto-end countdown starts right after.
+// Declining the just-landed buy or develop prompt -- either way, the move is
+// done for the turn, so it passes to the next player right away.
 function handleSkipDecision(state, seat) {
   if (seat !== state.currentSeat) fail("It's not your turn.");
   if (state.phase !== "buy-decision" && state.phase !== "develop-decision") {
@@ -486,7 +472,7 @@ function handleSkipDecision(state, seat) {
     log(state, `${playerLabel(seat)} passed on developing ${space.name}.`);
   }
 
-  beginTurnEndCountdown(state);
+  advanceToNextTurn(state, seat);
 }
 
 function handlePayJailFine(state, seat) {
@@ -534,7 +520,7 @@ function handleDevelop(state, seat, pos) {
   prop.houses += 1;
   log(state, `${playerLabel(seat)} developed ${space.name} (level ${prop.houses}/5).`);
 
-  if (state.phase === "develop-decision") beginTurnEndCountdown(state);
+  if (state.phase === "develop-decision") advanceToNextTurn(state, seat);
 }
 
 function handleSellDevelopment(state, seat, pos) {
@@ -693,11 +679,11 @@ function applyAction(state, seat, action, payload) {
 }
 
 // Turns no longer wait on the player to end them -- a buy/develop decision
-// times out on its own, and the post-decision "ending" pause auto-advances
-// to the next player. This stays a no-op for every other phase.
+// times out on its own and the turn passes immediately, with no additional
+// wait once the move is actually done. This stays a no-op for every other
+// phase.
 function nextDeadline(state) {
   if (state.phase === "buy-decision" || state.phase === "develop-decision") return state.decisionDeadline;
-  if (state.phase === "ending") return state.turnEndDeadline;
   return null;
 }
 
@@ -712,11 +698,6 @@ function advanceTime(state) {
   ) {
     const space = findSpace(state.players[seat].position);
     log(state, `${playerLabel(seat)} ran out of time to decide on ${space.name}.`);
-    beginTurnEndCountdown(state);
-    return state;
-  }
-
-  if (state.phase === "ending" && state.turnEndDeadline !== null && now >= state.turnEndDeadline) {
     advanceToNextTurn(state, seat);
     return state;
   }
@@ -746,7 +727,6 @@ function viewFor(state, seat) {
     lastRoll: state.lastRoll,
     pendingDebt: state.pendingDebt,
     decisionDeadline: state.decisionDeadline,
-    turnEndDeadline: state.turnEndDeadline,
     tradeOffers: state.tradeOffers || [],
     winner: state.winner,
     turnNumber: state.turnNumber,

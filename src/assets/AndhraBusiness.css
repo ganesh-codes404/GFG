@@ -162,11 +162,27 @@ button, input { font-family: inherit; }
 .ab-player-card.bankrupt { opacity: 0.5; }
 
 .ab-player-card-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 11px;
   font-weight: 700;
   border-bottom: 3px solid var(--player-color, #7de89a);
   padding-bottom: 2px;
 }
+
+.ab-player-swatch {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  vertical-align: middle;
+  border: 1px solid #17101f;
+  background: var(--player-color, #7de89a);
+}
+
+.ab-player-card-name .ab-player-swatch { margin-right: 0; }
 
 .ab-player-card-cash { position: relative; font-size: 11px; color: #d9e8d9; margin-top: 3px; }
 .ab-player-card-bankrupt { font-size: 10px; color: #ff9c9c; margin-top: 3px; }
@@ -310,6 +326,17 @@ button, input { font-family: inherit; }
   border: 1px solid #17101f;
 }
 
+/* SEAT SHAPES -- color alone doesn't distinguish players for colorblind
+   readers, so every seat also gets a distinct silhouette, applied to both
+   the board tokens and the small ownership markers on property cells. */
+.ab-shape-0 { border-radius: 50%; } /* circle */
+.ab-shape-1 { border-radius: 0; clip-path: none; } /* square */
+.ab-shape-2 { border-radius: 0; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); } /* triangle */
+.ab-shape-3 { border-radius: 0; clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); } /* diamond */
+.ab-shape-4 { border-radius: 0; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); } /* star */
+.ab-shape-5 { border-radius: 0; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); } /* pentagon */
+.ab-shape-6 { border-radius: 0; clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); } /* hexagon */
+
 .ab-cell-houses {
   font-size: 6px;
   line-height: 1;
@@ -345,11 +372,10 @@ button, input { font-family: inherit; }
 
 .ab-token-moving {
   position: absolute;
-  width: 3.2%;
-  height: 3.2%;
-  min-width: 9px;
-  min-height: 9px;
-  border-radius: 50%;
+  width: 3.6%;
+  height: 3.6%;
+  min-width: 11px;
+  min-height: 11px;
   border: 2px solid #17101f;
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
   transform: translate(-50%, -50%);
@@ -658,7 +684,7 @@ button, input { font-family: inherit; }
      viewport height too, not just width, so a wide-but-short window
      doesn't force scrolling to see the bottom of the board -- aspect-
      ratio:1 means shrinking the width shrinks the height to match. */
-  .ab-board { width: min(880px, 100%, calc(100dvh - 120px)); }
+  .ab-board { width: min(880px, 100%, calc(100dvh - 150px)); }
 }
 
 @media (max-width: 900px) {

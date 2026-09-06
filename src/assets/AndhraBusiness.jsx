@@ -15,15 +15,32 @@ import "./AndhraBusiness.css";
 
 const CURRENT_GAME = "Andhra Business";
 
-const GROUP_TYPES = ["property", "transport", "utility"];
+const BOARD_SIZE = 40;
+const MOVE_STEP_MS = 90;
+const MAX_ANIMATED_HOPS = 12; // normal dice rolls only go 2-12 -- anything
+// longer (cards, jail teleports) just jumps straight there instead of a
+// long crawl around the board.
+
+// Percent-of-board offsets for up to 7 tokens sharing one cell, small
+// enough to stay well inside a single ~9%-wide cell.
+const TOKEN_FAN_OFFSETS = [
+  [0, 0],
+  [-2.2, -2.2],
+  [2.2, -2.2],
+  [-2.2, 2.2],
+  [2.2, 2.2],
+  [0, -3.2],
+  [0, 3.2],
+];
 
 const RULES_SECTIONS = [
   { heading: "Objective", body: "Buy, rent, and trade your way to being the last player who isn't bankrupt." },
   { heading: "Dice", body: "Roll two dice each turn and move that many spaces around the board." },
-  { heading: "Buying", body: "Land on an unowned property, transport stop, or utility to buy it, or skip it." },
+  { heading: "Buying", body: "Land on an unowned property, transport stop, or utility and you'll be asked to buy or skip it." },
   { heading: "Rent", body: "Land on someone else's property and rent is charged automatically. Owning a full group doubles undeveloped rent." },
-  { heading: "Development", body: "Own a full group? Develop any property in it for higher rent, up to a hotel level." },
+  { heading: "Development", body: "Land on your own fully-owned-group property and you'll be asked to develop it. You can also develop other properties from the left panel." },
   { heading: "Trading", body: "Propose cash and/or properties to another player; they can accept, reject, or you can cancel first." },
+  { heading: "Turns", body: "Turns end automatically a few seconds after your buy/develop decision (or after landing, if there was nothing to decide) -- there's no manual end-turn." },
   { heading: "Events", body: "Event and Community spaces draw a card with a random effect -- money, movement, or jail." },
   { heading: "Bankruptcy", body: "Can't cover a debt even after mortgaging everything? You're out, and your properties return to the bank." },
 ];
@@ -43,6 +60,65 @@ function gridPosition(pos) {
   if (pos <= 20) return { row: 10 - (pos - 10), col: 0 };
   if (pos <= 30) return { row: 0, col: pos - 20 };
   return { row: pos - 30, col: 10 };
+}
+
+function formatCountdown(ms) {
+  return String(Math.max(0, Math.ceil(ms / 1000)));
+}
+
+// Animates each player's token hopping through the intermediate squares of a
+// normal dice move instead of teleporting straight to the new position. A
+// ref (not state) tracks the "from" position so overlapping updates don't
+// read a stale value.
+function usePlayerDisplayPositions(players) {
+  const posRef = useRef({});
+  const timersRef = useRef({});
+  const [, forceRender] = useState(0);
+
+  for (const p of players) {
+    if (posRef.current[p.seat] === undefined) posRef.current[p.seat] = p.position;
+  }
+
+  const positionsKey = players.map((p) => `${p.seat}:${p.position}`).join(",");
+
+  useEffect(() => {
+    for (const p of players) {
+      const from = posRef.current[p.seat] ?? p.position;
+      const to = p.position;
+      if (from === to) continue;
+
+      if (timersRef.current[p.seat]) clearInterval(timersRef.current[p.seat]);
+
+      const forwardPath = [];
+      let cur = from;
+      while (cur !== to && forwardPath.length <= MAX_ANIMATED_HOPS) {
+        cur = (cur + 1) % BOARD_SIZE;
+        forwardPath.push(cur);
+      }
+      const path = forwardPath.length > MAX_ANIMATED_HOPS || forwardPath[forwardPath.length - 1] !== to
+        ? [to]
+        : forwardPath;
+
+      let i = 0;
+      timersRef.current[p.seat] = setInterval(() => {
+        posRef.current[p.seat] = path[i];
+        forceRender((n) => n + 1);
+        i++;
+        if (i >= path.length) {
+          clearInterval(timersRef.current[p.seat]);
+          delete timersRef.current[p.seat];
+        }
+      }, MOVE_STEP_MS);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positionsKey]);
+
+  useEffect(() => {
+    const timers = timersRef.current;
+    return () => Object.values(timers).forEach(clearInterval);
+  }, []);
+
+  return players.map((p) => posRef.current[p.seat] ?? p.position);
 }
 
 export default function AndhraBusiness() {
@@ -138,13 +214,23 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
   const [showTrade, setShowTrade] = useState(false);
   const [showDevelop, setShowDevelop] = useState(false);
   const [rolling, setRolling] = useState(false);
+  const [now, setNow] = useState(Date.now());
   const { notifications, push } = useNotifications();
   const lastLogLength = useRef(0);
 
   const me = state.players.find((p) => p.seat === mySeat);
   const isMyTurn = state.currentSeat === mySeat && !me?.bankrupt;
   const mySpace = state.spaces[me?.position ?? 0];
-  const myProp = state.properties[me?.position];
+
+  const displayPositions = usePlayerDisplayPositions(state.players);
+
+  const deadline = state.decisionDeadline || state.turnEndDeadline || null;
+
+  useEffect(() => {
+    if (!deadline) return;
+    const interval = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(interval);
+  }, [deadline]);
 
   useEffect(() => {
     const newLines = state.log.slice(lastLogLength.current);
@@ -157,6 +243,7 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
       else if (/tax/i.test(line)) push("TAX PAID", { tone: "danger" });
       else if (/collected/i.test(line)) push("+CASH", { tone: "good" });
       else if (/traded|trade/i.test(line)) push("PROPERTY TRADED", { tone: "info" });
+      else if (/developed/i.test(line)) push("DEVELOPED", { tone: "good" });
     }
   }, [state.log, push]);
 
@@ -179,18 +266,18 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
     );
   }
 
-  const showBuyPrompt =
-    isMyTurn &&
-    state.phase === "main" &&
-    mySpace &&
-    GROUP_TYPES.includes(mySpace.type) &&
-    myProp?.owner === null;
-
-  const showJailPanel = isMyTurn && me?.inJail && state.phase !== "roll";
-
+  const showBuyPrompt = isMyTurn && state.phase === "buy-decision";
+  const showDevelopPrompt = isMyTurn && state.phase === "develop-decision";
+  const showJailPanel = isMyTurn && me?.inJail && state.phase !== "roll" && !showBuyPrompt && !showDevelopPrompt;
   const showDebtPanel = state.pendingDebt?.seat === mySeat;
 
+  const canDevelopNow = isMyTurn && state.phase === "ending";
+  const canTradeNow = !me?.bankrupt;
+
   const players = state.players.map((p) => ({ seat: p.seat, ...p }));
+  const myProperties = Object.entries(state.properties)
+    .filter(([, prop]) => prop.owner === mySeat)
+    .map(([pos, prop]) => ({ pos: Number(pos), prop, space: state.spaces[pos] }));
 
   return (
     <div className="ab-screen">
@@ -204,110 +291,161 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
         </div>
       </header>
 
-      <RoundTablePlayers
-        className="ab-table"
-        players={players}
-        center={
-          <Board state={state} />
-        }
-        renderPlayer={(player) => (
-          <div className={`ab-seat ${player.seat === mySeat ? "self" : ""} ${player.bankrupt ? "bankrupt" : ""}`}>
-            <div className="ab-seat-name" style={{ "--player-color": player.color }}>
-              Player {player.seat + 1}
-              {player.seat === mySeat ? " (you)" : ""}
-            </div>
-            {player.bankrupt ? (
-              <div className="ab-seat-bankrupt">OUT</div>
-            ) : (
-              <>
-                <div className="ab-seat-cash">{formatRupees(player.cash)}</div>
-                <PlayerStatus isActive={state.currentSeat === player.seat} />
-              </>
+      <div className="ab-layout">
+        <aside className="ab-actions-col">
+          <div className="ab-section-title">ACTIONS</div>
+
+          <div className="ab-dice-area">
+            {state.lastRoll && (
+              <Dice values={[state.lastRoll.d1, state.lastRoll.d2]} rolling={rolling} total={state.lastRoll.total} />
             )}
-            <ActionNotification notifications={notifications.filter((n) => n.seat === player.seat)} />
+            <button className="ab-action-button roll" disabled={!isMyTurn || state.phase !== "roll"} onClick={handleRoll}>
+              🎲 ROLL DICE
+            </button>
           </div>
-        )}
-      />
 
-      <div className="ab-controls">
-        <div className="ab-dice-area">
-          {state.lastRoll && <Dice values={[state.lastRoll.d1, state.lastRoll.d2]} rolling={rolling} total={state.lastRoll.total} />}
-          <button className="ab-action-button roll" disabled={!isMyTurn || state.phase !== "roll"} onClick={handleRoll}>
-            🎲 ROLL DICE
+          <button className="ab-action-button" disabled={!canDevelopNow} onClick={() => setShowDevelop(true)}>
+            🏗 DEVELOP
           </button>
-        </div>
 
-        <button className="ab-action-button" disabled={!isMyTurn || state.phase !== "main"} onClick={() => setShowDevelop(true)}>
-          🏗 DEVELOP
-        </button>
+          <button className="ab-action-button" disabled={!canTradeNow} onClick={() => setShowTrade(true)}>
+            🤝 TRADE
+          </button>
 
-        <button className="ab-action-button" disabled={!isMyTurn || state.phase !== "main"} onClick={() => setShowTrade(true)}>
-          🤝 TRADE
-        </button>
+          {deadline && (
+            <div className="ab-turn-timer">
+              {state.phase === "ending" ? "NEXT TURN IN" : "DECIDE WITHIN"}
+              <strong>{formatCountdown(deadline - now)}s</strong>
+            </div>
+          )}
 
-        <button
-          className="ab-action-button end-turn"
-          disabled={!isMyTurn || state.phase !== "main"}
-          onClick={() => dispatch("end-turn", {})}
-        >
-          END TURN
-        </button>
-      </div>
+          {me && (
+            <div className="ab-my-status">
+              <span>YOUR CASH</span>
+              <strong>{formatRupees(me.cash)}</strong>
+            </div>
+          )}
+        </aside>
 
-      {me && (
-        <div className="ab-my-status">
-          <span>YOUR CASH</span>
-          <strong>{formatRupees(me.cash)}</strong>
-        </div>
-      )}
-
-      <GameLog entries={state.log} title="EVENTS" />
-
-      {state.tradeOffers.filter((t) => t.toSeat === mySeat || t.fromSeat === mySeat).length > 0 && (
-        <div className="ab-trade-requests">
-          <div className="ab-section-title">
-            TRADE REQUESTS ({state.tradeOffers.filter((t) => t.toSeat === mySeat).length})
-          </div>
-          {state.tradeOffers
-            .filter((t) => t.toSeat === mySeat || t.fromSeat === mySeat)
-            .map((trade) => (
-              <div key={trade.id} className="ab-trade-offer">
-                <div>
-                  Player {trade.fromSeat + 1} → Player {trade.toSeat + 1}
+        <section className="ab-board-col">
+          <RoundTablePlayers
+            className="ab-table"
+            players={players}
+            center={<Board state={state} displayPositions={displayPositions} />}
+            renderPlayer={(player) => (
+              <div className={`ab-seat ${player.seat === mySeat ? "self" : ""} ${player.bankrupt ? "bankrupt" : ""}`}>
+                <div className="ab-seat-name" style={{ "--player-color": player.color }}>
+                  Player {player.seat + 1}
+                  {player.seat === mySeat ? " (you)" : ""}
                 </div>
-                <div className="ab-trade-line">
-                  Gives: {formatRupees(trade.giveCash)}
-                  {trade.giveProperties.map((pos) => `, ${state.spaces[pos].name}`)}
-                </div>
-                <div className="ab-trade-line">
-                  Wants: {formatRupees(trade.wantCash)}
-                  {trade.wantProperties.map((pos) => `, ${state.spaces[pos].name}`)}
-                </div>
-                {trade.toSeat === mySeat && (
-                  <div className="ab-trade-actions">
-                    <button onClick={() => dispatch("respond-trade", { tradeId: trade.id, accept: true })}>ACCEPT</button>
-                    <button onClick={() => dispatch("respond-trade", { tradeId: trade.id, accept: false })}>REJECT</button>
-                  </div>
+                {player.bankrupt ? (
+                  <div className="ab-seat-bankrupt">OUT</div>
+                ) : (
+                  <>
+                    <div className="ab-seat-cash">{formatRupees(player.cash)}</div>
+                    <PlayerStatus isActive={state.currentSeat === player.seat} />
+                  </>
                 )}
-                {trade.fromSeat === mySeat && (
-                  <div className="ab-trade-actions">
-                    <button onClick={() => dispatch("cancel-trade", { tradeId: trade.id })}>CANCEL</button>
-                  </div>
-                )}
+                <ActionNotification notifications={notifications.filter((n) => n.seat === player.seat)} />
               </div>
-            ))}
-        </div>
-      )}
+            )}
+          />
+
+          <GameLog entries={state.log} title="EVENTS" />
+
+          {state.tradeOffers.filter((t) => t.toSeat === mySeat || t.fromSeat === mySeat).length > 0 && (
+            <div className="ab-trade-requests">
+              <div className="ab-section-title">
+                TRADE REQUESTS ({state.tradeOffers.filter((t) => t.toSeat === mySeat).length})
+              </div>
+              {state.tradeOffers
+                .filter((t) => t.toSeat === mySeat || t.fromSeat === mySeat)
+                .map((trade) => (
+                  <div key={trade.id} className="ab-trade-offer">
+                    <div>
+                      Player {trade.fromSeat + 1} → Player {trade.toSeat + 1}
+                    </div>
+                    <div className="ab-trade-line">
+                      Gives: {formatRupees(trade.giveCash)}
+                      {trade.giveProperties.map((pos) => `, ${state.spaces[pos].name}`)}
+                    </div>
+                    <div className="ab-trade-line">
+                      Wants: {formatRupees(trade.wantCash)}
+                      {trade.wantProperties.map((pos) => `, ${state.spaces[pos].name}`)}
+                    </div>
+                    {trade.toSeat === mySeat && (
+                      <div className="ab-trade-actions">
+                        <button onClick={() => dispatch("respond-trade", { tradeId: trade.id, accept: true })}>ACCEPT</button>
+                        <button onClick={() => dispatch("respond-trade", { tradeId: trade.id, accept: false })}>REJECT</button>
+                      </div>
+                    )}
+                    {trade.fromSeat === mySeat && (
+                      <div className="ab-trade-actions">
+                        <button onClick={() => dispatch("cancel-trade", { tradeId: trade.id })}>CANCEL</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+            </div>
+          )}
+        </section>
+
+        <aside className="ab-properties-col">
+          <div className="ab-section-title">MY PROPERTIES ({myProperties.length})</div>
+          <div className="ab-property-cards">
+            {myProperties.length === 0 && <div className="ab-empty">You don't own any places yet.</div>}
+            {myProperties.map(({ pos, prop, space }) => {
+              const group = state.groups.find((g) => g.id === space.group);
+              return (
+                <div key={pos} className="ab-property-card">
+                  {group && <div className="ab-property-card-bar" style={{ background: group.color }} />}
+                  <div className="ab-property-card-name">{space.name}</div>
+                  <div className="ab-property-card-meta">
+                    {prop.mortgaged
+                      ? "MORTGAGED"
+                      : prop.houses > 0
+                      ? prop.houses === 5
+                        ? "HOTEL"
+                        : `${prop.houses} house${prop.houses === 1 ? "" : "s"}`
+                      : formatRupees(space.price)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </aside>
+      </div>
 
       {showBuyPrompt && (
         <Modal onClose={() => {}}>
           <h2>{mySpace.name}</h2>
           <p>Purchase for {formatRupees(mySpace.price)}?</p>
+          {state.decisionDeadline && (
+            <p className="ab-decision-timer">Deciding in {formatCountdown(state.decisionDeadline - now)}s...</p>
+          )}
           <div className="ab-confirm-row">
             <button className="ab-button" onClick={() => dispatch("buy-property", {})}>
               BUY
             </button>
-            <button className="ab-button secondary" onClick={() => dispatch("skip-buy", {})}>
+            <button className="ab-button secondary" onClick={() => dispatch("skip-decision", {})}>
+              SKIP
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {showDevelopPrompt && (
+        <Modal onClose={() => {}}>
+          <h2>{mySpace.name}</h2>
+          <p>Develop this property for {formatRupees(mySpace.houseCost)}?</p>
+          {state.decisionDeadline && (
+            <p className="ab-decision-timer">Deciding in {formatCountdown(state.decisionDeadline - now)}s...</p>
+          )}
+          <div className="ab-confirm-row">
+            <button className="ab-button" onClick={() => dispatch("develop", { pos: mySpace.pos })}>
+              DEVELOP
+            </button>
+            <button className="ab-button secondary" onClick={() => dispatch("skip-decision", {})}>
               SKIP
             </button>
           </div>
@@ -317,29 +455,45 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
       {showJailPanel && (
         <Modal onClose={() => {}}>
           <h2>TRAFFIC HALT</h2>
-          <p>
-            Attempt {me.jailTurns + 1} of 3. Roll doubles to escape, pay the fine, or use a
-            get-out card.
-          </p>
-          <div className="ab-confirm-row">
-            <button className="ab-button" onClick={handleRoll}>
-              🎲 ROLL
-            </button>
-            <button className="ab-button secondary" disabled={me.cash < 10000} onClick={() => dispatch("pay-jail-fine", {})}>
-              PAY FINE
-            </button>
-            {me.getOutOfJailCards > 0 && (
-              <button className="ab-button secondary" onClick={() => dispatch("use-jail-card", {})}>
-                USE CARD
-              </button>
-            )}
-          </div>
+          {state.phase === "roll" ? (
+            <>
+              <p>
+                Attempt {me.jailTurns + 1} of 3. Roll doubles to escape, pay the fine, or use a
+                get-out card.
+              </p>
+              <div className="ab-confirm-row">
+                <button className="ab-button" onClick={handleRoll}>
+                  🎲 ROLL
+                </button>
+                <button className="ab-button secondary" disabled={me.cash < 10000} onClick={() => dispatch("pay-jail-fine", {})}>
+                  PAY FINE
+                </button>
+                {me.getOutOfJailCards > 0 && (
+                  <button className="ab-button secondary" onClick={() => dispatch("use-jail-card", {})}>
+                    USE CARD
+                  </button>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <p>No luck this turn. Pay the fine or use a card so you're free to roll again next turn.</p>
+              <div className="ab-confirm-row">
+                <button className="ab-button secondary" disabled={me.cash < 10000} onClick={() => dispatch("pay-jail-fine", {})}>
+                  PAY FINE
+                </button>
+                {me.getOutOfJailCards > 0 && (
+                  <button className="ab-button secondary" onClick={() => dispatch("use-jail-card", {})}>
+                    USE CARD
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </Modal>
       )}
 
-      {showDebtPanel && (
-        <DebtModal state={state} mySeat={mySeat} dispatch={dispatch} />
-      )}
+      {showDebtPanel && <DebtModal state={state} mySeat={mySeat} dispatch={dispatch} />}
 
       {showDevelop && (
         <DevelopModal state={state} mySeat={mySeat} dispatch={dispatch} onClose={() => setShowDevelop(false)} />
@@ -354,7 +508,7 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
   );
 }
 
-function Board({ state }) {
+function Board({ state, displayPositions }) {
   const currentPlayer = state.players[state.currentSeat];
 
   return (
@@ -363,7 +517,6 @@ function Board({ state }) {
         const { row, col } = gridPosition(space.pos);
         const group = state.groups.find((g) => g.id === space.group);
         const prop = state.properties[space.pos];
-        const occupants = state.players.filter((p) => p.position === space.pos && !p.bankrupt);
 
         return (
           <div
@@ -382,14 +535,10 @@ function Board({ state }) {
             )}
             {prop?.houses > 0 && <div className="ab-cell-houses">{prop.houses === 5 ? "🏨" : "🏠".repeat(prop.houses)}</div>}
             {prop?.mortgaged && <div className="ab-cell-mortgaged">MORTGAGED</div>}
-            <div className="ab-cell-tokens">
-              {occupants.map((p) => (
-                <span key={p.seat} className="ab-token" style={{ background: p.color }} title={`Player ${p.seat + 1}`} />
-              ))}
-            </div>
           </div>
         );
       })}
+
       <div className="ab-board-center">
         <div className="ab-board-center-logo">
           ANDHRA
@@ -409,6 +558,42 @@ function Board({ state }) {
             🎲 {state.lastRoll.d1} + {state.lastRoll.d2} = {state.lastRoll.total}
           </div>
         )}
+      </div>
+
+      <div className="ab-token-layer">
+        {state.players.map((p, i) => {
+          if (p.bankrupt) return null;
+          const pos = displayPositions[i];
+          const { row, col } = gridPosition(pos);
+          const fan = state.players.filter(
+            (other, oi) => !other.bankrupt && (() => {
+              const otherPos = gridPosition(displayPositions[oi]);
+              return otherPos.row === row && otherPos.col === col;
+            })()
+          );
+          const fanIndex = fan.findIndex((o) => o.seat === p.seat);
+          // Small, fixed offsets that stay well within one board cell
+          // (~9% wide) regardless of how many of the up-to-7 players share
+          // it -- unlike a scaled spread, this can never push a token off
+          // the board.
+          const [offsetX, offsetY] = TOKEN_FAN_OFFSETS[fanIndex] || [0, 0];
+
+          const leftPct = ((col + 0.5) / 11) * 100 + offsetX;
+          const topPct = ((row + 0.5) / 11) * 100 + offsetY;
+
+          return (
+            <div
+              key={p.seat}
+              className="ab-token-moving"
+              style={{
+                left: `${leftPct}%`,
+                top: `${topPct}%`,
+                background: p.color,
+              }}
+              title={`Player ${p.seat + 1}`}
+            />
+          );
+        })}
       </div>
     </div>
   );

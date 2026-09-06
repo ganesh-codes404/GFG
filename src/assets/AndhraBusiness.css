@@ -22,7 +22,7 @@ button, input { font-family: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 1100px;
+  max-width: 1400px;
   margin: 0 auto 10px;
 }
 
@@ -49,10 +49,77 @@ button, input { font-family: inherit; }
   margin: 10px 0 6px;
 }
 
+/* LAYOUT */
+
+.ab-layout {
+  display: grid;
+  grid-template-columns: 190px 1fr 220px;
+  gap: 16px;
+  max-width: 1400px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.ab-board-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ab-properties-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.ab-property-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.ab-property-card {
+  position: relative;
+  padding: 8px 8px 8px 12px;
+  background: #1a2620;
+  border: 2px solid #0e1712;
+  border-radius: 6px;
+  font-size: 10px;
+  overflow: hidden;
+}
+
+.ab-property-card-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+}
+
+.ab-property-card-name {
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.ab-property-card-meta {
+  margin-top: 4px;
+  font-size: 9px;
+  color: #7de89a;
+}
+
+.ab-empty {
+  font-size: 11px;
+  color: #8fa08f;
+  line-height: 1.6;
+}
+
 /* TABLE */
 
 .ab-table {
-  max-width: 900px;
+  max-width: 640px;
+  width: 100%;
 }
 
 .ab-seat {
@@ -196,23 +263,6 @@ button, input { font-family: inherit; }
   font-weight: 700;
 }
 
-.ab-cell-tokens {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1px;
-  max-width: 16px;
-}
-
-.ab-token {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  border: 1px solid #17101f;
-}
-
 .ab-cell-go, .ab-cell-jail, .ab-cell-free-parking, .ab-cell-go-to-jail {
   background: #e8e0c8;
   align-items: center;
@@ -224,14 +274,36 @@ button, input { font-family: inherit; }
 .ab-cell-community { background: #b0d8ff; }
 .ab-cell-tax { background: #f0b0b0; }
 
-/* CONTROLS */
+/* TOKENS -- a separate absolutely-positioned overlay (not per-cell children)
+   so the same DOM element persists across moves and its left/top can
+   actually transition/animate between squares instead of teleporting. */
 
-.ab-controls {
+.ab-token-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.ab-token-moving {
+  position: absolute;
+  width: 3.2%;
+  height: 3.2%;
+  min-width: 9px;
+  min-height: 9px;
+  border-radius: 50%;
+  border: 2px solid #17101f;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%);
+  transition: left 0.5s ease, top 0.5s ease;
+}
+
+/* CONTROLS (left action column) */
+
+.ab-actions-col {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  margin-top: 14px;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .ab-dice-area {
@@ -253,15 +325,36 @@ button, input { font-family: inherit; }
 
 .ab-action-button:disabled { opacity: 0.4; cursor: not-allowed; }
 .ab-action-button.roll { background: linear-gradient(180deg, #ffe27a, #ffb93e); color: #17101f; }
-.ab-action-button.end-turn { background: linear-gradient(180deg, #ff9f7a, #e8734a, #b8502b); }
+
+.ab-turn-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px;
+  font-size: 9px;
+  color: #d9e8d9;
+  background: #1a2620;
+  border: 2px solid #0e1712;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.ab-turn-timer strong { color: #ffe27a; font-size: 15px; }
+
+.ab-decision-timer { color: #ff9c9c !important; font-size: 11px !important; }
 
 .ab-my-status {
   display: flex;
-  justify-content: center;
-  gap: 8px;
-  align-items: baseline;
-  margin-top: 10px;
-  font-size: 12px;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 11px;
+  padding: 8px;
+  background: #1a2620;
+  border: 2px solid #0e1712;
+  border-radius: 6px;
 }
 
 .ab-my-status strong { color: #ffe27a; font-size: 16px; }
@@ -498,6 +591,37 @@ button, input { font-family: inherit; }
   margin-top: 20px;
   color: #d9e8d9;
   font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .ab-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ab-actions-col {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+  }
+
+  .ab-actions-col .ab-dice-area,
+  .ab-actions-col .ab-action-button,
+  .ab-actions-col .ab-turn-timer,
+  .ab-actions-col .ab-my-status {
+    flex: 1 1 140px;
+  }
+
+  .ab-board-col { order: 2; }
+  .ab-properties-col { order: 3; }
+
+  .ab-property-cards {
+    max-height: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .ab-property-card { flex: 1 1 140px; }
 }
 
 @media (max-width: 700px) {

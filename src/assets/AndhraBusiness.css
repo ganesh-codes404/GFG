@@ -218,14 +218,18 @@ button, input { font-family: inherit; }
 /* BOARD */
 
 .ab-board {
+  /* Shared with .ab-token-layer (which inherits these as a descendant) so
+     the token overlay's grid tracks always land on the exact same
+     boundaries as the real cells, however this grid ends up sliced --
+     tokens used to be positioned with hardcoded percentage math that
+     assumed a uniform 13-way split, which silently drifted out of sync
+     whenever the split stopped being uniform (see the mobile override). */
+  --ab-cols: repeat(13, 1fr);
+  --ab-rows: repeat(13, 1fr);
   position: relative;
   display: grid;
-  /* Only the outer ring (the first/last row and column) holds real cells --
-     the 11 tracks between them are pure backdrop for the center info panel.
-     Splitting all 13 evenly starved the actual property cells down to ~8%
-     of the board each; weight the ring tracks much heavier instead. */
-  grid-template-columns: 2fr repeat(11, 0.4fr) 2fr;
-  grid-template-rows: 2fr repeat(11, 0.4fr) 2fr;
+  grid-template-columns: var(--ab-cols);
+  grid-template-rows: var(--ab-rows);
   /* 100% (not a vw guess) so it's always sized off its actual grid column
      -- a fixed vw-based width ignored the side columns and could overflow
      on a real laptop screen, which is narrower than it looks in isolation. */
@@ -368,18 +372,25 @@ button, input { font-family: inherit; }
   inset: 0;
   pointer-events: none;
   z-index: 6;
+  /* Placed as its own grid using the board's exact track sizes (inherited
+     custom properties) so a token's grid-row/grid-column always lands
+     dead center in the same cell as the real board -- no percentage math
+     to keep in sync with however those tracks are sliced. */
+  display: grid;
+  grid-template-columns: var(--ab-cols);
+  grid-template-rows: var(--ab-rows);
+  gap: 1px;
 }
 
 .ab-token-moving {
-  position: absolute;
-  width: 3.6%;
-  height: 3.6%;
-  min-width: 11px;
-  min-height: 11px;
+  justify-self: center;
+  align-self: center;
+  width: 3.2%;
+  height: 3.2%;
+  min-width: 10px;
+  min-height: 10px;
   border: 2px solid #17101f;
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
-  transform: translate(-50%, -50%);
-  transition: left 0.5s ease, top 0.5s ease;
 }
 
 /* CONTROLS (left action column) */
@@ -737,12 +748,42 @@ button, input { font-family: inherit; }
   /* Almost full viewport width -- the phone is narrow either way, so every
      extra pixel per cell matters for fitting a town name like
      "Tadepalligudem" without it turning into an unreadable smear. */
-  .ab-board { width: min(560px, 98vw); }
+  .ab-board {
+    width: min(560px, 98vw);
+    /* Only the outer ring (first/last row and column) holds real cells --
+       the 11 tracks between them are pure backdrop for the center info
+       panel. Splitting all 13 evenly on a phone starves the actual
+       property cells down to a sliver each, so weight the ring tracks
+       much heavier here. Kept mobile-only -- the laptop board keeps its
+       original even 13-way split. */
+    --ab-cols: 2fr repeat(11, 0.4fr) 2fr;
+    --ab-rows: 2fr repeat(11, 0.4fr) 2fr;
+  }
   .ab-trade-columns { grid-template-columns: 1fr; }
 
   .ab-cell { padding: 1px; font-size: 7px; }
-  .ab-cell-name { font-size: clamp(5.5px, 2.1vw, 7.5px); line-height: 1.05; word-break: break-word; hyphens: auto; }
+  .ab-cell-name { font-size: clamp(6px, 2.4vw, 8.5px); line-height: 1.05; }
   .ab-cell-price { font-size: 5.5px; }
   .ab-cell-houses, .ab-cell-mortgaged { font-size: 5px; }
   .ab-cell-owner { width: 6px; height: 6px; bottom: 1px; left: 1px; }
+
+  /* The top/bottom rows are now tall and narrow (the ring-weighting above
+     favors width on the left/right columns instead) -- a name wrapped
+     into that narrow width reads as a vertical letter-stack. Rotating it
+     to run along the cell's long axis keeps it on one horizontal line. */
+  .ab-cell-rotate .ab-cell-name {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max-content;
+    max-width: 110px;
+    text-align: center;
+    white-space: nowrap;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    transform-origin: center;
+  }
+  .ab-cell-rotate .ab-cell-price { display: none; }
+
+  /* Events log -- 20% shorter on phone so it doesn't dominate the screen. */
+  .ab-board-col .game-log-body { height: 144px; }
 }

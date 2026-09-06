@@ -16,22 +16,22 @@ import "./AndhraBusiness.css";
 const CURRENT_GAME = "Andhra Business";
 
 const BOARD_SIZE = 48;
-const BOARD_GRID = 13; // 13x13 perimeter grid (12 squares per side)
 const MOVE_STEP_MS = 220;
 const MAX_ANIMATED_HOPS = 12; // normal dice rolls only go 2-12 -- anything
 // longer (cards, jail teleports) just jumps straight there instead of a
 // long crawl around the board.
 
-// Percent-of-board offsets for up to 7 tokens sharing one cell, small
-// enough to stay well inside a single ~9%-wide cell.
+// Fixed-pixel offsets (not percentages -- board cells range from ~18px to
+// ~90px depending on layout/breakpoint) for up to 7 tokens sharing one
+// cell, small enough to stay well inside even the narrowest cell.
 const TOKEN_FAN_OFFSETS = [
   [0, 0],
-  [-2.2, -2.2],
-  [2.2, -2.2],
-  [-2.2, 2.2],
-  [2.2, 2.2],
-  [0, -3.2],
-  [0, 3.2],
+  [-5, -5],
+  [5, -5],
+  [-5, 5],
+  [5, 5],
+  [0, -7],
+  [0, 7],
 ];
 
 const RULES_SECTIONS = [
@@ -594,11 +594,17 @@ function Board({ state, displayPositions }) {
         const { row, col } = gridPosition(space.pos);
         const group = state.groups.find((g) => g.id === space.group);
         const prop = state.properties[space.pos];
+        // Mobile-only: the top/bottom rows are tall and narrow, so their
+        // name text is rotated to run along that long axis instead of
+        // wrapping into a vertical letter-stack. The corners (row and col
+        // both an edge) are big and square either way and stay unrotated.
+        const isTopOrBottomEdge = (row === 0 || row === 12) && col !== 0 && col !== 12;
 
         return (
           <div
             key={space.pos}
-            className={`ab-cell ab-cell-${space.type}`}
+            data-pos={space.pos}
+            className={`ab-cell ab-cell-${space.type} ${isTopOrBottomEdge ? "ab-cell-rotate" : ""}`}
             style={{ gridRow: row + 1, gridColumn: col + 1 }}
           >
             {group && <div className="ab-cell-bar" style={{ background: group.color }} />}
@@ -649,22 +655,24 @@ function Board({ state, displayPositions }) {
             })()
           );
           const fanIndex = fan.findIndex((o) => o.seat === p.seat);
-          // Small, fixed offsets that stay well within one board cell
-          // (~9% wide) regardless of how many of the up-to-7 players share
-          // it -- unlike a scaled spread, this can never push a token off
-          // the board.
+          // Small, fixed pixel offsets that stay well within one board cell
+          // regardless of how many of the up-to-7 players share it -- unlike
+          // a scaled spread, this can never push a token off the board.
           const [offsetX, offsetY] = TOKEN_FAN_OFFSETS[fanIndex] || [0, 0];
-
-          const leftPct = ((col + 0.5) / BOARD_GRID) * 100 + offsetX;
-          const topPct = ((row + 0.5) / BOARD_GRID) * 100 + offsetY;
 
           return (
             <div
               key={p.seat}
+              data-seat={p.seat}
               className={`ab-token-moving ab-shape-${p.seat}`}
               style={{
-                left: `${leftPct}%`,
-                top: `${topPct}%`,
+                // Grid placement (matching how cells themselves are placed)
+                // instead of percentage-of-board math -- that math assumed
+                // every one of the 13 tracks was the same width, which broke
+                // the moment the board stopped splitting them evenly.
+                gridRow: row + 1,
+                gridColumn: col + 1,
+                transform: `translate(${offsetX}px, ${offsetY}px)`,
                 background: p.color,
               }}
               title={nameFor(state, p.seat)}

@@ -1,4 +1,5 @@
 const {
+  BOARD_SIZE,
   SPACES,
   GROUPS,
   EVENT_CARDS,
@@ -229,7 +230,7 @@ function drawCard(state, seat, deckName) {
   } else if (card.type === "get-out-of-jail") {
     player.getOutOfJailCards += 1;
   } else if (card.type === "move-back") {
-    player.position = (player.position - card.amount + 40) % 40;
+    player.position = (player.position - card.amount + BOARD_SIZE) % BOARD_SIZE;
   } else if (card.type === "repairs") {
     let total = 0;
     for (const pos of Object.keys(state.properties)) {
@@ -404,7 +405,7 @@ function handleRollDice(state, seat) {
   }
 
   const from = player.position;
-  const to = (from + d1 + d2) % 40;
+  const to = (from + d1 + d2) % BOARD_SIZE;
   player.position = to;
   grantSalaryIfPassed(state, seat, from, to);
 
@@ -704,6 +705,7 @@ function advanceTime(state) {
 function viewFor(state, seat) {
   return {
     mySeat: seat,
+    boardSize: BOARD_SIZE,
     spaces: SPACES,
     groups: GROUPS,
     properties: state.properties,

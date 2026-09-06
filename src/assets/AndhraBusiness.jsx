@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { socket } from "../socket";
-import RoundTablePlayers from "../components/RoundTablePlayers";
 import DirectionIndicator from "../components/DirectionIndicator";
 import ActionNotification from "../components/ActionNotification";
 import GameLog from "../components/GameLog";
@@ -15,7 +14,8 @@ import "./AndhraBusiness.css";
 
 const CURRENT_GAME = "Andhra Business";
 
-const BOARD_SIZE = 40;
+const BOARD_SIZE = 48;
+const BOARD_GRID = 13; // 13x13 perimeter grid (12 squares per side)
 const MOVE_STEP_MS = 90;
 const MAX_ANIMATED_HOPS = 12; // normal dice rolls only go 2-12 -- anything
 // longer (cards, jail teleports) just jumps straight there instead of a
@@ -54,12 +54,12 @@ function formatRupees(n) {
   return `${sign}₹${rest ? `${grouped},` : ""}${last3}`;
 }
 
-// Maps a board position (0-39) to a cell in an 11x11 perimeter grid.
+// Maps a board position (0-47) to a cell in a 13x13 perimeter grid.
 function gridPosition(pos) {
-  if (pos <= 10) return { row: 10, col: 10 - pos };
-  if (pos <= 20) return { row: 10 - (pos - 10), col: 0 };
-  if (pos <= 30) return { row: 0, col: pos - 20 };
-  return { row: pos - 30, col: 10 };
+  if (pos <= 12) return { row: 12, col: 12 - pos };
+  if (pos <= 24) return { row: 12 - (pos - 12), col: 0 };
+  if (pos <= 36) return { row: 0, col: pos - 24 };
+  return { row: pos - 36, col: 12 };
 }
 
 function formatCountdown(ms) {
@@ -293,6 +293,32 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
 
       <div className="ab-layout">
         <aside className="ab-actions-col">
+          <div className="ab-section-title">PLAYERS</div>
+
+          <div className="ab-player-list">
+            {players.map((player) => (
+              <div
+                key={player.seat}
+                className={`ab-player-card ${player.seat === mySeat ? "self" : ""} ${player.bankrupt ? "bankrupt" : ""}`}
+                style={{ "--player-color": player.color }}
+              >
+                <div className="ab-player-card-name">
+                  Player {player.seat + 1}
+                  {player.seat === mySeat ? " (you)" : ""}
+                </div>
+                {player.bankrupt ? (
+                  <div className="ab-player-card-bankrupt">OUT</div>
+                ) : (
+                  <>
+                    <div className="ab-player-card-cash">{formatRupees(player.cash)}</div>
+                    <PlayerStatus isActive={state.currentSeat === player.seat} />
+                  </>
+                )}
+                <ActionNotification notifications={notifications.filter((n) => n.seat === player.seat)} />
+              </div>
+            ))}
+          </div>
+
           <div className="ab-section-title">ACTIONS</div>
 
           <div className="ab-dice-area">
@@ -328,28 +354,7 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
         </aside>
 
         <section className="ab-board-col">
-          <RoundTablePlayers
-            className="ab-table"
-            players={players}
-            center={<Board state={state} displayPositions={displayPositions} />}
-            renderPlayer={(player) => (
-              <div className={`ab-seat ${player.seat === mySeat ? "self" : ""} ${player.bankrupt ? "bankrupt" : ""}`}>
-                <div className="ab-seat-name" style={{ "--player-color": player.color }}>
-                  Player {player.seat + 1}
-                  {player.seat === mySeat ? " (you)" : ""}
-                </div>
-                {player.bankrupt ? (
-                  <div className="ab-seat-bankrupt">OUT</div>
-                ) : (
-                  <>
-                    <div className="ab-seat-cash">{formatRupees(player.cash)}</div>
-                    <PlayerStatus isActive={state.currentSeat === player.seat} />
-                  </>
-                )}
-                <ActionNotification notifications={notifications.filter((n) => n.seat === player.seat)} />
-              </div>
-            )}
-          />
+          <Board state={state} displayPositions={displayPositions} />
 
           <GameLog entries={state.log} title="EVENTS" />
 
@@ -413,44 +418,44 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
               );
             })}
           </div>
+
+          {showBuyPrompt && (
+            <div className="ab-decision-panel">
+              <div className="ab-section-title">{mySpace.name}</div>
+              <p>Purchase for {formatRupees(mySpace.price)}?</p>
+              {state.decisionDeadline && (
+                <p className="ab-decision-timer">Deciding in {formatCountdown(state.decisionDeadline - now)}s...</p>
+              )}
+              <div className="ab-confirm-row">
+                <button className="ab-button" onClick={() => dispatch("buy-property", {})}>
+                  BUY
+                </button>
+                <button className="ab-button secondary" onClick={() => dispatch("skip-decision", {})}>
+                  SKIP
+                </button>
+              </div>
+            </div>
+          )}
+
+          {showDevelopPrompt && (
+            <div className="ab-decision-panel">
+              <div className="ab-section-title">{mySpace.name}</div>
+              <p>Develop this property for {formatRupees(mySpace.houseCost)}?</p>
+              {state.decisionDeadline && (
+                <p className="ab-decision-timer">Deciding in {formatCountdown(state.decisionDeadline - now)}s...</p>
+              )}
+              <div className="ab-confirm-row">
+                <button className="ab-button" onClick={() => dispatch("develop", { pos: mySpace.pos })}>
+                  DEVELOP
+                </button>
+                <button className="ab-button secondary" onClick={() => dispatch("skip-decision", {})}>
+                  SKIP
+                </button>
+              </div>
+            </div>
+          )}
         </aside>
       </div>
-
-      {showBuyPrompt && (
-        <Modal onClose={() => {}}>
-          <h2>{mySpace.name}</h2>
-          <p>Purchase for {formatRupees(mySpace.price)}?</p>
-          {state.decisionDeadline && (
-            <p className="ab-decision-timer">Deciding in {formatCountdown(state.decisionDeadline - now)}s...</p>
-          )}
-          <div className="ab-confirm-row">
-            <button className="ab-button" onClick={() => dispatch("buy-property", {})}>
-              BUY
-            </button>
-            <button className="ab-button secondary" onClick={() => dispatch("skip-decision", {})}>
-              SKIP
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {showDevelopPrompt && (
-        <Modal onClose={() => {}}>
-          <h2>{mySpace.name}</h2>
-          <p>Develop this property for {formatRupees(mySpace.houseCost)}?</p>
-          {state.decisionDeadline && (
-            <p className="ab-decision-timer">Deciding in {formatCountdown(state.decisionDeadline - now)}s...</p>
-          )}
-          <div className="ab-confirm-row">
-            <button className="ab-button" onClick={() => dispatch("develop", { pos: mySpace.pos })}>
-              DEVELOP
-            </button>
-            <button className="ab-button secondary" onClick={() => dispatch("skip-decision", {})}>
-              SKIP
-            </button>
-          </div>
-        </Modal>
-      )}
 
       {showJailPanel && (
         <Modal onClose={() => {}}>
@@ -578,8 +583,8 @@ function Board({ state, displayPositions }) {
           // the board.
           const [offsetX, offsetY] = TOKEN_FAN_OFFSETS[fanIndex] || [0, 0];
 
-          const leftPct = ((col + 0.5) / 11) * 100 + offsetX;
-          const topPct = ((row + 0.5) / 11) * 100 + offsetY;
+          const leftPct = ((col + 0.5) / BOARD_GRID) * 100 + offsetX;
+          const topPct = ((row + 0.5) / BOARD_GRID) * 100 + offsetY;
 
           return (
             <div

@@ -1,7 +1,9 @@
-// 40-space board, all locations genuinely in Andhra Pradesh. Layout mirrors
+// 48-space board, all locations genuinely in Andhra Pradesh. Layout mirrors
 // the well-tested classic property-trading board shape (same space-type
 // sequence and price scaling curve), just re-themed end to end with AP
 // geography and rupee pricing -- no Monopoly names, art, or branding reused.
+
+const BOARD_SIZE = 48;
 
 const GROUPS = [
   {
@@ -62,7 +64,7 @@ const GROUPS = [
     rent: [900, 2000, 5500, 13500, 16500, 21000],
     houseCost: 15000,
     mortgage: 13000,
-    towns: ["Guntur", "Tenali", "Ongole"],
+    towns: ["Bapatla", "Guntur", "Tenali", "Ongole"],
   },
   {
     id: "nellore-region",
@@ -72,7 +74,7 @@ const GROUPS = [
     rent: [1000, 2200, 6000, 14000, 17000, 22500],
     houseCost: 20000,
     mortgage: 15000,
-    towns: ["Nellore", "Kavali", "Narasaraopet"],
+    towns: ["Nellore", "Kavali", "Narasaraopet", "Gudur"],
   },
   {
     id: "rayalaseema",
@@ -82,12 +84,12 @@ const GROUPS = [
     rent: [1500, 3500, 9000, 17500, 20000, 30000],
     houseCost: 20000,
     mortgage: 18000,
-    towns: ["Tirupati", "Kadapa"],
+    towns: ["Tirupati", "Kadapa", "Srikalahasti", "Madanapalle"],
   },
 ];
 
-const TRANSPORT_NAMES = ["Kurnool", "Anantapur", "Chittoor", "Proddatur"];
-const UTILITY_NAMES = ["Hindupur", "Rajampet"];
+const TRANSPORT_NAMES = ["Kurnool", "Renigunta", "Anantapur", "Chittoor", "Proddatur"];
+const UTILITY_NAMES = ["Hindupur", "Rajampet", "Dharmavaram"];
 
 const EVENT_CARDS = [
   { text: "New expressway opens near you. Collect ₹5,000.", type: "collect", amount: 5000 },
@@ -98,6 +100,16 @@ const EVENT_CARDS = [
   { text: "Move back 3 spaces.", type: "move-back", amount: 3 },
   { text: "Repairs on all your developments. Pay ₹1,000 per house, ₹3,000 per hotel.", type: "repairs", perHouse: 1000, perHotel: 3000 },
   { text: "Festival bonus! Collect ₹10,000.", type: "collect", amount: 10000 },
+  { text: "Jagan became CM -- cabinet reshuffle chaos. Move back 4 spaces.", type: "move-back", amount: 4 },
+  { text: "Chandrababu promises a shiny new capital. Advance to Andhra Start and collect ₹20,000.", type: "advance-to", pos: 0 },
+  { text: "NTR's classic gets re-released in cinemas. Collect ₹8,000 in nostalgia ticket sales.", type: "collect", amount: 8000 },
+  { text: "Pawan Kalyan's fans fill the street on day one. Pay ₹3,000 -- you're stuck in traffic.", type: "pay", amount: 3000 },
+  { text: "Election season freebies! Collect ₹6,000.", type: "collect", amount: 6000 },
+  { text: "Amaravati construction delayed yet again. Pay ₹4,000 in cost overruns.", type: "pay", amount: 4000 },
+  { text: "Cyclone warning off the coast. Pay ₹3,500 for emergency supplies.", type: "pay", amount: 3500 },
+  { text: "Tirupati laddu demand hits a record high. Collect ₹5,000 selling extras.", type: "collect", amount: 5000 },
+  { text: "Ugadi pachadi reminds everyone life mixes sweet and bitter. Get out of Traffic Halt free.", type: "get-out-of-jail" },
+  { text: "Vizag Steel Plant protests shut the highway. Move back 3 spaces.", type: "move-back", amount: 3 },
 ];
 
 const COMMUNITY_CARDS = [
@@ -111,20 +123,21 @@ const COMMUNITY_CARDS = [
   { text: "School fees due. Pay ₹4,000 per player.", type: "pay-each", amount: 4000 },
 ];
 
+// 4 corners (GO, Jail, Free Parking, Go-to-Jail) + 11 positions per side.
 function buildSpaces() {
-  const spaces = new Array(40);
+  const spaces = new Array(BOARD_SIZE);
 
   spaces[0] = { pos: 0, type: "go", name: "Andhra Start" };
   spaces[4] = { pos: 4, type: "tax", name: "Road Expansion Tax", amount: 20000 };
-  spaces[10] = { pos: 10, type: "jail", name: "Traffic Halt" };
-  spaces[20] = { pos: 20, type: "free-parking", name: "Temple Rest Stop" };
-  spaces[30] = { pos: 30, type: "go-to-jail", name: "Roadblock! Go to Traffic Halt" };
-  spaces[38] = { pos: 38, type: "tax", name: "Festival Levy", amount: 10000 };
+  spaces[12] = { pos: 12, type: "jail", name: "Traffic Halt" };
+  spaces[24] = { pos: 24, type: "free-parking", name: "Temple Rest Stop" };
+  spaces[36] = { pos: 36, type: "go-to-jail", name: "Roadblock! Go to Traffic Halt" };
+  spaces[46] = { pos: 46, type: "tax", name: "Festival Levy", amount: 10000 };
 
-  for (const pos of [2, 17, 33]) spaces[pos] = { pos, type: "community", name: "Community" };
-  for (const pos of [7, 22, 36]) spaces[pos] = { pos, type: "event", name: "Event" };
+  for (const pos of [2, 11, 39, 45]) spaces[pos] = { pos, type: "community", name: "Community" };
+  for (const pos of [7, 18, 30, 47]) spaces[pos] = { pos, type: "event", name: "Event" };
 
-  const transportPositions = [5, 15, 25, 35];
+  const transportPositions = [5, 10, 21, 33, 43];
   transportPositions.forEach((pos, i) => {
     spaces[pos] = {
       pos,
@@ -135,7 +148,7 @@ function buildSpaces() {
     };
   });
 
-  const utilityPositions = [12, 28];
+  const utilityPositions = [15, 27, 41];
   utilityPositions.forEach((pos, i) => {
     spaces[pos] = {
       pos,
@@ -146,7 +159,9 @@ function buildSpaces() {
     };
   });
 
-  const propertyPositions = [1, 3, 6, 8, 9, 11, 13, 14, 16, 18, 19, 21, 23, 24, 26, 27, 29, 31, 32, 34, 37, 39];
+  const propertyPositions = [
+    1, 3, 6, 8, 9, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37, 38, 40, 42, 44,
+  ];
   let cursor = 0;
 
   GROUPS.forEach((group) => {
@@ -175,6 +190,7 @@ function groupPositions(groupId) {
 }
 
 module.exports = {
+  BOARD_SIZE,
   SPACES,
   GROUPS,
   EVENT_CARDS,
@@ -182,7 +198,7 @@ module.exports = {
   groupPositions,
   STARTING_CASH: 150000,
   GO_SALARY: 20000,
-  JAIL_POSITION: 10,
+  JAIL_POSITION: 12,
   JAIL_FINE: 10000,
   MAX_JAIL_TURNS: 3,
 };

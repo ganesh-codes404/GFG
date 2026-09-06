@@ -719,13 +719,18 @@ function DevelopModal({ state, mySeat, dispatch, onClose }) {
         {myProps.length === 0 && <p>You don't own any developable properties.</p>}
         {myProps.map(([pos, prop]) => {
           const space = state.spaces[pos];
+          const needsAnotherLanding = (prop.landCount || 0) < 2;
           return (
             <div key={pos} className="ab-develop-row">
               <span>{space.name}</span>
               <span>{prop.houses === 5 ? "Hotel" : `${prop.houses}/4 houses`}</span>
               <div className="ab-trade-actions">
-                <button onClick={() => dispatch("develop", { pos: Number(pos) })}>
-                  + {formatRupees(space.houseCost)}
+                <button
+                  disabled={needsAnotherLanding}
+                  title={needsAnotherLanding ? "Land on this property again before developing it" : undefined}
+                  onClick={() => dispatch("develop", { pos: Number(pos) })}
+                >
+                  {needsAnotherLanding ? "LAND AGAIN" : `+ ${formatRupees(space.houseCost)}`}
                 </button>
                 {prop.houses > 0 && (
                   <button onClick={() => dispatch("sell-development", { pos: Number(pos) })}>SELL</button>

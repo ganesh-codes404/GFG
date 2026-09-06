@@ -204,8 +204,12 @@ button, input { font-family: inherit; }
 .ab-board {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(13, 1fr);
-  grid-template-rows: repeat(13, 1fr);
+  /* Only the outer ring (the first/last row and column) holds real cells --
+     the 11 tracks between them are pure backdrop for the center info panel.
+     Splitting all 13 evenly starved the actual property cells down to ~8%
+     of the board each; weight the ring tracks much heavier instead. */
+  grid-template-columns: 2fr repeat(11, 0.4fr) 2fr;
+  grid-template-rows: 2fr repeat(11, 0.4fr) 2fr;
   /* 100% (not a vw guess) so it's always sized off its actual grid column
      -- a fixed vw-based width ignored the side columns and could overflow
      on a real laptop screen, which is narrower than it looks in isolation. */
@@ -448,6 +452,8 @@ button, input { font-family: inherit; }
   cursor: pointer;
 }
 
+.ab-trade-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+
 /* POPUPS */
 
 .ab-popup {
@@ -645,6 +651,14 @@ button, input { font-family: inherit; }
   margin-top: 20px;
   color: #d9e8d9;
   font-size: 14px;
+}
+
+@media (min-width: 901px) {
+  /* Only on the wide, single-row desktop/laptop layout: cap the board by
+     viewport height too, not just width, so a wide-but-short window
+     doesn't force scrolling to see the bottom of the board -- aspect-
+     ratio:1 means shrinking the width shrinks the height to match. */
+  .ab-board { width: min(880px, 100%, calc(100dvh - 120px)); }
 }
 
 @media (max-width: 900px) {

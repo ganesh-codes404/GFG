@@ -14,14 +14,14 @@ const {
 
 const COLORS = ["#e74c3c", "#3498db", "#f1c40f", "#2ecc71", "#9b59b6", "#e67e22", "#1abc9c"];
 
-// Turns are no longer ended by the player -- after a roll resolves (and any
-// buy/develop decision it triggers is answered), the server waits this long
-// before automatically passing to the next player. That pause is also the
-// window where TRADE and developing OTHER properties remain available.
-// 30s per person, both for making a buy/develop call and for the
-// post-decision window before the turn auto-advances.
+// Turns are no longer ended by the player -- after a roll resolves, the
+// server waits this long for a buy/develop decision before auto-skipping it.
 const DECISION_TIME_MS = 30 * 1000;
-const TURN_END_DELAY_MS = 30 * 1000;
+// Once the player's move is actually done for the turn (decision answered,
+// or nothing to decide in the first place), there's nothing left for them to
+// do -- this is just a short beat to read the outcome before passing to the
+// next player, not another 30s wait.
+const TURN_END_DELAY_MS = 3 * 1000;
 
 function fail(message) {
   throw new Error(message);
@@ -56,6 +56,9 @@ function canDevelopHere(state, seat, pos) {
   if (!prop || prop.owner !== seat || prop.mortgaged) return false;
   if (!ownsFullGroup(state, seat, space.group)) return false;
   if (prop.houses >= 5) return false;
+  // The first landing is what buys the property -- developing it is only
+  // on the table once you've landed on that same square again.
+  if ((prop.landCount || 0) < 2) return false;
   return state.players[seat].cash >= space.houseCost;
 }
 
@@ -81,7 +84,11 @@ function enterPostLandingPhase(state, seat) {
     return;
   }
 
-  beginTurnEndCountdown(state);
+  // Nothing was actually up for a decision this landing -- event/community/
+  // tax spaces resolve automatically, and so does rent on an already-owned
+  // or mortgaged property. There's nothing left for anyone to do, so don't
+  // hold the game up with a countdown; just pass the turn.
+  advanceToNextTurn(state, seat);
 }
 
 function beginTurnEndCountdown(state) {
@@ -160,7 +167,7 @@ function createInitialState(seatCount, rng = Math.random) {
   const properties = {};
   for (const space of SPACES) {
     if (["property", "transport", "utility"].includes(space.type)) {
-      properties[space.pos] = { owner: null, houses: 0, mortgaged: false };
+      properties[space.pos] = { owner: null, houses: 0, mortgaged: false, landCount: 0 };
     }
   }
 
@@ -286,6 +293,7 @@ function resolveLanding(state, seat) {
 
   if (space.type === "property" || space.type === "transport" || space.type === "utility") {
     const prop = state.properties[space.pos];
+    prop.landCount = (prop.landCount || 0) + 1;
 
     if (prop.owner === null) {
       log(state, `${playerLabel(seat)} landed on ${space.name} (₹${space.price.toLocaleString("en-IN")}) -- up for sale.`);
@@ -362,6 +370,7 @@ function declareBankruptcy(state, seat) {
       prop.owner = null;
       prop.houses = 0;
       prop.mortgaged = false;
+      prop.landCount = 0;
     }
   }
 
@@ -412,7 +421,7 @@ function handleRollDice(state, seat) {
         if (state.phase === "debt") return;
       } else {
         log(state, `${playerLabel(seat)} stays in Traffic Halt.`);
-        beginTurnEndCountdown(state);
+        advanceToNextTurn(state, seat);
         return;
       }
     }
@@ -432,7 +441,7 @@ function handleRollDice(state, seat) {
     if (player.doublesStreak >= 3) {
       sendToJail(state, seat, "rolled doubles three times in a row and was hauled off to");
       player.doublesStreak = 0;
-      beginTurnEndCountdown(state);
+      advanceToNextTurn(state, seat);
       return;
     }
     log(state, `${playerLabel(seat)} rolled doubles and goes again!`);
@@ -516,6 +525,7 @@ function handleDevelop(state, seat, pos) {
   if (prop.mortgaged) fail("That property is mortgaged.");
   if (!ownsFullGroup(state, seat, space.group)) fail("You need the whole group to develop.");
   if (prop.houses >= 5) fail("Already fully developed.");
+  if ((prop.landCount || 0) < 2) fail("Land on this property again before developing it.");
 
   const player = state.players[seat];
   if (player.cash < space.houseCost) fail("Not enough cash to develop.");

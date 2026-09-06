@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body, #root { width: 100%; min-height: 100%; }
-body { overflow-x: hidden; font-family: "Pixelify Sans", sans-serif; background: #1d1733; }
+body { overflow-x: hidden; font-family: "Press Start 2P", cursive; background: #1d1733; }
 button, input { font-family: inherit; }
 
 .ab-screen {
@@ -84,26 +84,67 @@ button, input { font-family: inherit; }
   display: grid;
   grid-template-columns: repeat(11, 1fr);
   grid-template-rows: repeat(11, 1fr);
-  width: min(560px, 80vw);
+  width: min(680px, 82vw);
   aspect-ratio: 1;
   background: #f4ecd8;
   border: 4px solid #17101f;
   border-radius: 6px;
   gap: 1px;
+  /* The round-table's center slot is deliberately much smaller than the
+     board -- without this the surrounding flex layout would silently
+     shrink the board down to fit that slot instead of rendering at full
+     size (it's fine for it to spill past the decorative felt circle). */
+  flex-shrink: 0;
 }
 
-.ab-board-center-label {
-  grid-row: 4 / 8;
-  grid-column: 4 / 8;
+.ab-board-center {
+  grid-row: 2 / 11;
+  grid-column: 2 / 11;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   text-align: center;
-  font-family: "Press Start 2P";
-  font-size: clamp(8px, 1.6vw, 13px);
-  color: #14532d;
-  opacity: 0.5;
+  background: radial-gradient(ellipse, #fffaf0, #f4ecd8 75%);
+  border: 3px dashed #c9bb8e;
+  border-radius: 10px;
   padding: 6px;
+}
+
+.ab-board-center-logo {
+  font-family: "Press Start 2P";
+  font-size: clamp(11px, 2.6vw, 20px);
+  line-height: 1.6;
+  color: #14532d;
+  opacity: 0.55;
+}
+
+.ab-board-center-turn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: clamp(9px, 1.6vw, 13px);
+  font-weight: 700;
+  color: #17101f;
+  background: #fff;
+  border: 2px solid #17101f;
+  border-radius: 20px;
+}
+
+.ab-board-center-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--player-color, #7de89a);
+  border: 2px solid #17101f;
+  flex-shrink: 0;
+}
+
+.ab-board-center-roll {
+  font-size: clamp(9px, 1.6vw, 13px);
+  color: #4a3f2a;
 }
 
 .ab-cell {
@@ -460,6 +501,6 @@ button, input { font-family: inherit; }
 }
 
 @media (max-width: 700px) {
-  .ab-board { width: 92vw; }
+  .ab-board { width: min(560px, 78vw); }
   .ab-trade-columns { grid-template-columns: 1fr; }
 }

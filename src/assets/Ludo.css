@@ -5,7 +5,7 @@ html, body, #root { width: 100%; min-height: 100%; }
 body { overflow-x: hidden; font-family: "Press Start 2P", cursive; background: #1d1733; }
 button { font-family: inherit; }
 
-.snl-screen {
+.ldo-screen {
   position: relative;
   min-height: 100vh;
   min-height: 100dvh;
@@ -16,9 +16,9 @@ button { font-family: inherit; }
   background: linear-gradient(180deg, #241a3d 0%, #34204f 45%, #4a2160 100%);
 }
 
-.snl-gate { display: flex; align-items: center; justify-content: center; }
+.ldo-gate { display: flex; align-items: center; justify-content: center; }
 
-.snl-header {
+.ldo-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -26,13 +26,13 @@ button { font-family: inherit; }
   margin: 0 auto 12px;
 }
 
-.snl-logo {
+.ldo-logo {
   font-family: "Press Start 2P", cursive;
-  font-size: clamp(14px, 3.5vw, 24px);
+  font-size: clamp(18px, 4vw, 26px);
   color: #ffe27a;
 }
 
-.snl-info-button {
+.ldo-info-button {
   width: 34px; height: 34px;
   font-size: 15px; color: #17101f;
   background: linear-gradient(180deg, #ffe27a, #ffb93e);
@@ -40,13 +40,13 @@ button { font-family: inherit; }
   cursor: pointer;
 }
 
-/* TABLE */
+/* TABLE / SEATS */
 
-.snl-table { max-width: 760px; margin: 0 auto; }
+.ldo-table { max-width: 780px; margin: 0 auto; }
 
-.snl-seat {
+.ldo-seat {
   position: relative;
-  min-width: 90px;
+  min-width: 96px;
   padding: 6px 8px;
   text-align: center;
   background: linear-gradient(180deg, #3a2748, #241833);
@@ -55,13 +55,13 @@ button { font-family: inherit; }
   border-radius: 8px;
 }
 
-.snl-seat.self {
+.ldo-seat.self {
   border-left-color: #ffe27a;
   border-right-color: #ffe27a;
   border-bottom-color: #ffe27a;
 }
 
-.snl-seat-name {
+.ldo-seat-name {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -70,7 +70,7 @@ button { font-family: inherit; }
   font-weight: 700;
 }
 
-.snl-seat-swatch {
+.ldo-seat-swatch {
   width: 10px;
   height: 10px;
   border-radius: 50%;
@@ -80,71 +80,108 @@ button { font-family: inherit; }
   flex-shrink: 0;
 }
 
-.snl-seat-position { font-size: 10px; color: #d9c9f2; margin-top: 3px; }
+.ldo-token-pips {
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 5px;
+}
+
+.ldo-pip {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--player-color, #7de89a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 700;
+  color: #17101f;
+  background: transparent;
+}
+
+.ldo-pip-track, .ldo-pip-stretch, .ldo-pip-home {
+  background: var(--player-color, #7de89a);
+  color: #17101f;
+}
+
+.ldo-pip-home { box-shadow: 0 0 0 2px #ffe27a; }
 
 /* BOARD */
 
-.snl-board {
+.ldo-board {
   position: relative;
-  width: min(640px, 82vw);
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  grid-template-rows: repeat(14, 1fr);
+  width: min(560px, 80vw);
   aspect-ratio: 1;
   background: #f4ecd8;
   border: 4px solid #17101f;
   border-radius: 6px;
-  /* The round-table's center slot is deliberately much smaller than the
-     board -- without this the surrounding flexbox would silently shrink
-     the board down to fit that slot instead of rendering at full size. */
+  gap: 1px;
   flex-shrink: 0;
 }
 
-.snl-grid {
+.ldo-yard {
   position: relative;
-  z-index: 2;
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  grid-template-rows: repeat(10, 1fr);
-  width: 100%;
-  height: 100%;
+  background: color-mix(in srgb, var(--player-color, #7de89a) 22%, #f4ecd8);
+  border: 2px solid var(--player-color, #7de89a);
+  border-radius: 6px;
+  margin: 3px;
 }
 
-.snl-board-overlay {
+.ldo-yard.unused { opacity: 0.25; }
+
+.ldo-yard-tokens {
   position: absolute;
   inset: 0;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  place-items: center;
+  padding: 14%;
 }
 
-.snl-cell {
+.ldo-yard-token {
+  width: 60%;
+  height: 60%;
+  max-width: 16px;
+  max-height: 16px;
+  border-radius: 50%;
+  background: var(--player-color, #7de89a);
+  border: 2px solid #17101f;
+}
+
+.ldo-cell {
   position: relative;
+  background: #fff;
   border: 1px solid rgba(23, 16, 31, 0.15);
   display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding: 1px 2px;
+  align-items: center;
+  justify-content: center;
 }
 
-.snl-cell-number {
-  font-size: 6.5px;
-  color: #6b5a3a;
-  font-weight: 700;
-}
+.ldo-cell.safe { background: #fff3cf; }
 
-.snl-cell-tokens {
+.ldo-star {
   position: absolute;
-  inset: 0;
+  font-size: 7px;
+  color: #d4a017;
+}
+
+.ldo-cell-tokens {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 1px;
-  padding-top: 4px;
 }
 
-.snl-token {
-  width: 10px;
-  height: 10px;
+.ldo-token {
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   border: 2px solid #fff;
   box-shadow: 0 0 0 1px #17101f, 0 2px 3px rgba(0, 0, 0, 0.5);
@@ -152,15 +189,16 @@ button { font-family: inherit; }
 
 /* CONTROLS */
 
-.snl-controls {
+.ldo-controls {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 10px;
   margin: 16px 0;
 }
 
-.snl-action-button {
+.ldo-action-button {
   padding: 12px 18px;
   font-family: "Press Start 2P";
   font-size: 11px;
@@ -171,11 +209,52 @@ button { font-family: inherit; }
   cursor: pointer;
 }
 
-.snl-action-button:disabled { opacity: 0.4; cursor: not-allowed; }
+.ldo-action-button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.ldo-token-picker { text-align: center; }
+
+.ldo-token-picker p {
+  font-size: 12px;
+  color: #d9c9f2;
+  margin-bottom: 8px;
+}
+
+.ldo-token-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ldo-token-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 10px;
+  font-family: "Press Start 2P";
+  font-size: 9px;
+  color: #17101f;
+  background: var(--player-color, #7de89a);
+  border: 3px solid #17101f;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ldo-token-button small {
+  font-family: "Press Start 2P";
+  font-size: 8px;
+}
+
+.ldo-token-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
 
 /* POPUPS */
 
-.snl-popup {
+.ldo-popup {
   width: min(460px, 94vw);
   padding: 30px 26px;
   text-align: center;
@@ -185,15 +264,15 @@ button { font-family: inherit; }
   box-shadow: 0 0 0 5px #7c5cff33, 0 12px 0 #17101f;
 }
 
-.snl-popup h2 {
+.ldo-popup h2 {
   font-family: "Press Start 2P";
   font-size: 18px;
   color: #ffe27a;
 }
 
-.snl-popup p { margin: 12px 0 16px; color: #d9c9f2; }
+.ldo-popup p { margin: 12px 0 16px; color: #d9c9f2; }
 
-.snl-button {
+.ldo-button {
   padding: 12px 20px;
   font-family: "Press Start 2P";
   font-size: 11px;
@@ -204,23 +283,22 @@ button { font-family: inherit; }
   cursor: pointer;
 }
 
-.snl-victory h1 {
+.ldo-victory h1 {
   font-family: "Press Start 2P";
   font-size: clamp(15px, 5vw, 22px);
-  color: #fff6cf;
   margin-top: 10px;
 }
 
-.snl-trophy { font-size: 44px; }
+.ldo-trophy { font-size: 44px; }
 
-.snl-final-stats {
+.ldo-final-stats {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-top: 16px;
 }
 
-.snl-final-row {
+.ldo-final-row {
   display: flex;
   justify-content: space-between;
   padding: 8px 12px;
@@ -231,31 +309,27 @@ button { font-family: inherit; }
   font-size: 13px;
 }
 
-.snl-postgame-actions {
+.ldo-postgame-actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
   margin-top: 20px;
 }
 
-.snl-button.next {
+.ldo-button.next {
   background: linear-gradient(180deg, #9fd9ff, #3f7fe6, #255fc4);
 }
 
-.snl-waiting-host {
+.ldo-waiting-host {
   margin-top: 20px;
   color: #d9c9f2;
   font-size: 14px;
 }
 
 @media (max-width: 600px) {
-  .snl-board { width: 96vw; }
+  .ldo-board { width: 96vw; }
 
-  .snl-token {
-    width: 12px;
-    height: 12px;
-    border-width: 2px;
-  }
+  .ldo-token { width: 10px; height: 10px; }
 
-  .snl-cell-number { font-size: 7px; }
+  .ldo-yard-token { max-width: 14px; max-height: 14px; }
 }

@@ -77,6 +77,47 @@ function publicRoom(room) {
   };
 }
 
+// Broadcasts the current game state to every seat, each getting its own
+// view (for games with hidden information like who's drawing/guessing).
+function broadcastGameState(room) {
+  room.game.seats.forEach((playerId, seatIndex) => {
+    io.to(playerId).emit("game-state", room.game.engine.viewFor(room.game.state, seatIndex));
+  });
+}
+
+// Most games only ever change state in response to a player's action. A few
+// (Pictionary's word-choice/draw/reveal timers) need to advance on their own
+// wall-clock schedule even if nobody acts -- an engine opts into that by
+// exporting `nextDeadline(state)` (returns a timestamp or null) and
+// `advanceTime(state)` (a pure state transition, just like applyAction but
+// with no seat/action). This stays a complete no-op for every other engine.
+function scheduleGameTimer(room) {
+  if (room.game.timer) {
+    clearTimeout(room.game.timer);
+    room.game.timer = null;
+  }
+
+  const { engine } = room.game;
+  if (!engine.nextDeadline || !engine.advanceTime) return;
+
+  const deadline = engine.nextDeadline(room.game.state);
+  if (deadline === null || deadline === undefined) return;
+
+  const thisGame = room.game;
+  const delay = Math.max(0, deadline - Date.now());
+
+  room.game.timer = setTimeout(() => {
+    // The room's game may have been replaced (a rematch, or a different
+    // game entirely) since this timer was scheduled -- bail rather than
+    // run a stale engine against whatever is there now.
+    if (room.game !== thisGame) return;
+
+    room.game.state = engine.advanceTime(room.game.state);
+    broadcastGameState(room);
+    scheduleGameTimer(room);
+  }, delay);
+}
+
 function generateRoomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -257,6 +298,8 @@ io.on("connection", (socket) => {
 
     const engine = GAMES[game];
 
+    if (room.game?.timer) clearTimeout(room.game.timer);
+
     room.game = engine
       ? {
           type: game,
@@ -265,8 +308,11 @@ io.on("connection", (socket) => {
           // Snapshot of socket ids in join order -- this is what "seat 0",
           // "seat 1", etc. mean for the lifetime of this game session.
           seats: room.players.map((player) => player.id),
+          timer: null,
         }
       : null;
+
+    if (room.game) scheduleGameTimer(room);
 
     io.to(room.code).emit("game-started", { code: room.code, game });
 
@@ -331,12 +377,8 @@ io.on("connection", (socket) => {
       return;
     }
 
-    room.game.seats.forEach((playerId, seatIndex) => {
-      io.to(playerId).emit(
-        "game-state",
-        room.game.engine.viewFor(room.game.state, seatIndex)
-      );
-    });
+    broadcastGameState(room);
+    scheduleGameTimer(room);
 
     callback?.({ success: true });
   });
@@ -359,12 +401,8 @@ io.on("connection", (socket) => {
 
     room.game.state = room.game.engine.createInitialState(room.game.seats.length);
 
-    room.game.seats.forEach((playerId, seatIndex) => {
-      io.to(playerId).emit(
-        "game-state",
-        room.game.engine.viewFor(room.game.state, seatIndex)
-      );
-    });
+    broadcastGameState(room);
+    scheduleGameTimer(room);
 
     callback?.({ success: true });
   });

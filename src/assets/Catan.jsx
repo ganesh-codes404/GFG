@@ -209,19 +209,36 @@ function CatanGame({ state, mySeat, dispatch, toast, isHost, nextGame, onNextGam
   const isSetupSettlement = inSetup && state.setupStep === "settlement";
 
   useEffect(() => {
-    if (!inSetup) return;
-    setPlacementMode(isSetupSettlement ? "settlement" : "road");
-  }, [inSetup, isSetupSettlement]);
-
-  useEffect(() => {
+    if (inSetup) {
+      setPlacementMode(isSetupSettlement ? "settlement" : "road");
+      return;
+    }
+    // Outside setup, placement mode is chosen explicitly via the BUILD
+    // buttons -- just clear it when leaving "main" entirely (rolling,
+    // discarding, moving the robber, etc.), and leave it alone otherwise so
+    // a chosen mode survives incidental state updates while in "main".
     if (state.phase !== "main") setPlacementMode(null);
-  }, [state.phase]);
+  }, [inSetup, isSetupSettlement, state.phase]);
 
   const vertices = state.graph.vertices;
   const edges = state.graph.edges;
   const hexes = state.graph.hexes;
 
   const viewBox = useMemo(() => computeViewBox(vertices), [vertices]);
+
+  // Mirrors the server's distance rule (no settlement adjacent to another)
+  // so the board never highlights a spot as placeable when the server
+  // would actually reject it -- that mismatch reads as "nothing happens"
+  // when a real player taps it.
+  const adjacentVertexIds = useMemo(() => {
+    const map = {};
+    for (const edge of Object.values(edges)) {
+      const [a, b] = edge.vertexIds;
+      (map[a] ||= []).push(b);
+      (map[b] ||= []).push(a);
+    }
+    return map;
+  }, [edges]);
 
   const handleRoll = async () => {
     setRollAnim(true);
@@ -466,31 +483,51 @@ function CatanGame({ state, mySeat, dispatch, toast, isHost, nextGame, onNextGam
                 const clickable = isMyTurn && placementMode === "road" && !builder;
 
                 return (
-                  <line
-                    key={edge.id}
-                    x1={a.x}
-                    y1={a.y}
-                    x2={b.x}
-                    y2={b.y}
-                    stroke={builder ? builder.color : clickable ? "#ffe27a" : "transparent"}
-                    strokeWidth={builder ? 0.09 : 0.22}
-                    strokeLinecap="round"
-                    className={clickable ? "catan-edge-clickable" : ""}
-                    onClick={() => handleEdgeClick(edge.id)}
-                  />
+                  <g key={edge.id} onClick={() => handleEdgeClick(edge.id)}>
+                    {/* Invisible, much wider hit-area -- the visible line
+                        below is far too thin to reliably tap on a phone. */}
+                    <line
+                      x1={a.x}
+                      y1={a.y}
+                      x2={b.x}
+                      y2={b.y}
+                      stroke="transparent"
+                      strokeWidth="0.5"
+                      strokeLinecap="round"
+                    />
+                    <line
+                      x1={a.x}
+                      y1={a.y}
+                      x2={b.x}
+                      y2={b.y}
+                      stroke={builder ? builder.color : clickable ? "#ffe27a" : "transparent"}
+                      strokeWidth={builder ? 0.09 : 0.22}
+                      strokeLinecap="round"
+                      className={clickable ? "catan-edge-clickable" : ""}
+                    />
+                  </g>
                 );
               })}
 
               {Object.values(vertices).map((vertex) => {
                 const building = state.buildings[vertex.id];
                 const owner = building && state.players.find((p) => p.seat === building.seat);
-                const clickableSettlement = isMyTurn && placementMode === "settlement" && !building;
+                const tooCloseToAnother = (adjacentVertexIds[vertex.id] || []).some(
+                  (neighborId) => state.buildings[neighborId]
+                );
+                const clickableSettlement =
+                  isMyTurn && placementMode === "settlement" && !building && !tooCloseToAnother;
                 const clickableCity =
                   isMyTurn && placementMode === "city" && building?.seat === mySeat && building.type === "settlement";
                 const clickable = clickableSettlement || clickableCity;
 
                 return (
                   <g key={vertex.id} onClick={() => handleVertexClick(vertex.id)}>
+                    {/* Invisible, much bigger hit-area -- the visible dot
+                        below is far too small to reliably tap on a phone.
+                        Kept under 0.5 (half the distance between adjacent
+                        vertices) so neighboring hit-areas never overlap. */}
+                    <circle cx={vertex.x} cy={vertex.y} r="0.45" fill="transparent" />
                     <circle
                       cx={vertex.x}
                       cy={vertex.y}

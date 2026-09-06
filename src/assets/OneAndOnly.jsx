@@ -262,8 +262,6 @@ function OneAndOnlyGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame,
         </div>
       )}
 
-      <GameLog entries={state.log} title="EVENTS" />
-
       <footer className="ooo-hand-wrap">
         <div className="ooo-hand">
           {state.myHand.map((card) => {
@@ -281,6 +279,8 @@ function OneAndOnlyGame({ state, mySeat, dispatch, isHost, nextGame, onNextGame,
           })}
         </div>
       </footer>
+
+      <GameLog entries={state.log} title="EVENTS" />
 
       {pendingWildCardId && (
         <Modal onClose={() => setPendingWildCardId(null)}>

@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 *{margin:0;padding:0;box-sizing:border-box}
 html,body,#root{width:100%;min-height:100%}
-body{overflow-x:hidden;font-family:"Pixelify Sans",sans-serif;background:#1d1733}
+body{overflow-x:hidden;font-family: "Press Start 2P", cursive;background:#1d1733}
 
 .screen{
   position:relative;
@@ -86,7 +86,7 @@ body{overflow-x:hidden;font-family:"Pixelify Sans",sans-serif;background:#1d1733
 
 .panel input{
   width:100%;
-  font-family:"Pixelify Sans";font-weight:600;
+  font-family: "Press Start 2P";font-weight:600;
   font-size:18px;color:#3a2748;
   padding:14px 16px;
   border:3px solid #17101f;border-radius:6px;

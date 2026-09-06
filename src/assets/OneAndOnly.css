@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 * {
   margin: 0;
@@ -13,7 +13,7 @@ html, body, #root {
 
 body {
   overflow-x: hidden;
-  font-family: "Pixelify Sans", sans-serif;
+  font-family: "Press Start 2P", cursive;
   background: #1d1733;
 }
 
@@ -136,7 +136,7 @@ button { font-family: inherit; }
 }
 
 .ooo-draw-pile small {
-  font-family: "Pixelify Sans";
+  font-family: "Press Start 2P";
   font-size: 9px;
   color: #d9c9f2;
 }
@@ -222,8 +222,6 @@ button { font-family: inherit; }
 /* HAND */
 
 .ooo-hand-wrap {
-  position: sticky;
-  bottom: 0;
   padding: 12px 4px 4px;
   margin-top: 10px;
 }

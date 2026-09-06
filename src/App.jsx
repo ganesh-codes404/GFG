@@ -19,6 +19,11 @@ import Catan from "./assets/Catan";
 import OneAndOnly from "./assets/OneAndOnly";
 import AndhraBusiness from "./assets/AndhraBusiness";
 import SnakesAndLadders from "./assets/SnakesAndLadders";
+import Ludo from "./assets/Ludo";
+import WordRush from "./assets/WordRush";
+import Imposter from "./assets/Imposter";
+import Pictionary from "./assets/Pictionary";
+import Checkers from "./assets/Checkers";
 
 function Home() {
   const navigate = useNavigate();
@@ -226,6 +231,31 @@ export default function App() {
         <Route
           path="/snakes-and-ladders"
           element={<SnakesAndLadders />}
+        />
+
+        <Route
+          path="/ludo"
+          element={<Ludo />}
+        />
+
+        <Route
+          path="/word-rush"
+          element={<WordRush />}
+        />
+
+        <Route
+          path="/imposter"
+          element={<Imposter />}
+        />
+
+        <Route
+          path="/pictionary"
+          element={<Pictionary />}
+        />
+
+        <Route
+          path="/checkers"
+          element={<Checkers />}
         />
 
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 * {
   margin: 0;
@@ -15,7 +15,7 @@ body,
 
 body {
   overflow-x: hidden;
-  font-family: "Pixelify Sans", sans-serif;
+  font-family: "Press Start 2P", cursive;
   background: #1d1733;
 }
 
@@ -553,7 +553,7 @@ button {
 }
 
 .arena-player small {
-  font-family: "Pixelify Sans";
+  font-family: "Press Start 2P";
   font-weight: 700;
   font-size: 12px;
 }
@@ -711,7 +711,7 @@ button {
 
   margin-top: 6px;
 
-  font-family: "Pixelify Sans";
+  font-family: "Press Start 2P";
   font-size: 11px;
 }
 

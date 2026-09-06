@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 * {
   margin: 0;
@@ -15,7 +15,7 @@ body,
 
 body {
   overflow-x: hidden;
-  font-family: "Pixelify Sans", sans-serif;
+  font-family: "Press Start 2P", cursive;
   background: #1d1733;
 }
 
@@ -137,7 +137,9 @@ select {
   grid-template-columns: 220px 1fr 260px;
   gap: 14px;
 
-  padding-bottom: 90px;
+  /* Comfortably clears the fixed .catan-action-bar so nothing at the
+     bottom of the board ends up permanently hidden underneath it. */
+  padding-bottom: 130px;
 }
 
 .catan-section-title {
@@ -456,7 +458,7 @@ select {
 .catan-build-cost {
   display: flex;
   gap: 4px;
-  font-family: "Pixelify Sans";
+  font-family: "Press Start 2P";
   font-size: 11px;
 }
 
@@ -810,6 +812,10 @@ select {
   }
 
   .catan-layout {
-    padding-bottom: 110px;
+    /* Must clear the fixed .catan-action-bar's actual rendered height
+       (~122px measured, more with certain font-rendering/zoom settings) --
+       otherwise its bottom-most content becomes untappable, permanently
+       hidden under the bar with no way to scroll past it. */
+    padding-bottom: 160px;
   }
 }

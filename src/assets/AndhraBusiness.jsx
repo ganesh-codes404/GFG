@@ -355,6 +355,8 @@ function AndhraBusinessGame({ state, mySeat, dispatch, isHost, nextGame, onNextG
 }
 
 function Board({ state }) {
+  const currentPlayer = state.players[state.currentSeat];
+
   return (
     <div className="ab-board">
       {state.spaces.map((space) => {
@@ -388,7 +390,26 @@ function Board({ state }) {
           </div>
         );
       })}
-      <div className="ab-board-center-label">ANDHRA BUSINESS</div>
+      <div className="ab-board-center">
+        <div className="ab-board-center-logo">
+          ANDHRA
+          <br />
+          BUSINESS
+        </div>
+
+        {currentPlayer && !currentPlayer.bankrupt && (
+          <div className="ab-board-center-turn" style={{ "--player-color": currentPlayer.color }}>
+            <span className="ab-board-center-dot" />
+            Player {state.currentSeat + 1}'s turn
+          </div>
+        )}
+
+        {state.lastRoll && (
+          <div className="ab-board-center-roll">
+            🎲 {state.lastRoll.d1} + {state.lastRoll.d2} = {state.lastRoll.total}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

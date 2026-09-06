@@ -8,6 +8,11 @@ export const GAME_ROUTES = {
   "One and Only": "/one-and-only",
   "Andhra Business": "/andhra-business",
   "Snakes and Ladders": "/snakes-and-ladders",
+  "Ludo": "/ludo",
+  "Word Rush": "/word-rush",
+  "Imposter": "/imposter",
+  "Pictionary": "/pictionary",
+  "Checkers": "/checkers",
 };
 
 // Games that only work with an exact headcount (no more, no less).
@@ -16,6 +21,7 @@ export const GAME_EXACT_PLAYERS = {
   "Secret Agent": 7,
   "Chess": 2,
   "Connect 4": 2,
+  "Checkers": 2,
 };
 
 // Games that work across a range of headcounts (min/max inclusive).
@@ -24,6 +30,10 @@ export const GAME_PLAYER_RANGE = {
   "One and Only": { min: 2, max: 5 },
   "Andhra Business": { min: 4, max: 7 },
   "Snakes and Ladders": { min: 3, max: 7 },
+  "Ludo": { min: 3, max: 4 },
+  "Word Rush": { min: 2, max: 7 },
+  "Imposter": { min: 5, max: 7 },
+  "Pictionary": { min: 5, max: 7 },
 };
 
 // Games with a server-authoritative session (server/games/*) -- their state
@@ -37,6 +47,11 @@ export const NETWORKED_GAMES = new Set([
   "One and Only",
   "Andhra Business",
   "Snakes and Ladders",
+  "Ludo",
+  "Word Rush",
+  "Imposter",
+  "Pictionary",
+  "Checkers",
 ]);
 
 export function playerCountRequirementLabel(game) {

@@ -1,0 +1,180 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body, #root { width: 100%; min-height: 100%; }
+body { overflow-x: hidden; font-family: "Press Start 2P", cursive; background: #1a1225; }
+button { font-family: inherit; }
+
+.chk-screen {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 16px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(180deg, #241a3d 0%, #34204f 45%, #4a2160 100%);
+}
+
+.chk-gate { justify-content: center; }
+
+.chk-header { margin-bottom: 10px; }
+
+.chk-logo {
+  font-size: clamp(16px, 4vw, 24px);
+  color: #ffe27a;
+}
+
+.chk-turn-row { margin-bottom: 10px; min-height: 24px; }
+
+.chk-turn-tag {
+  padding: 6px 12px;
+  font-size: 10px;
+  color: #d9c9f2;
+  background: #2a1c3a;
+  border: 2px solid #17101f;
+  border-radius: 20px;
+}
+
+.chk-turn-tag.mine { color: #17101f; background: #ffe27a; }
+
+/* BOARD */
+
+.chk-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: min(480px, 92vw);
+  aspect-ratio: 1;
+  border: 4px solid #17101f;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.chk-board.not-my-turn { opacity: 0.9; }
+
+.chk-square {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  padding: 0;
+  cursor: default;
+}
+
+.chk-square.light { background: #f0dcb4; }
+.chk-square.dark { background: #7a5230; }
+.chk-square.dark:not(:disabled) { cursor: pointer; }
+
+.chk-square.selected { box-shadow: inset 0 0 0 4px #ffe27a; }
+
+.chk-piece {
+  width: 74%;
+  height: 74%;
+  border-radius: 50%;
+  border: 3px solid #17101f;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
+}
+
+.chk-piece.seat-0 { background: radial-gradient(circle at 35% 30%, #ff8f85, #d43847 65%, #8f1e28); }
+.chk-piece.seat-1 { background: radial-gradient(circle at 35% 30%, #4a4458, #221a30 65%, #0e0a16); }
+
+.chk-piece.selectable { box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4), 0 0 0 3px #ffe27a99; }
+
+.chk-piece.king::after {
+  content: "K";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 12px;
+  color: #ffe27a;
+  text-shadow: 0 1px 0 #000;
+}
+
+.chk-destination-dot {
+  position: absolute;
+  width: 26%;
+  height: 26%;
+  border-radius: 50%;
+  background: #ffe27acc;
+  border: 2px solid #17101f;
+}
+
+.chk-square.destination { cursor: pointer; }
+
+/* RESET / POPUPS */
+
+.chk-reset-button {
+  margin-top: 16px;
+  padding: 10px 18px;
+  font-size: 10px;
+  color: #fff;
+  background: #504858;
+  border: 3px solid #17101f;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.chk-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(10, 6, 16, 0.75);
+  z-index: 20;
+}
+
+.chk-popup {
+  width: min(420px, 94vw);
+  padding: 26px 22px;
+  text-align: center;
+  background: linear-gradient(155deg, #3a2748, #2a1c3a 60%, #1f1530);
+  border: 4px solid #17101f;
+  border-radius: 10px;
+  box-shadow: 0 0 0 5px #ffe27a33, 0 12px 0 #17101f;
+}
+
+.chk-popup h2 { font-size: 16px; color: #ffe27a; }
+.chk-popup p { margin: 12px 0 16px; color: #d9c9f2; font-size: 12px; line-height: 1.6; }
+
+.chk-confirm-grid { display: flex; gap: 8px; }
+
+.chk-confirm-yes, .chk-confirm-no {
+  flex: 1;
+  padding: 10px;
+  font-size: 9px;
+  color: #fff;
+  border: 3px solid #17101f;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.chk-confirm-yes { background: #d43847; }
+.chk-confirm-no { background: #3fb968; }
+
+.chk-button {
+  padding: 12px 20px;
+  font-size: 11px;
+  color: #fff;
+  background: linear-gradient(180deg, #7de89a, #3fb968, #1f8f47);
+  border: 3px solid #17101f;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.chk-button.next { background: linear-gradient(180deg, #9fd9ff, #3f7fe6, #255fc4); }
+
+.chk-trophy { font-size: 44px; margin-bottom: 8px; }
+.chk-victory h1 { font-size: clamp(14px, 4.5vw, 20px); color: #fff6cf; margin-bottom: 10px; }
+
+.chk-postgame-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.chk-waiting-host { margin-top: 16px; color: #d9c9f2; font-size: 12px; }

@@ -133,12 +133,12 @@ function grantSalaryIfPassed(state, seat, fromPos, toPos) {
   }
 }
 
-function sendToJail(state, seat) {
+function sendToJail(state, seat, reason) {
   const player = state.players[seat];
   player.position = JAIL_POSITION;
   player.inJail = true;
   player.jailTurns = 0;
-  log(state, `${playerLabel(seat)} was sent to Traffic Halt.`);
+  log(state, `${playerLabel(seat)} ${reason || "was sent to"} Traffic Halt.`);
 }
 
 function drawCard(state, seat, deckName) {
@@ -165,7 +165,7 @@ function drawCard(state, seat, deckName) {
     player.position = card.pos;
     grantSalaryIfPassed(state, seat, from, card.pos);
   } else if (card.type === "go-to-jail") {
-    sendToJail(state, seat);
+    sendToJail(state, seat, "drew a go-to-jail card and was hauled off to");
   } else if (card.type === "get-out-of-jail") {
     player.getOutOfJailCards += 1;
   } else if (card.type === "move-back") {
@@ -195,7 +195,7 @@ function resolveLanding(state, seat) {
   }
 
   if (space.type === "go-to-jail") {
-    sendToJail(state, seat);
+    sendToJail(state, seat, "landed on Go to Jail and was hauled off to");
     return;
   }
 
@@ -213,7 +213,7 @@ function resolveLanding(state, seat) {
     const prop = state.properties[space.pos];
 
     if (prop.owner === null) {
-      // Left for the player to buy or skip via a separate action.
+      log(state, `${playerLabel(seat)} landed on ${space.name} (₹${space.price.toLocaleString("en-IN")}) -- up for sale.`);
       return;
     }
 
@@ -223,9 +223,26 @@ function resolveLanding(state, seat) {
     player.cash -= amount;
     state.players[prop.owner].cash += amount;
 
+    let flavor = "";
+    if (space.type === "property" && prop.houses === 0 && ownsFullGroup(state, prop.owner, space.group)) {
+      flavor = " (monopoly bonus -- rent doubled!)";
+    } else if (space.type === "property" && prop.houses > 0) {
+      flavor = prop.houses === 5 ? " (hotel!)" : ` (${prop.houses} house${prop.houses === 1 ? "" : "s"})`;
+    } else if (space.type === "transport") {
+      const ownedCount = SPACES.filter(
+        (s) => s.type === "transport" && state.properties[s.pos]?.owner === prop.owner
+      ).length;
+      flavor = ` (${ownedCount} station${ownedCount === 1 ? "" : "s"} owned)`;
+    } else if (space.type === "utility") {
+      const ownedCount = SPACES.filter(
+        (s) => s.type === "utility" && state.properties[s.pos]?.owner === prop.owner
+      ).length;
+      flavor = ` (dice x${ownedCount >= 2 ? 10 : 4})`;
+    }
+
     log(
       state,
-      `${playerLabel(seat)} paid ₹${amount.toLocaleString("en-IN")} rent to ${playerLabel(prop.owner)} (${space.name}).`
+      `${playerLabel(seat)} paid ₹${amount.toLocaleString("en-IN")} rent to ${playerLabel(prop.owner)} (${space.name})${flavor}.`
     );
 
     checkDebt(state, seat);
@@ -331,7 +348,7 @@ function handleRollDice(state, seat) {
   if (isDouble && !player.bankrupt) {
     player.doublesStreak += 1;
     if (player.doublesStreak >= 3) {
-      sendToJail(state, seat);
+      sendToJail(state, seat, "rolled doubles three times in a row and was hauled off to");
       player.doublesStreak = 0;
       state.phase = "main";
       return;
@@ -366,6 +383,9 @@ function handleBuyProperty(state, seat) {
 
 function handleSkipBuy(state, seat) {
   if (seat !== state.currentSeat) fail("It's not your turn.");
+
+  const space = findSpace(state.players[seat].position);
+  log(state, `${playerLabel(seat)} passed on buying ${space.name}.`);
   state.phase = "main";
 }
 

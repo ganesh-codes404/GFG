@@ -1,0 +1,247 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body, #root { width: 100%; min-height: 100%; }
+body { overflow-x: hidden; font-family: "Press Start 2P", cursive; background: #1d1733; }
+button { font-family: inherit; }
+
+.wr-screen {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 16px;
+  color: #fff;
+  background: linear-gradient(180deg, #241a3d 0%, #34204f 45%, #4a2160 100%);
+}
+
+.wr-gate { display: flex; align-items: center; justify-content: center; }
+
+.wr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 900px;
+  margin: 0 auto 8px;
+}
+
+.wr-logo {
+  font-family: "Press Start 2P", cursive;
+  font-size: clamp(16px, 3.6vw, 24px);
+  color: #ffe27a;
+}
+
+.wr-info-button {
+  width: 34px; height: 34px;
+  font-size: 15px; color: #17101f;
+  background: linear-gradient(180deg, #ffe27a, #ffb93e);
+  border: 3px solid #17101f; border-radius: 50%;
+  cursor: pointer;
+}
+
+.wr-round-banner {
+  text-align: center;
+  font-family: "Press Start 2P";
+  font-size: 11px;
+  color: #d9c9f2;
+  margin-bottom: 12px;
+}
+
+/* TABLE / SEATS */
+
+.wr-table { max-width: 900px; margin: 0 auto; }
+
+.wr-seat {
+  position: relative;
+  min-width: 100px;
+  padding: 6px 8px;
+  text-align: center;
+  background: linear-gradient(180deg, #3a2748, #241833);
+  border: 3px solid #17101f;
+  border-radius: 8px;
+}
+
+.wr-seat.self { border-color: #ffe27a; }
+
+.wr-seat-name { font-size: 11px; font-weight: 700; }
+
+.wr-seat-score {
+  font-size: 10px;
+  color: #ffe27a;
+  margin-top: 2px;
+}
+
+.wr-seat-progress {
+  font-size: 10px;
+  color: #d9c9f2;
+  margin-top: 2px;
+}
+
+.wr-recap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+  transform: scale(0.7);
+  transform-origin: top center;
+}
+
+/* BOARD / TILES */
+
+.wr-board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: min(320px, 78vw);
+  flex-shrink: 0;
+}
+
+.wr-row {
+  display: flex;
+  gap: 5px;
+}
+
+.wr-tile {
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Press Start 2P";
+  font-size: 16px;
+  color: #fff;
+  background: #2a1c3a;
+  border: 2px solid #4a4458;
+  border-radius: 4px;
+}
+
+.wr-tile.correct { background: #3fb968; border-color: #1f8f47; }
+.wr-tile.present { background: #d4a017; border-color: #9c7910; }
+.wr-tile.absent { background: #332c44; border-color: #4a4458; }
+.wr-tile.empty { background: transparent; border-color: #4a4458; }
+
+.wr-guess-row {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.wr-guess-input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+  font-family: "Press Start 2P";
+  font-size: 14px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-align: center;
+  color: #fff;
+  background: #2a1c3a;
+  border: 3px solid #ffe27a;
+  border-radius: 6px;
+}
+
+.wr-submit-button {
+  padding: 0 16px;
+  font-family: "Press Start 2P";
+  font-size: 11px;
+  color: #17101f;
+  background: linear-gradient(180deg, #ffe27a, #ffb93e);
+  border: 3px solid #17101f;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.wr-submit-button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.wr-round-result {
+  text-align: center;
+  margin-top: 10px;
+  padding: 12px;
+  background: #211631;
+  border: 2px solid #17101f;
+  border-radius: 8px;
+}
+
+.wr-round-result p { margin-bottom: 8px; font-size: 13px; color: #d9c9f2; }
+
+/* POPUPS */
+
+.wr-popup {
+  width: min(460px, 94vw);
+  padding: 30px 26px;
+  text-align: center;
+  background: linear-gradient(155deg, #3a2748, #2a1c3a 60%, #1f1530);
+  border: 4px solid #17101f;
+  border-radius: 10px;
+  box-shadow: 0 0 0 5px #7c5cff33, 0 12px 0 #17101f;
+}
+
+.wr-popup h2 {
+  font-family: "Press Start 2P";
+  font-size: 18px;
+  color: #ffe27a;
+}
+
+.wr-popup p { margin: 12px 0 16px; color: #d9c9f2; }
+
+.wr-button {
+  padding: 12px 20px;
+  font-family: "Press Start 2P";
+  font-size: 11px;
+  color: #fff;
+  background: linear-gradient(180deg, #7de89a, #3fb968, #1f8f47);
+  border: 3px solid #17101f;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.wr-victory h1 {
+  font-family: "Press Start 2P";
+  font-size: clamp(15px, 5vw, 22px);
+  color: #fff6cf;
+  margin-top: 10px;
+}
+
+.wr-trophy { font-size: 44px; }
+
+.wr-final-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.wr-final-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #211631;
+  border: 2px solid #17101f;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.wr-postgame-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.wr-button.next {
+  background: linear-gradient(180deg, #9fd9ff, #3f7fe6, #255fc4);
+}
+
+.wr-waiting-host {
+  margin-top: 20px;
+  color: #d9c9f2;
+  font-size: 14px;
+}
+
+@media (max-width: 600px) {
+  .wr-tile { width: 38px; height: 38px; font-size: 13px; }
+  .wr-guess-input { font-size: 12px; }
+}

@@ -55,6 +55,15 @@ function formatRupees(n) {
   return `${sign}₹${rest ? `${grouped},` : ""}${last3}`;
 }
 
+// Mirrors the server's ownsFullGroup check so the client can proactively
+// disable/explain a develop button instead of letting the click round-trip
+// to the server just to fail silently.
+function ownsFullGroup(state, seat, groupId) {
+  return state.spaces
+    .filter((s) => s.type === "property" && s.group === groupId)
+    .every((s) => state.properties[s.pos]?.owner === seat);
+}
+
 // Maps a board position (0-47) to a cell in a 13x13 perimeter grid.
 function gridPosition(pos) {
   if (pos <= 12) return { row: 12, col: 12 - pos };
@@ -563,7 +572,7 @@ function AndhraBusinessGame({ state, mySeat, dispatch, canControl, nextGame, onN
       {showDebtPanel && <DebtModal state={state} mySeat={mySeat} dispatch={dispatch} />}
 
       {showDevelop && (
-        <DevelopModal state={state} mySeat={mySeat} dispatch={dispatch} onClose={() => setShowDevelop(false)} />
+        <DevelopModal state={state} mySeat={mySeat} dispatch={dispatch} push={push} onClose={() => setShowDevelop(false)} />
       )}
 
       {showTrade && (
@@ -716,10 +725,37 @@ function DebtModal({ state, mySeat, dispatch }) {
   );
 }
 
-function DevelopModal({ state, mySeat, dispatch, onClose }) {
+function DevelopModal({ state, mySeat, dispatch, push, onClose }) {
+  const me = state.players.find((p) => p.seat === mySeat);
   const myProps = Object.entries(state.properties).filter(
     ([pos, prop]) => prop.owner === mySeat && state.spaces[pos].type === "property"
   );
+
+  // Any of these makes the server reject the request -- checking them here
+  // means the button honestly reflects whether developing will work instead
+  // of silently doing nothing when clicked (the request would still fail
+  // server-side, but the player would never see why).
+  const blockReason = (pos, prop, space) => {
+    if (!ownsFullGroup(state, mySeat, space.group)) return "NEED FULL SET";
+    if (prop.houses >= 5) return "MAXED OUT";
+    if ((prop.landCount || 0) < 2) return "LAND AGAIN";
+    if ((me?.cash ?? 0) < space.houseCost) return "CAN'T AFFORD";
+    return null;
+  };
+
+  const runDevelop = async (pos) => {
+    const response = await dispatch("develop", { pos });
+    if (!response?.success) {
+      push?.(response?.error || "Could not develop", { tone: "danger", seat: mySeat });
+    }
+  };
+
+  const runSell = async (pos) => {
+    const response = await dispatch("sell-development", { pos });
+    if (!response?.success) {
+      push?.(response?.error || "Could not sell", { tone: "danger", seat: mySeat });
+    }
+  };
 
   return (
     <Modal onClose={onClose}>
@@ -728,21 +764,21 @@ function DevelopModal({ state, mySeat, dispatch, onClose }) {
         {myProps.length === 0 && <p>You don't own any developable properties.</p>}
         {myProps.map(([pos, prop]) => {
           const space = state.spaces[pos];
-          const needsAnotherLanding = (prop.landCount || 0) < 2;
+          const reason = blockReason(pos, prop, space);
           return (
             <div key={pos} className="ab-develop-row">
               <span>{space.name}</span>
               <span>{prop.houses === 5 ? "Hotel" : `${prop.houses}/4 houses`}</span>
               <div className="ab-trade-actions">
                 <button
-                  disabled={needsAnotherLanding}
-                  title={needsAnotherLanding ? "Land on this property again before developing it" : undefined}
-                  onClick={() => dispatch("develop", { pos: Number(pos) })}
+                  disabled={Boolean(reason)}
+                  title={reason || undefined}
+                  onClick={() => runDevelop(Number(pos))}
                 >
-                  {needsAnotherLanding ? "LAND AGAIN" : `+ ${formatRupees(space.houseCost)}`}
+                  {reason || `+ ${formatRupees(space.houseCost)}`}
                 </button>
                 {prop.houses > 0 && (
-                  <button onClick={() => dispatch("sell-development", { pos: Number(pos) })}>SELL</button>
+                  <button onClick={() => runSell(Number(pos))}>SELL</button>
                 )}
               </div>
             </div>

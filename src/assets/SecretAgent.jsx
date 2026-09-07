@@ -2,8 +2,12 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./SecretAgent.css";
 
-const REQUIRED_PLAYERS = 7;
-const NUM_AGENTS = 2;
+const MIN_PLAYERS = 6;
+const MAX_PLAYERS = 7;
+// The case data is hardcoded for exactly 5 civilians (15-word sentences,
+// 3 words each) -- so supporting a 6th player means dropping to 1 agent
+// instead of 2, not stretching the civilian count.
+const NUM_CIVILIANS = 5;
 
 const KILL_INTERVAL_SECONDS = 4 * 60;
 const FAST_ENDING_SECONDS = 10 * 60;
@@ -59,12 +63,13 @@ function normalize(text) {
 
 function setupGame(names) {
   const caseFile = CASES[Math.floor(Math.random() * CASES.length)];
+  const numAgents = names.length - NUM_CIVILIANS;
 
   const order = shuffled(
-    Array.from({ length: REQUIRED_PLAYERS }, (_, i) => i)
+    Array.from({ length: names.length }, (_, i) => i)
   );
 
-  const agentIndexes = new Set(order.slice(0, NUM_AGENTS));
+  const agentIndexes = new Set(order.slice(0, numAgents));
 
   const civilianWords = shuffled(caseFile.sentence.split(" "));
   const agentWords = shuffled(caseFile.decoys);
@@ -95,7 +100,7 @@ function setupGame(names) {
     };
   });
 
-  return { caseFile, players };
+  return { caseFile, players, numAgents };
 }
 
 export default function SecretAgent() {
@@ -104,7 +109,7 @@ export default function SecretAgent() {
 
   const room = location.state?.room;
 
-  if (room && room.players.length !== REQUIRED_PLAYERS) {
+  if (room && (room.players.length < MIN_PLAYERS || room.players.length > MAX_PLAYERS)) {
     return (
       <NotEnoughPlayers
         joined={room.players.length}
@@ -115,7 +120,7 @@ export default function SecretAgent() {
 
   const names = room
     ? room.players.map((player) => player.nickname)
-    : Array.from({ length: REQUIRED_PLAYERS }, (_, i) => `Player ${i + 1}`);
+    : Array.from({ length: MAX_PLAYERS }, (_, i) => `Player ${i + 1}`);
 
   return <SecretAgentGame names={names} />;
 }
@@ -124,12 +129,12 @@ function NotEnoughPlayers({ joined, onBack }) {
   return (
     <div className="agent-screen agent-gate">
       <div className="agent-popup">
-        <h2>NEED {REQUIRED_PLAYERS} PLAYERS</h2>
+        <h2>NEED {MIN_PLAYERS}-{MAX_PLAYERS} PLAYERS</h2>
 
         <p>
-          Secret Agent only starts with exactly {REQUIRED_PLAYERS} players.
+          Secret Agent needs {MIN_PLAYERS}-{MAX_PLAYERS} players.
           <br />
-          {joined}/{REQUIRED_PLAYERS} have joined so far.
+          {joined}/{MIN_PLAYERS}-{MAX_PLAYERS} have joined so far.
         </p>
 
         <button className="agent-reset-button" onClick={onBack}>
@@ -141,10 +146,11 @@ function NotEnoughPlayers({ joined, onBack }) {
 }
 
 function SecretAgentGame({ names }) {
+  const numAgents = names.length - NUM_CIVILIANS;
   const [game, setGame] = useState(() => setupGame(names));
   const [logs, setLogs] = useState([
     "SECRET AGENT MISSION STARTED!",
-    "2 agents are hiding among 5 civilians.",
+    `${numAgents} agent${numAgents === 1 ? " is" : "s are"} hiding among ${NUM_CIVILIANS} civilians.`,
     "Tap your card to view your role and words.",
   ]);
 
@@ -183,7 +189,7 @@ function SecretAgentGame({ names }) {
 
     setLogs([
       "NEW MISSION STARTED!",
-      "2 agents are hiding among 5 civilians.",
+      `${numAgents} agent${numAgents === 1 ? " is" : "s are"} hiding among ${NUM_CIVILIANS} civilians.`,
       "Tap your card to view your role and words.",
     ]);
   };
@@ -487,12 +493,12 @@ function SecretAgentGame({ names }) {
           <div className="agent-resource-box">
             <div>
               <span>CIVILIANS ALIVE</span>
-              <strong>{aliveCivilians.length}/5</strong>
+              <strong>{aliveCivilians.length}/{NUM_CIVILIANS}</strong>
             </div>
 
             <div>
               <span>AGENTS ALIVE</span>
-              <strong>{aliveAgents.length}/2</strong>
+              <strong>{aliveAgents.length}/{numAgents}</strong>
             </div>
           </div>
 

@@ -17,8 +17,6 @@ export const GAME_ROUTES = {
 
 // Games that only work with an exact headcount (no more, no less).
 export const GAME_EXACT_PLAYERS = {
-  "Battle Royale": 7,
-  "Secret Agent": 7,
   "Chess": 2,
   "Connect 4": 2,
   "Checkers": 2,
@@ -26,6 +24,8 @@ export const GAME_EXACT_PLAYERS = {
 
 // Games that work across a range of headcounts (min/max inclusive).
 export const GAME_PLAYER_RANGE = {
+  "Battle Royale": { min: 6, max: 7 },
+  "Secret Agent": { min: 6, max: 7 },
   "Catan": { min: 3, max: 5 },
   "One and Only": { min: 2, max: 5 },
   "Andhra Business": { min: 4, max: 7 },

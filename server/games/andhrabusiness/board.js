@@ -11,7 +11,7 @@ const GROUPS = [
     label: "North Coastal Andhra",
     color: "#8b5a2b",
     price: 6000,
-    rent: [250, 750, 2250, 7000, 9000, 11000],
+    rent: [550, 1650, 4950, 15400, 19800, 24200],
     houseCost: 5000,
     mortgage: 3000,
     towns: ["Srikakulam", "Vizianagaram"],
@@ -21,7 +21,7 @@ const GROUPS = [
     label: "Uttarandhra",
     color: "#6fb3e0",
     price: 10000,
-    rent: [400, 1000, 3000, 9500, 11500, 14000],
+    rent: [880, 2200, 6600, 20900, 25300, 30800],
     houseCost: 5000,
     mortgage: 5000,
     towns: ["Visakhapatnam", "Anakapalli", "Narsipatnam"],
@@ -31,7 +31,7 @@ const GROUPS = [
     label: "Godavari Coastal",
     color: "#c76bb3",
     price: 14000,
-    rent: [600, 1400, 4000, 10500, 13000, 15500],
+    rent: [1320, 3080, 8800, 23100, 28600, 34100],
     houseCost: 10000,
     mortgage: 7000,
     towns: ["Kakinada", "Rajahmundry", "Amalapuram"],
@@ -41,7 +41,7 @@ const GROUPS = [
     label: "West Godavari",
     color: "#e8934a",
     price: 18000,
-    rent: [700, 1600, 4500, 11500, 14500, 18000],
+    rent: [1540, 3520, 9900, 25300, 31900, 39600],
     houseCost: 10000,
     mortgage: 9000,
     towns: ["Eluru", "Bhimavaram", "Tadepalligudem"],
@@ -51,7 +51,7 @@ const GROUPS = [
     label: "Krishna Delta",
     color: "#d9453f",
     price: 22000,
-    rent: [800, 1800, 5000, 12500, 15500, 19500],
+    rent: [1760, 3960, 11000, 27500, 34100, 42900],
     houseCost: 15000,
     mortgage: 11000,
     towns: ["Vijayawada", "Machilipatnam", "Gudivada"],
@@ -61,7 +61,7 @@ const GROUPS = [
     label: "Guntur-Prakasam",
     color: "#e8c94a",
     price: 26000,
-    rent: [900, 2000, 5500, 13500, 16500, 21000],
+    rent: [1980, 4400, 12100, 29700, 36300, 46200],
     houseCost: 15000,
     mortgage: 13000,
     towns: ["Bapatla", "Guntur", "Tenali", "Ongole"],
@@ -71,7 +71,7 @@ const GROUPS = [
     label: "Nellore Region",
     color: "#3fb968",
     price: 30000,
-    rent: [1000, 2200, 6000, 14000, 17000, 22500],
+    rent: [2200, 4840, 13200, 30800, 37400, 49500],
     houseCost: 20000,
     mortgage: 15000,
     towns: ["Nellore", "Kavali", "Narasaraopet", "Gudur"],
@@ -81,7 +81,7 @@ const GROUPS = [
     label: "Rayalaseema",
     color: "#7168d8",
     price: 36000,
-    rent: [1500, 3500, 9000, 17500, 20000, 30000],
+    rent: [3300, 7700, 19800, 38500, 44000, 66000],
     houseCost: 20000,
     mortgage: 18000,
     towns: ["Tirupati", "Kadapa", "Srikalahasti", "Madanapalle"],
@@ -128,11 +128,11 @@ function buildSpaces() {
   const spaces = new Array(BOARD_SIZE);
 
   spaces[0] = { pos: 0, type: "go", name: "Andhra Start" };
-  spaces[4] = { pos: 4, type: "tax", name: "Road Expansion Tax", amount: 20000 };
+  spaces[4] = { pos: 4, type: "tax", name: "Road Expansion Tax", amount: 40000 };
   spaces[12] = { pos: 12, type: "jail", name: "Traffic Halt" };
   spaces[24] = { pos: 24, type: "free-parking", name: "Temple Rest Stop" };
   spaces[36] = { pos: 36, type: "go-to-jail", name: "Roadblock! Go to Traffic Halt" };
-  spaces[46] = { pos: 46, type: "tax", name: "Festival Levy", amount: 10000 };
+  spaces[46] = { pos: 46, type: "tax", name: "Festival Levy", amount: 20000 };
 
   for (const pos of [2, 11, 39, 45]) spaces[pos] = { pos, type: "community", name: "Community" };
   for (const pos of [7, 18, 30, 47]) spaces[pos] = { pos, type: "event", name: "Event" };
@@ -196,8 +196,14 @@ module.exports = {
   EVENT_CARDS,
   COMMUNITY_CARDS,
   groupPositions,
-  STARTING_CASH: 150000,
-  GO_SALARY: 20000,
+  // Tuned so games actually converge to a winner: the old
+  // 150k-starting-cash / 20k-GO-salary combo let cash accumulate far
+  // faster than rent could ever drain it -- simulated games routinely ran
+  // 15,000+ turns without a single bankruptcy. This combo (verified by
+  // simulation) reliably finishes in the low hundreds of turns for both
+  // 4-player and 7-player games.
+  STARTING_CASH: 100000,
+  GO_SALARY: 8000,
   JAIL_POSITION: 12,
   JAIL_FINE: 10000,
   MAX_JAIL_TURNS: 3,

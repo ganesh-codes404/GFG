@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./BattleRoyale.css";
 
-const REQUIRED_PLAYERS = 7;
+const MIN_PLAYERS = 6;
+const MAX_PLAYERS = 7;
 
 const MAX_ATTACKS = 20;
 const MAX_HEALS = 10;
@@ -38,7 +39,7 @@ export default function BattleRoyale() {
   const room = location.state?.room;
 
   // A room was handed off from the lobby, but it isn't full yet.
-  if (room && room.players.length !== REQUIRED_PLAYERS) {
+  if (room && (room.players.length < MIN_PLAYERS || room.players.length > MAX_PLAYERS)) {
     return (
       <NotEnoughPlayers
         joined={room.players.length}
@@ -49,7 +50,7 @@ export default function BattleRoyale() {
 
   const names = room
     ? room.players.map((player) => player.nickname)
-    : Array.from({ length: REQUIRED_PLAYERS }, (_, i) => `Player ${i + 1}`);
+    : Array.from({ length: MAX_PLAYERS }, (_, i) => `Player ${i + 1}`);
 
   return <BattleRoyaleGame names={names} />;
 }
@@ -58,12 +59,12 @@ function NotEnoughPlayers({ joined, onBack }) {
   return (
     <div className="battle-screen battle-gate">
       <div className="game-popup">
-        <h2>NEED {REQUIRED_PLAYERS} PLAYERS</h2>
+        <h2>NEED {MIN_PLAYERS}-{MAX_PLAYERS} PLAYERS</h2>
 
         <p>
-          Battle Royale only starts with exactly {REQUIRED_PLAYERS} players.
+          Battle Royale needs {MIN_PLAYERS}-{MAX_PLAYERS} players.
           <br />
-          {joined}/{REQUIRED_PLAYERS} have joined so far.
+          {joined}/{MIN_PLAYERS}-{MAX_PLAYERS} have joined so far.
         </p>
 
         <button className="reset-button" onClick={onBack}>
@@ -89,7 +90,7 @@ function BattleRoyaleGame({ names }) {
 
   const [logs, setLogs] = useState([
     "BATTLE ROYALE STARTED!",
-    "7 players have entered the arena.",
+    `${names.length} players have entered the arena.`,
     "Select a player and then select a target.",
   ]);
 
@@ -124,7 +125,7 @@ function BattleRoyaleGame({ names }) {
 
     setLogs([
       "NEW BATTLE STARTED!",
-      "7 players have entered the arena.",
+      `${names.length} players have entered the arena.`,
       "Select a player and then select a target.",
     ]);
   };
@@ -958,7 +959,7 @@ function BattleRoyaleGame({ names }) {
             <div>
               <span>ALIVE</span>
               <strong>
-                {alivePlayers.length}/7
+                {alivePlayers.length}/{players.length}
               </strong>
             </div>
 

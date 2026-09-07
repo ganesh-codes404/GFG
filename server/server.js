@@ -34,9 +34,9 @@ process.on("uncaughtException", (err) => {
 // Games that don't have a server-side engine yet still get a shared
 // "everyone starts together" signal, they just each run their own local
 // simulation once there (see GAMES for the ones that are fully networked).
-const LEGACY_REQUIRED_PLAYERS = {
-  "Battle Royale": 7,
-  "Secret Agent": 7,
+const LEGACY_PLAYER_RANGE = {
+  "Battle Royale": { min: 6, max: 7 },
+  "Secret Agent": { min: 6, max: 7 },
 };
 
 // A game either needs an exact headcount (Chess: exactly 2) or a range
@@ -51,8 +51,8 @@ function playerCountRequirement(game) {
     }
   }
 
-  if (LEGACY_REQUIRED_PLAYERS[game] !== undefined) {
-    return { exact: LEGACY_REQUIRED_PLAYERS[game] };
+  if (LEGACY_PLAYER_RANGE[game] !== undefined) {
+    return LEGACY_PLAYER_RANGE[game];
   }
 
   return null;

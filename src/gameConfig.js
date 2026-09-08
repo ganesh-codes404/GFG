@@ -13,6 +13,7 @@ export const GAME_ROUTES = {
   "Imposter": "/imposter",
   "Pictionary": "/pictionary",
   "Checkers": "/checkers",
+  "Guess Who": "/guess-who",
 };
 
 // Games that only work with an exact headcount (no more, no less).
@@ -34,6 +35,7 @@ export const GAME_PLAYER_RANGE = {
   "Word Rush": { min: 2, max: 7 },
   "Imposter": { min: 5, max: 7 },
   "Pictionary": { min: 5, max: 7 },
+  "Guess Who": { min: 2, max: 4 },
 };
 
 // Games with a server-authoritative session (server/games/*) -- their state
@@ -52,6 +54,7 @@ export const NETWORKED_GAMES = new Set([
   "Imposter",
   "Pictionary",
   "Checkers",
+  "Guess Who",
 ]);
 
 export function playerCountRequirementLabel(game) {

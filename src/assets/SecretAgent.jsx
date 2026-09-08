@@ -9,8 +9,36 @@ const MAX_PLAYERS = 7;
 // instead of 2, not stretching the civilian count.
 const NUM_CIVILIANS = 5;
 
-const KILL_INTERVAL_SECONDS = 4 * 60;
-const FAST_ENDING_SECONDS = 10 * 60;
+// Tuned by simulating 100 games per player count (see the "cool time"
+// design note below) -- 60s keeps a 7-player mission (2 agents) close to a
+// 50/50 outcome and a 6-player mission (1 agent, inherently an uphill
+// fight) still winnable, while keeping real games in the 2-5 minute range
+// instead of the old design's much slower ~10 minute pace.
+const KILL_INTERVAL_SECONDS = 60;
+// How long the group must wait after a vote resolves before calling
+// another one -- long enough to actually talk, short enough that a 2-5
+// minute game gets a real handful of vote attempts.
+const VOTE_COOLDOWN_SECONDS = 90;
+// Games now average 2-5 minutes (not the old design's ~10), so the
+// fast/slow ending split is scaled down to match -- otherwise every game
+// would land in the "fast" bucket and the "slow" flavor text would never
+// fire.
+const FAST_ENDING_SECONDS = 150;
+
+// --- Design note: choosing KILL_INTERVAL_SECONDS ---
+// Modeled each mission as: civilians have a small constant per-minute
+// chance of piecing together the sentence (all words are visible from the
+// start now, so this is deduction speed, not "waiting for reveals");
+// agents kill one civilian every KILL_INTERVAL_SECONDS; a vote round fires
+// every VOTE_COOLDOWN_SECONDS with an accuracy better than blind chance
+// (decoy words and behavior give real tells) but not perfect. Simulating
+// 100 games per candidate interval across both the 6-player (1 agent) and
+// 7-player (2 agent) configurations, faster than ~45s produced unrealistic
+// <90-second games (no time for a room to actually talk), while slower
+// than ~120s let civilians' vote advantage dominate almost every game.
+// 60s was the best shared compromise: 7-player lands near 50/50, 6-player
+// stays a real (if uphill) fight for the lone agent, and both configs keep
+// games in a human, several-minute pace.
 
 const COLORS = [
   "#ff6b6b",
@@ -95,8 +123,9 @@ function setupGame(names) {
       name,
       role: isAgent ? "agent" : "civilian",
       alive: true,
-      flipped: false,
-      words: words.map((word) => ({ word, revealed: false })),
+      // "agent" (sniped, silenced) | "vote" (voted out) | null (still alive)
+      eliminatedBy: null,
+      words,
     };
   });
 
@@ -151,7 +180,7 @@ function SecretAgentGame({ names }) {
   const [logs, setLogs] = useState([
     "SECRET AGENT MISSION STARTED!",
     `${numAgents} agent${numAgents === 1 ? " is" : "s are"} hiding among ${NUM_CIVILIANS} civilians.`,
-    "Tap your card to view your role and words.",
+    "Everyone's words are shown below their name -- nobody's role is ever shown. Talk it out, then guess the sentence or vote someone out.",
   ]);
 
   const [killTimer, setKillTimer] = useState(KILL_INTERVAL_SECONDS);
@@ -159,17 +188,27 @@ function SecretAgentGame({ names }) {
   const [paused, setPaused] = useState(false);
 
   const [showKillPopup, setShowKillPopup] = useState(false);
+  const [killNotice, setKillNotice] = useState(null);
   const [guess, setGuess] = useState("");
 
+  // "playing" | "voting" | "finished"
   const [phase, setPhase] = useState("playing");
+  // Starts at 0 (not VOTE_COOLDOWN_SECONDS) -- the cooldown only applies
+  // *between* vote rounds, so the group can call the very first vote
+  // whenever they're ready instead of being blocked for a minute and a
+  // half at the start of every mission.
+  const [voteCooldown, setVoteCooldown] = useState(0);
+  const [voteQueue, setVoteQueue] = useState([]);
+  const [voteQueueIndex, setVoteQueueIndex] = useState(0);
+  const [votes, setVotes] = useState({});
+
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [ending, setEnding] = useState(null);
   const [outcome, setOutcome] = useState(null);
 
   const players = game.players;
-  const aliveCivilians = players.filter(
-    (p) => p.role === "civilian" && p.alive
-  );
+  const alivePlayers = players.filter((p) => p.alive);
+  const aliveCivilians = players.filter((p) => p.role === "civilian" && p.alive);
   const aliveAgents = players.filter((p) => p.role === "agent" && p.alive);
 
   const addLog = (message) => {
@@ -182,24 +221,32 @@ function SecretAgentGame({ names }) {
     setElapsed(0);
     setPaused(false);
     setShowKillPopup(false);
+    setKillNotice(null);
     setGuess("");
     setPhase("playing");
+    setVoteCooldown(0);
+    setVoteQueue([]);
+    setVoteQueueIndex(0);
+    setVotes({});
     setEnding(null);
     setOutcome(null);
 
     setLogs([
       "NEW MISSION STARTED!",
       `${numAgents} agent${numAgents === 1 ? " is" : "s are"} hiding among ${NUM_CIVILIANS} civilians.`,
-      "Tap your card to view your role and words.",
+      "Everyone's words are shown below their name -- nobody's role is ever shown. Talk it out, then guess the sentence or vote someone out.",
     ]);
   };
 
-  // Real-time countdown to the next sniper kill, plus the overall mission clock.
+  // Real-time countdown to the next sniper kill and the next available
+  // vote, plus the overall mission clock. All pause together whenever
+  // something needs the group's full attention (a kill or a vote).
   useEffect(() => {
-    if (phase !== "playing" || paused || showKillPopup) return;
+    if (phase !== "playing" || paused || showKillPopup || killNotice) return;
 
     const interval = setInterval(() => {
       setElapsed((value) => value + 1);
+      setVoteCooldown((value) => (value > 0 ? value - 1 : 0));
 
       setKillTimer((value) => {
         if (value <= 1) {
@@ -213,48 +260,14 @@ function SecretAgentGame({ names }) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [phase, paused, showKillPopup]);
-
-  const flipCard = (id) => {
-    setGame((current) => ({
-      ...current,
-      players: current.players.map((player) =>
-        player.id === id
-          ? { ...player, flipped: !player.flipped }
-          : player
-      ),
-    }));
-  };
-
-  const revealWord = (playerId, wordIndex) => {
-    if (phase !== "playing") return;
-
-    const player = players.find((p) => p.id === playerId);
-    if (!player?.alive) return;
-
-    setGame((current) => ({
-      ...current,
-      players: current.players.map((p) =>
-        p.id === playerId
-          ? {
-              ...p,
-              words: p.words.map((w, index) =>
-                index === wordIndex ? { ...w, revealed: true } : w
-              ),
-            }
-          : p
-      ),
-    }));
-
-    addLog(`${player.name} revealed a word.`);
-  };
+  }, [phase, paused, showKillPopup, killNotice]);
 
   const killPlayer = (targetId) => {
     const target = players.find((p) => p.id === targetId);
     if (!target?.alive) return;
 
     const updatedPlayers = players.map((player) =>
-      player.id === targetId ? { ...player, alive: false } : player
+      player.id === targetId ? { ...player, alive: false, eliminatedBy: "agent" } : player
     );
 
     setGame((current) => ({ ...current, players: updatedPlayers }));
@@ -263,12 +276,91 @@ function SecretAgentGame({ names }) {
 
     setShowKillPopup(false);
     setKillTimer(KILL_INTERVAL_SECONDS);
+    setKillNotice(target.name);
 
     const remainingCivilians = updatedPlayers.filter(
       (p) => p.role === "civilian" && p.alive
     );
 
     if (remainingCivilians.length === 0) {
+      finishGame(
+        "agents",
+        elapsed < FAST_ENDING_SECONDS ? "Dhurandhar Ending" : "The Long Game Ending"
+      );
+    }
+  };
+
+  const startVote = () => {
+    if (phase !== "playing" || voteCooldown > 0) return;
+
+    setVoteQueue(alivePlayers.map((p) => p.id));
+    setVoteQueueIndex(0);
+    setVotes({});
+    setPhase("voting");
+    addLog("A VOTE HAS BEEN CALLED -- EVERYONE WILL VOTE IN TURN.");
+  };
+
+  const castVote = (targetId) => {
+    const voterId = voteQueue[voteQueueIndex];
+    if (voterId === undefined) return;
+
+    const nextVotes = { ...votes, [voterId]: targetId };
+    setVotes(nextVotes);
+
+    if (voteQueueIndex + 1 < voteQueue.length) {
+      setVoteQueueIndex((index) => index + 1);
+    } else {
+      resolveVote(nextVotes);
+    }
+  };
+
+  const resolveVote = (finalVotes) => {
+    const tally = {};
+    Object.values(finalVotes).forEach((targetId) => {
+      tally[targetId] = (tally[targetId] || 0) + 1;
+    });
+
+    const entries = Object.entries(tally);
+    let eliminatedId = null;
+
+    if (entries.length > 0) {
+      entries.sort((a, b) => b[1] - a[1]);
+      const topCount = entries[0][1];
+      const topEntries = entries.filter(([, count]) => count === topCount);
+      if (topEntries.length === 1) eliminatedId = Number(topEntries[0][0]);
+    }
+
+    setPhase("playing");
+    setVoteCooldown(VOTE_COOLDOWN_SECONDS);
+    setVoteQueue([]);
+    setVoteQueueIndex(0);
+    setVotes({});
+
+    if (eliminatedId === null) {
+      addLog("THE VOTE WAS TIED -- NO ONE WAS ELIMINATED.");
+      return;
+    }
+
+    const target = players.find((p) => p.id === eliminatedId);
+    const updatedPlayers = players.map((p) =>
+      p.id === eliminatedId ? { ...p, alive: false, eliminatedBy: "vote" } : p
+    );
+
+    setGame((current) => ({ ...current, players: updatedPlayers }));
+
+    addLog(
+      `${target.name} WAS VOTED OUT -- THEY ${target.role === "agent" ? "WERE" : "were NOT".toUpperCase()} AN AGENT!`
+    );
+
+    const remainingAgents = updatedPlayers.filter((p) => p.role === "agent" && p.alive);
+    const remainingCivilians = updatedPlayers.filter((p) => p.role === "civilian" && p.alive);
+
+    if (remainingAgents.length === 0) {
+      finishGame(
+        "civilians",
+        elapsed < FAST_ENDING_SECONDS ? "Goodachari Ending" : "Slow and Steady Ending"
+      );
+    } else if (remainingCivilians.length === 0) {
       finishGame(
         "agents",
         elapsed < FAST_ENDING_SECONDS ? "Dhurandhar Ending" : "The Long Game Ending"
@@ -312,6 +404,8 @@ function SecretAgentGame({ names }) {
     return `${minutes}:${String(seconds).padStart(2, "0")}`;
   };
 
+  const currentVoter = phase === "voting" ? players.find((p) => p.id === voteQueue[voteQueueIndex]) : null;
+
   return (
     <div className="agent-screen">
       <div className="agent-pixel-moon" />
@@ -332,7 +426,7 @@ function SecretAgentGame({ names }) {
             <strong>{formatTime(elapsed)}</strong>
           </div>
 
-          <div className={`timer-box ${killTimer <= 30 ? "danger" : ""}`}>
+          <div className={`timer-box ${killTimer <= 15 ? "danger" : ""}`}>
             <span>NEXT SNIPE</span>
             <strong>{formatTime(killTimer)}</strong>
           </div>
@@ -364,51 +458,18 @@ function SecretAgentGame({ names }) {
                   <div className="agent-name">{player.name}</div>
 
                   {!player.alive && (
-                    <div className="agent-status-dead">ELIMINATED</div>
-                  )}
-
-                  {player.alive && !player.flipped && (
-                    <button
-                      className="agent-flip-button"
-                      onClick={() => flipCard(player.id)}
-                    >
-                      TAP TO VIEW ROLE
-                    </button>
-                  )}
-
-                  {player.alive && player.flipped && (
-                    <div className="agent-role-reveal">
-                      <span
-                        className={`agent-role-tag ${player.role}`}
-                      >
-                        {player.role === "agent" ? "AGENT" : "CIVILIAN"}
-                      </span>
-
-                      <div className="agent-word-row">
-                        {player.words.map((w, wordIndex) => (
-                          <button
-                            key={wordIndex}
-                            className={`agent-word-chip ${
-                              w.revealed ? "revealed" : ""
-                            }`}
-                            disabled={w.revealed}
-                            onClick={() =>
-                              revealWord(player.id, wordIndex)
-                            }
-                          >
-                            {w.revealed ? w.word : "?????"}
-                          </button>
-                        ))}
-                      </div>
-
-                      <button
-                        className="agent-flip-button hide"
-                        onClick={() => flipCard(player.id)}
-                      >
-                        HIDE
-                      </button>
+                    <div className="agent-status-dead">
+                      {player.eliminatedBy === "agent" ? "🔇 SILENCED" : "OUT (VOTED)"}
                     </div>
                   )}
+
+                  <div className="agent-word-row">
+                    {player.words.map((word, wordIndex) => (
+                      <span key={wordIndex} className="agent-word-chip revealed">
+                        {word}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
@@ -421,28 +482,19 @@ function SecretAgentGame({ names }) {
           <div className="agent-section-title">THE CASE</div>
 
           <p className="agent-case-hint">
-            Piece together the revealed words below into the secret
-            sentence. Some words are decoys planted by the agents.
+            Every word from every player is already on the board below --
+            piece them into the secret sentence. Some are decoys planted by
+            the agents. Nobody's role is ever shown; vote someone out if you
+            think you've spotted one.
           </p>
 
           <div className="agent-word-pool">
             {players.flatMap((player) =>
-              player.words
-                .filter((w) => w.revealed)
-                .map((w, i) => (
-                  <span
-                    className="agent-pool-word"
-                    key={`${player.id}-${i}`}
-                  >
-                    {w.word}
-                  </span>
-                ))
-            )}
-
-            {players.every((p) => p.words.every((w) => !w.revealed)) && (
-              <span className="agent-pool-empty">
-                No words revealed yet.
-              </span>
+              player.words.map((word, i) => (
+                <span className="agent-pool-word" key={`${player.id}-${i}`}>
+                  {word}
+                </span>
+              ))
             )}
           </div>
 
@@ -472,6 +524,14 @@ function SecretAgentGame({ names }) {
               disabled={phase !== "playing"}
             >
               {paused ? "▶ RESUME TIMERS" : "⏸ PAUSE TIMERS"}
+            </button>
+
+            <button
+              className="agent-vote-button"
+              onClick={startVote}
+              disabled={phase !== "playing" || voteCooldown > 0}
+            >
+              {voteCooldown > 0 ? `🗳 VOTE IN ${formatTime(voteCooldown)}` : "🗳 CALL A VOTE"}
             </button>
           </div>
         </section>
@@ -565,6 +625,55 @@ function SecretAgentGame({ names }) {
         </div>
       )}
 
+      {/* VOTE POPUP */}
+
+      {phase === "voting" && currentVoter && (
+        <div className="agent-overlay">
+          <div className="agent-popup">
+            <h2>CAST YOUR VOTE</h2>
+
+            <p>
+              {currentVoter.name}, who do you suspect is an agent?
+              <br />
+              (Pass the device/look away, everyone else!)
+            </p>
+
+            <div className="agent-kill-targets">
+              {alivePlayers
+                .filter((p) => p.id !== currentVoter.id)
+                .map((suspect) => (
+                  <button
+                    key={suspect.id}
+                    className="agent-kill-target"
+                    onClick={() => castVote(suspect.id)}
+                  >
+                    {suspect.name}
+                  </button>
+                ))}
+            </div>
+
+            <p className="agent-vote-progress">
+              {voteQueueIndex}/{voteQueue.length} have voted
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* KILL NOTICE -- stays up until dismissed, and the player's card
+          stays marked "SILENCED" for the rest of the game either way. */}
+
+      {killNotice && (
+        <div className="agent-kill-notice">
+          <div className="agent-kill-notice-icon">🔇</div>
+          <h1>{killNotice}</h1>
+          <p>YOU WERE KILLED</p>
+          <p className="agent-kill-notice-sub">Don't speak for the rest of the game.</p>
+          <button className="agent-restart-winning" onClick={() => setKillNotice(null)}>
+            I UNDERSTAND
+          </button>
+        </div>
+      )}
+
       {/* WINNER */}
 
       {phase === "finished" && (
@@ -583,7 +692,7 @@ function SecretAgentGame({ names }) {
             <p>
               {outcome === "agents"
                 ? "Every civilian was silenced."
-                : "The secret sentence was cracked!"}
+                : "The secret sentence was cracked (or every agent was voted out)!"}
             </p>
 
             <div className="agent-solution">

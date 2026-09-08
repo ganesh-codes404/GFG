@@ -24,6 +24,7 @@ import WordRush from "./assets/WordRush";
 import Imposter from "./assets/Imposter";
 import Pictionary from "./assets/Pictionary";
 import Checkers from "./assets/Checkers";
+import GuessWho from "./assets/GuessWho";
 
 function Home() {
   const navigate = useNavigate();
@@ -256,6 +257,11 @@ export default function App() {
         <Route
           path="/checkers"
           element={<Checkers />}
+        />
+
+        <Route
+          path="/guess-who"
+          element={<GuessWho />}
         />
 
         <Route path="*" element={<Navigate to="/" replace />} />

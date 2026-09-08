@@ -4,9 +4,9 @@ import "./create_room.css";
 import { socket } from "./socket";
 
 const GAMES_BY_PLAYERS = {
-  2: ["Chess", "Connect 4", "One and Only", "Word Rush", "Tic Tac Toe", "Checkers", "Pong","Cricket"],
-  3: ["Ludo", "One and Only", "Dots & Boxes", "Carrom", "Word Rush","Snakes and Ladders","Catan"],
-  4: ["Codenames", "Andhra Business", "Trivia","Ludo","Word Rush","Snakes and Ladders","Catan","One and Only"],
+  2: ["Chess", "Connect 4", "One and Only", "Word Rush", "Tic Tac Toe", "Checkers", "Pong","Cricket","Guess Who"],
+  3: ["Ludo", "One and Only", "Dots & Boxes", "Carrom", "Word Rush","Snakes and Ladders","Catan","Guess Who"],
+  4: ["Codenames", "Andhra Business", "Trivia","Ludo","Word Rush","Snakes and Ladders","Catan","One and Only","Guess Who"],
   5: ["Werewolf", "Mafia", "Musical Chairs", "Quiz Battle", "Snakes and Ladders","Imposter","One and Only","Catan","Andhra Business","Word Rush","Pictionary"],
   6: ["Among Us", "Hide & Seek", "Team Trivia", "Bomb Tag", "Capture the Flag","Chinese Whisper","Andhra Business","Snakes and Ladders","Word Rush","Imposter","Pictionary","Battle Royale","Secret Agent"],
   7: ["Battle Royale", "Secret Agent", "Andhra Business","Snakes and Ladders","Word Rush","Imposter","Pictionary"],

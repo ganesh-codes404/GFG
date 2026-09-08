@@ -10,4 +10,5 @@ module.exports = {
   "Imposter": require("./imposter/engine"),
   "Pictionary": require("./pictionary/engine"),
   "Checkers": require("./checkers"),
+  "Guess Who": require("./guesswho"),
 };

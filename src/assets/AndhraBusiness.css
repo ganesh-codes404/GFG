@@ -101,12 +101,43 @@ button, input { font-family: inherit; }
 .ab-property-card-name {
   font-size: 10px;
   line-height: 1.4;
+  margin-bottom: 4px;
 }
 
-.ab-property-card-meta {
-  margin-top: 4px;
+.ab-property-card-mortgaged {
   font-size: 9px;
+  color: #ff9c9c;
+}
+
+.ab-property-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 9px;
+  color: #a8b8a8;
+  margin-top: 2px;
+}
+
+.ab-property-card-row strong {
   color: #7de89a;
+  font-size: 10px;
+}
+
+.ab-property-card-group {
+  margin-top: 4px;
+  font-size: 8.5px;
+  color: #8fa08f;
+}
+
+.ab-property-card-group.complete {
+  color: #ffe27a;
+  font-weight: 700;
+}
+
+.ab-property-card-develop {
+  margin-top: 2px;
+  font-size: 8.5px;
+  color: #6ba8ff;
 }
 
 .ab-empty {

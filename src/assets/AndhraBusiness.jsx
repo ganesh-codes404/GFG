@@ -472,19 +472,70 @@ function AndhraBusinessGame({ state, mySeat, dispatch, canControl, nextGame, onN
             {myProperties.length === 0 && <div className="ab-empty">You don't own any places yet.</div>}
             {myProperties.map(({ pos, prop, space }) => {
               const group = state.groups.find((g) => g.id === space.group);
+              const isProperty = space.type === "property";
+
+              const groupSpaces = isProperty
+                ? state.spaces.filter((s) => s.type === "property" && s.group === space.group)
+                : [];
+              const ownedInGroup = groupSpaces.filter((s) => state.properties[s.pos]?.owner === mySeat).length;
+              const hasFullSet = isProperty && groupSpaces.length > 0 && ownedInGroup === groupSpaces.length;
+
+              let rentLabel = null;
+              if (isProperty) {
+                const rent = space.rent[prop.houses] * (prop.houses === 0 && hasFullSet ? 2 : 1);
+                rentLabel = `${formatRupees(rent)}${prop.houses === 0 && hasFullSet ? " (2x)" : ""}`;
+              } else if (space.type === "transport") {
+                const ownedCount = state.spaces.filter(
+                  (s) => s.type === "transport" && state.properties[s.pos]?.owner === mySeat
+                ).length;
+                rentLabel = formatRupees([1000, 2000, 4000, 8000][ownedCount - 1] || 1000);
+              } else if (space.type === "utility") {
+                const ownedCount = state.spaces.filter(
+                  (s) => s.type === "utility" && state.properties[s.pos]?.owner === mySeat
+                ).length;
+                rentLabel = `${ownedCount >= 2 ? 10 : 4}x dice roll`;
+              }
+
+              const developStatus = !isProperty
+                ? null
+                : !hasFullSet
+                ? "Need full set to develop"
+                : (prop.landCount || 0) < 2
+                ? "Land here again to develop"
+                : prop.houses >= 5
+                ? "Hotel (max level)"
+                : `Develop for ${formatRupees(space.houseCost)}`;
+
               return (
                 <div key={pos} className="ab-property-card">
                   {group && <div className="ab-property-card-bar" style={{ background: group.color }} />}
                   <div className="ab-property-card-name">{space.name}</div>
-                  <div className="ab-property-card-meta">
-                    {prop.mortgaged
-                      ? "MORTGAGED"
-                      : prop.houses > 0
-                      ? prop.houses === 5
-                        ? "HOTEL"
-                        : `${prop.houses} house${prop.houses === 1 ? "" : "s"}`
-                      : formatRupees(space.price)}
-                  </div>
+
+                  {prop.mortgaged ? (
+                    <div className="ab-property-card-mortgaged">
+                      MORTGAGED · unmortgage for {formatRupees(Math.round(space.mortgage * 1.1))}
+                    </div>
+                  ) : (
+                    <>
+                      <div className="ab-property-card-row">
+                        <span>Rent</span>
+                        <strong>{rentLabel}</strong>
+                      </div>
+
+                      {isProperty && (
+                        <>
+                          <div className="ab-property-card-row">
+                            <span>Houses</span>
+                            <strong>{prop.houses === 5 ? "HOTEL" : `${prop.houses}/4`}</strong>
+                          </div>
+                          <div className={`ab-property-card-group ${hasFullSet ? "complete" : ""}`}>
+                            {hasFullSet ? "✓ FULL SET" : `${ownedInGroup}/${groupSpaces.length} of set owned`}
+                          </div>
+                          <div className="ab-property-card-develop">{developStatus}</div>
+                        </>
+                      )}
+                    </>
+                  )}
                 </div>
               );
             })}

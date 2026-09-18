@@ -7,18 +7,43 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies and build output -- this repo has two separate installs
+# (root frontend + server/), the bare patterns below match at any depth so
+# both node_modules and both dist-likes are covered without repeating them.
 node_modules
 dist
 dist-ssr
+build
+
+# Local env vars -- never commit real secrets/URLs here. Keep a checked-in
+# .env.example instead if a documented template is ever needed.
+.env
+.env.*
+!.env.example
 *.local
+
+# Firebase CLI artifacts (firebase is a project dependency) -- local cache
+# and debug logs from `firebase` commands, not meant to be shared.
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
+# Claude Code -- .claude/settings.json (shared project config, if any) stays
+# tracked; settings.local.json is per-person tool-permission overrides.
+.claude/settings.local.json
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

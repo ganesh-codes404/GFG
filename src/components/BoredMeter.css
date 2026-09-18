@@ -1,0 +1,80 @@
+.bored-meter {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  font-family: "Press Start 2P", cursive;
+}
+
+.bored-toggle {
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 10px;
+  color: #fff;
+  background: linear-gradient(180deg, #4c459c, #332d5c);
+  border: 2px solid #17101f;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #17101f;
+  white-space: nowrap;
+}
+
+.bored-toggle.active {
+  color: #17101f;
+  background: linear-gradient(180deg, #ffb93e, #e88a1f);
+}
+
+.bored-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 10px 12px;
+  max-width: 220px;
+  text-align: right;
+  font-size: 9px;
+  line-height: 1.5;
+  color: #fff;
+  background: #17101f;
+  border: 2px solid #ffe27a;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.bored-banner.postgame {
+  border-color: #7de89a;
+}
+
+.bored-banner button {
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 9px;
+  color: #17101f;
+  background: linear-gradient(180deg, #7de89a, #3fb968);
+  border: 2px solid #17101f;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .bored-meter {
+    top: 6px;
+    right: 6px;
+  }
+
+  .bored-toggle {
+    padding: 6px 9px;
+    font-size: 8px;
+  }
+
+  .bored-banner {
+    max-width: 170px;
+    font-size: 8px;
+    padding: 8px;
+  }
+}

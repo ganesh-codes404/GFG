@@ -502,6 +502,14 @@ body {
   box-shadow: 0 1px 0 #143f8f;
 }
 
+.create-room-button.secondary {
+  margin-top: 10px;
+  background: linear-gradient(180deg, #7a7a8c, #55556a 55%, #3c3c4c 100%);
+  box-shadow:
+    0 6px 0 #232330,
+    0 10px 18px -6px rgba(35,35,48,.6);
+}
+
 .create-room-button:disabled {
   opacity: .45;
   cursor: not-allowed;

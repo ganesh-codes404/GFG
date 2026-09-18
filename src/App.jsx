@@ -5,11 +5,13 @@ import {
   Route,
   Navigate,
   useNavigate,
+  useLocation,
 } from "react-router-dom";
 import "./App.css";
 import CreateRoom from "./create_room";
 import Lobby from "./Lobby";
 import ServerStatusBanner from "./ServerStatusBanner";
+import BoredMeter from "./components/BoredMeter";
 import { socket } from "./socket";
 import BattleRoyale from "./assets/BattleRoyale";
 import SecretAgent from "./assets/SecretAgent";
@@ -25,6 +27,7 @@ import Imposter from "./assets/Imposter";
 import Pictionary from "./assets/Pictionary";
 import Checkers from "./assets/Checkers";
 import GuessWho from "./assets/GuessWho";
+import Tambola from "./assets/Tambola";
 
 function Home() {
   const navigate = useNavigate();
@@ -176,6 +179,23 @@ const handleJoin = () => {
   );
 }
 
+// Wraps a networked game's route with the shared bored-meter widget,
+// without every one of the 13 game components needing to know it exists --
+// it reads the same location state each game already gets navigated in
+// with (code/room) and mounts entirely alongside, not inside, the game.
+function GameShell({ name, children }) {
+  const location = useLocation();
+  const code = location.state?.code;
+  const room = location.state?.room;
+
+  return (
+    <>
+      {children}
+      {code && <BoredMeter code={code} room={room} currentGame={name} />}
+    </>
+  );
+}
+
 export default function App() {
   return (
     <HashRouter>
@@ -206,62 +226,67 @@ export default function App() {
 
         <Route
           path="/chess"
-          element={<Chess />}
+          element={<GameShell name="Chess"><Chess /></GameShell>}
         />
 
         <Route
           path="/connect-4"
-          element={<Connect4 />}
+          element={<GameShell name="Connect 4"><Connect4 /></GameShell>}
         />
 
         <Route
           path="/catan"
-          element={<Catan />}
+          element={<GameShell name="Catan"><Catan /></GameShell>}
         />
 
         <Route
           path="/one-and-only"
-          element={<OneAndOnly />}
+          element={<GameShell name="One and Only"><OneAndOnly /></GameShell>}
         />
 
         <Route
           path="/andhra-business"
-          element={<AndhraBusiness />}
+          element={<GameShell name="Andhra Business"><AndhraBusiness /></GameShell>}
         />
 
         <Route
           path="/snakes-and-ladders"
-          element={<SnakesAndLadders />}
+          element={<GameShell name="Snakes and Ladders"><SnakesAndLadders /></GameShell>}
         />
 
         <Route
           path="/ludo"
-          element={<Ludo />}
+          element={<GameShell name="Ludo"><Ludo /></GameShell>}
         />
 
         <Route
           path="/word-rush"
-          element={<WordRush />}
+          element={<GameShell name="Word Rush"><WordRush /></GameShell>}
         />
 
         <Route
           path="/imposter"
-          element={<Imposter />}
+          element={<GameShell name="Imposter"><Imposter /></GameShell>}
         />
 
         <Route
           path="/pictionary"
-          element={<Pictionary />}
+          element={<GameShell name="Pictionary"><Pictionary /></GameShell>}
         />
 
         <Route
           path="/checkers"
-          element={<Checkers />}
+          element={<GameShell name="Checkers"><Checkers /></GameShell>}
         />
 
         <Route
           path="/guess-who"
-          element={<GuessWho />}
+          element={<GameShell name="Guess Who"><GuessWho /></GameShell>}
+        />
+
+        <Route
+          path="/tambola"
+          element={<GameShell name="Tambola"><Tambola /></GameShell>}
         />
 
         <Route path="*" element={<Navigate to="/" replace />} />

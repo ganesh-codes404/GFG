@@ -4,6 +4,8 @@ import "./create_room.css";
 import { socket } from "./socket";
 import {
   GAME_ROUTES,
+  GAMES_BY_PLAYERS,
+  MAX_GAMES,
   playerCountRequirementLabel,
   playerCountSatisfied,
 } from "./gameConfig";
@@ -15,6 +17,8 @@ export default function Lobby() {
 
   const [room, setRoom] = useState(location.state?.room || null);
   const [notFound, setNotFound] = useState(false);
+  const [pickingGames, setPickingGames] = useState(false);
+  const [selectedGames, setSelectedGames] = useState([]);
 
   const roomRef = useRef(room);
   roomRef.current = room;
@@ -51,17 +55,35 @@ export default function Lobby() {
       navigate(route, { state: { code, room: roomRef.current, game } });
     };
 
+    // Someone (any player, not just whoever's looking at the lobby right
+    // now) confirmed a fresh lineup -- pick up the new list and close the
+    // picker if it happened to be open here too.
+    const handleGamesUpdated = ({ games }) => {
+      setRoom((current) => (current ? { ...current, games, allGamesPlayed: false } : current));
+      setPickingGames(false);
+      setSelectedGames([]);
+    };
+
     socket.on("player-joined", handleJoined);
     socket.on("player-left", handleLeft);
     socket.on("game-started", handleStarted);
+    socket.on("room-games-updated", handleGamesUpdated);
 
     return () => {
       socket.off("player-joined", handleJoined);
       socket.off("player-left", handleLeft);
       socket.off("game-started", handleStarted);
+      socket.off("room-games-updated", handleGamesUpdated);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]);
+
+  // The room's just played through its entire lineup -- proactively offer
+  // a fresh one instead of leaving the group to just keep re-cycling the
+  // same games (or stuck with no obvious way to pick something new).
+  useEffect(() => {
+    if (room?.allGamesPlayed) setPickingGames(true);
+  }, [room?.allGamesPlayed]);
 
   // If a game is already in progress (e.g. the player hit "back" mid-game,
   // or reloaded the lobby), rejoin it instead of showing a stale "pick a
@@ -134,6 +156,98 @@ export default function Lobby() {
       }
     });
   };
+
+  const toggleGame = (game) => {
+    setSelectedGames((current) => {
+      if (current.includes(game)) return current.filter((item) => item !== game);
+      if (current.length >= MAX_GAMES) return current;
+      return [...current, game];
+    });
+  };
+
+  const confirmNewGames = () => {
+    socket.emit("update-room-games", { code, games: selectedGames }, (response) => {
+      if (!response?.success) {
+        alert("Could not update the games.");
+        return;
+      }
+
+      setRoom(response.room);
+      setPickingGames(false);
+      setSelectedGames([]);
+    });
+  };
+
+  // Games available for a room this size -- keyed by capacity, not how
+  // many have actually joined yet, so the picker doesn't shrink out from
+  // under a group that's temporarily short a player.
+  const availableGames = GAMES_BY_PLAYERS[room.maxPlayers] || [];
+
+  if (pickingGames) {
+    return (
+      <main className="create-room-screen">
+        <div className="create-room-sun" />
+        <div className="create-room-cloud create-room-cloud-1" />
+        <div className="create-room-cloud create-room-cloud-2" />
+
+        <section className="create-room-panel">
+          <h1 className="create-room-logo">PLAY MORE?</h1>
+
+          <p className="create-room-subtitle">
+            {room.allGamesPlayed
+              ? "You've played every game in this room's lineup! Pick up to "
+              : "Pick up to "}
+            {MAX_GAMES} more for {room.maxPlayers} players.
+          </p>
+
+          <div className="game-grid">
+            {availableGames.map((game, index) => {
+              const selected = selectedGames.includes(game);
+              const disabled = !selected && selectedGames.length >= MAX_GAMES;
+
+              return (
+                <button
+                  key={game}
+                  type="button"
+                  disabled={disabled}
+                  className={`game-card ${selected ? "selected" : ""} ${disabled ? "disabled" : ""}`}
+                  onClick={() => toggleGame(game)}
+                >
+                  <span className="game-number">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="game-name">{game}</span>
+                  <span className="game-check">{selected ? "✓" : "+"}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            className="create-room-button"
+            disabled={selectedGames.length === 0}
+            onClick={confirmNewGames}
+          >
+            CONFIRM GAMES
+          </button>
+
+          {room.allGamesPlayed && (
+            <button
+              type="button"
+              className="create-room-button secondary"
+              onClick={() => {
+                setPickingGames(false);
+                setSelectedGames([]);
+              }}
+            >
+              KEEP THE CURRENT LINEUP
+            </button>
+          )}
+        </section>
+
+        <div className="create-room-grass" />
+      </main>
+    );
+  }
 
   return (
     <main className="create-room-screen">

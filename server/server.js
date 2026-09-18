@@ -74,7 +74,31 @@ function publicRoom(room) {
     // back to the lobby (or reloads it) mid-game gets bounced straight
     // back into it instead of seeing a stale "pick a game" screen.
     activeGame: room.game && !room.game.state.finished ? room.game.type : null,
+    // True once every game in this room's current lineup has been started
+    // at least once -- the lobby uses this to proactively offer a fresh
+    // lineup instead of just silently cycling the same games forever.
+    allGamesPlayed: room.games.length > 0 && (room.playedGames?.size || 0) >= room.games.length,
   };
+}
+
+// Bored-meter state lives on the active game session (not the room) since
+// it's about whether THIS game is dragging, not a room-wide setting -- it
+// resets every time a new game (or a rematch) starts.
+function boredStatePayload(room) {
+  const boredSeats = room.game?.boredSeats ? [...room.game.boredSeats] : [];
+  const totalPlayers = room.game?.seats.length || 0;
+  const hostPlayer = room.players.find((p) => p.isHost);
+  const hostSeat = hostPlayer && room.game ? room.game.seats.indexOf(hostPlayer.id) : -1;
+  const hostBored = hostSeat !== -1 && boredSeats.includes(hostSeat);
+  // Half (or more) of the table, or the host alone -- either is enough to
+  // surface the "skip this?" option without waiting for a strict majority.
+  const canSkip = totalPlayers > 0 && (boredSeats.length >= Math.ceil(totalPlayers / 2) || hostBored);
+
+  return { boredSeats, totalPlayers, hostBored, canSkip };
+}
+
+function broadcastBoredState(room) {
+  io.to(room.code).emit("bored-update", boredStatePayload(room));
 }
 
 // Every engine only knows seats, not nicknames -- attaching this generically
@@ -170,6 +194,7 @@ io.on("connection", (socket) => {
           isHost: true,
         },
       ],
+      playedGames: new Set(),
     };
 
     rooms.set(code, room);
@@ -327,10 +352,14 @@ io.on("connection", (socket) => {
           // "seat 1", etc. mean for the lifetime of this game session.
           seats: room.players.map((player) => player.id),
           timer: null,
+          boredSeats: new Set(),
         }
       : null;
 
     if (room.game) scheduleGameTimer(room);
+
+    room.playedGames ||= new Set();
+    room.playedGames.add(game);
 
     io.to(room.code).emit("game-started", { code: room.code, game });
 
@@ -418,11 +447,103 @@ io.on("connection", (socket) => {
     }
 
     room.game.state = room.game.engine.createInitialState(room.game.seats.length);
+    room.game.boredSeats = new Set();
 
     broadcastGameState(room);
     scheduleGameTimer(room);
+    broadcastBoredState(room);
 
     callback?.({ success: true });
+  });
+
+  // TOGGLE BORED -- any seated player can flag "this game's dragging";
+  // once enough of the table (or the host alone) has, the client shows a
+  // shortcut to skip to the next game.
+  socket.on("toggle-bored", ({ code }, callback) => {
+    const room = rooms.get((code || "").trim().toUpperCase());
+
+    if (!room?.game) {
+      callback?.({ success: false, error: "GAME_NOT_FOUND" });
+      return;
+    }
+
+    const seat = room.game.seats.indexOf(socket.id);
+
+    if (seat === -1) {
+      callback?.({ success: false, error: "NOT_A_PLAYER" });
+      return;
+    }
+
+    room.game.boredSeats ||= new Set();
+
+    if (room.game.boredSeats.has(seat)) room.game.boredSeats.delete(seat);
+    else room.game.boredSeats.add(seat);
+
+    broadcastBoredState(room);
+
+    callback?.({ success: true });
+  });
+
+  // GET BORED STATE -- fetched once on mount so a page that joins mid-game
+  // (or reconnects) starts from the real count instead of assuming zero.
+  socket.on("get-bored-state", ({ code }, callback) => {
+    const room = rooms.get((code || "").trim().toUpperCase());
+
+    if (!room?.game) {
+      callback?.({ success: false, error: "GAME_NOT_FOUND" });
+      return;
+    }
+
+    callback?.({ success: true, ...boredStatePayload(room) });
+  });
+
+  // END GAME SESSION -- clears the active game and sends everyone back to
+  // the lobby together (used when "skip" has nowhere left to skip TO, and
+  // when the group is done with this room's whole game lineup).
+  socket.on("end-game-session", ({ code }, callback) => {
+    const room = rooms.get((code || "").trim().toUpperCase());
+
+    if (!room) {
+      callback?.({ success: false, error: "ROOM_NOT_FOUND" });
+      return;
+    }
+
+    if (room.game?.timer) clearTimeout(room.game.timer);
+    room.game = null;
+
+    io.to(room.code).emit("return-to-lobby");
+
+    callback?.({ success: true });
+  });
+
+  // UPDATE ROOM GAMES -- lets the group pick a fresh lineup without
+  // leaving the room, once they've played through the current one.
+  socket.on("update-room-games", ({ code, games }, callback) => {
+    const room = rooms.get((code || "").trim().toUpperCase());
+
+    if (!room) {
+      callback?.({ success: false, error: "ROOM_NOT_FOUND" });
+      return;
+    }
+
+    const requester = room.players.find((player) => player.id === socket.id);
+
+    if (!requester) {
+      callback?.({ success: false, error: "NOT_IN_ROOM" });
+      return;
+    }
+
+    if (!Array.isArray(games) || games.length === 0) {
+      callback?.({ success: false, error: "NO_GAMES" });
+      return;
+    }
+
+    room.games = games.slice(0, 4);
+    room.playedGames = new Set();
+
+    io.to(room.code).emit("room-games-updated", { games: room.games });
+
+    callback?.({ success: true, room: publicRoom(room) });
   });
 
   // DISCONNECT

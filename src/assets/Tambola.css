@@ -1,0 +1,324 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body, #root { width: 100%; min-height: 100%; }
+body { overflow-x: hidden; font-family: "Press Start 2P", cursive; background: #14201c; }
+button { font-family: inherit; }
+
+.tam-screen {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 16px;
+  color: #fff;
+  background: linear-gradient(180deg, #14201c 0%, #1c3128 50%, #14201c 100%);
+}
+
+.tam-gate { display: flex; align-items: center; justify-content: center; }
+
+.tam-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1300px;
+  margin: 0 auto 14px;
+}
+
+.tam-logo {
+  font-size: clamp(16px, 3.6vw, 24px);
+  color: #ffe27a;
+  text-shadow: 0 3px 0 #0e1712;
+}
+
+.tam-header-right { display: flex; align-items: center; gap: 10px; }
+
+.tam-next-call {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 10px;
+  font-size: 8px;
+  color: #d9e8d9;
+  background: #16261f;
+  border: 2px solid #0e1712;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.tam-next-call strong { color: #ffe27a; font-size: 14px; }
+
+.tam-info-button {
+  width: 34px; height: 34px;
+  font-size: 15px; color: #17101f;
+  background: linear-gradient(180deg, #ffe27a, #ffb93e);
+  border: 3px solid #17101f; border-radius: 50%;
+  cursor: pointer;
+}
+
+.tam-section-title {
+  font-size: 9px;
+  color: #ffe27a;
+  margin: 10px 0 6px;
+}
+
+/* LAYOUT */
+
+.tam-layout {
+  display: grid;
+  grid-template-columns: 230px 1fr;
+  gap: 16px;
+  max-width: 1300px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.tam-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tam-board-col {
+  min-width: 0;
+}
+
+/* PRIZES */
+
+.tam-prize-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tam-prize-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 8px 10px;
+  background: linear-gradient(180deg, #223a2c, #16261f);
+  border: 2px solid #0e1712;
+  border-radius: 6px;
+}
+
+.tam-prize-row.claimed { opacity: 0.7; }
+
+.tam-prize-label { font-size: 9px; line-height: 1.4; flex: 1; }
+
+.tam-prize-winner { font-size: 8px; color: #ffe27a; white-space: nowrap; }
+
+.tam-claim-button {
+  padding: 6px 8px;
+  font-size: 8px;
+  color: #17101f;
+  background: linear-gradient(180deg, #7de89a, #3fb968);
+  border: 2px solid #0e1712;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tam-claim-button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* PLAYERS */
+
+.tam-player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tam-player-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  font-size: 9px;
+  background: #16261f;
+  border: 2px solid #0e1712;
+  border-radius: 6px;
+}
+
+.tam-player-row.self { border-color: #ffe27a; }
+.tam-player-row strong { color: #ffe27a; font-size: 9px; }
+
+/* LAST CALLED */
+
+.tam-last-called {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 14px;
+  background: radial-gradient(ellipse, #223a2c, #16261f 75%);
+  border: 3px solid #ffe27a;
+  border-radius: 10px;
+  box-shadow: 0 0 0 3px #ffe27a33;
+}
+
+.tam-last-called span { font-size: 9px; color: #d9e8d9; }
+.tam-last-called strong { font-size: clamp(28px, 6vw, 44px); color: #ffe27a; }
+
+/* NUMBER BOARD */
+
+.tam-number-board {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 3px;
+  margin-bottom: 14px;
+  padding: 8px;
+  background: #0e1712;
+  border: 2px solid #0e1712;
+  border-radius: 8px;
+}
+
+.tam-number-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  font-size: 8px;
+  color: #5a6e63;
+  background: #16261f;
+  border-radius: 3px;
+}
+
+.tam-number-cell.called {
+  color: #17101f;
+  background: linear-gradient(180deg, #7de89a, #3fb968);
+  font-weight: 700;
+}
+
+.tam-number-cell.latest {
+  background: linear-gradient(180deg, #ffe27a, #ffb93e);
+  box-shadow: 0 0 0 2px #fff6d9;
+}
+
+/* TICKET */
+
+.tam-ticket {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 16px;
+  padding: 8px;
+  background: #17101f;
+  border: 3px solid #ffe27a;
+  border-radius: 8px;
+}
+
+.tam-ticket-row {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 3px;
+}
+
+.tam-ticket-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  font-size: clamp(9px, 1.6vw, 13px);
+  font-weight: 700;
+  color: #17101f;
+  background: #f4ecd8;
+  border-radius: 4px;
+}
+
+.tam-ticket-cell.blank {
+  background: transparent;
+}
+
+.tam-ticket-cell.marked {
+  color: #fff;
+  background: linear-gradient(180deg, #7de89a, #3fb968, #1f8f47);
+}
+
+/* POPUPS */
+
+.tam-popup {
+  width: min(460px, 94vw);
+  padding: 28px 24px;
+  text-align: center;
+  background: linear-gradient(155deg, #223a2c, #16261f 60%, #0e1712);
+  border: 4px solid #0e1712;
+  border-radius: 10px;
+  box-shadow: 0 0 0 5px #ffe27a33, 0 12px 0 #0e1712;
+}
+
+.tam-popup h2 {
+  font-size: 16px;
+  color: #ffe27a;
+}
+
+.tam-popup p { margin: 10px 0 16px; color: #d9e8d9; font-size: 13px; }
+
+.tam-button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  font-size: 10px;
+  color: #fff;
+  background: linear-gradient(180deg, #7de89a, #3fb968, #1f8f47);
+  border: 3px solid #0e1712;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.tam-button.next { background: linear-gradient(180deg, #9fd9ff, #3f7fe6, #255fc4); }
+
+/* VICTORY */
+
+.tam-trophy { font-size: 48px; }
+
+.tam-victory h1 {
+  font-size: clamp(14px, 4vw, 20px);
+  color: #fff6cf;
+  margin-top: 8px;
+}
+
+.tam-final-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.tam-final-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: #16261f;
+  border: 2px solid #0e1712;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.tam-postgame-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.tam-waiting-host {
+  margin-top: 20px;
+  color: #d9e8d9;
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .tam-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .tam-number-board { grid-template-columns: repeat(9, 1fr); }
+  .tam-ticket-cell { font-size: 9px; }
+}

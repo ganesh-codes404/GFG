@@ -11,4 +11,5 @@ module.exports = {
   "Pictionary": require("./pictionary/engine"),
   "Checkers": require("./checkers"),
   "Guess Who": require("./guesswho"),
+  "Tambola": require("./tambola"),
 };

@@ -26,8 +26,19 @@ export function useGameTransitions({ code, room, currentGame }) {
       });
     };
 
+    // The room's game session was ended without a next game to jump to
+    // (everyone bored-skipped with nowhere left to go, or the group is
+    // done with this lineup) -- send everyone back to the lobby together.
+    const handleReturnToLobby = () => {
+      navigate(`/room/${code}`, { replace: true, state: { code, room } });
+    };
+
     socket.on("game-started", handleStarted);
-    return () => socket.off("game-started", handleStarted);
+    socket.on("return-to-lobby", handleReturnToLobby);
+    return () => {
+      socket.off("game-started", handleStarted);
+      socket.off("return-to-lobby", handleReturnToLobby);
+    };
     // room is only used to pass along to the next page, not to decide
     // whether to (re)subscribe.
     // eslint-disable-next-line react-hooks/exhaustive-deps

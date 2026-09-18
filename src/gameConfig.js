@@ -1,3 +1,17 @@
+// Which games are offered for selection at each room size -- shared by the
+// initial create-room picker and the lobby's "pick more games" flow so the
+// two never drift apart.
+export const GAMES_BY_PLAYERS = {
+  2: ["Chess", "Connect 4", "One and Only", "Word Rush", "Tic Tac Toe", "Checkers", "Pong","Cricket","Guess Who","Tambola"],
+  3: ["Ludo", "One and Only", "Dots & Boxes", "Carrom", "Word Rush","Snakes and Ladders","Catan","Guess Who","Tambola"],
+  4: ["Codenames", "Andhra Business", "Trivia","Ludo","Word Rush","Snakes and Ladders","Catan","One and Only","Guess Who","Tambola"],
+  5: ["Werewolf", "Mafia", "Musical Chairs", "Quiz Battle", "Snakes and Ladders","Imposter","One and Only","Catan","Andhra Business","Word Rush","Pictionary","Tambola"],
+  6: ["Among Us", "Hide & Seek", "Team Trivia", "Bomb Tag", "Capture the Flag","Chinese Whisper","Andhra Business","Snakes and Ladders","Word Rush","Imposter","Pictionary","Battle Royale","Secret Agent","Tambola"],
+  7: ["Battle Royale", "Secret Agent", "Andhra Business","Snakes and Ladders","Word Rush","Imposter","Pictionary","Tambola"],
+};
+
+export const MAX_GAMES = 4;
+
 // Games with a playable page, and the route to launch them at.
 export const GAME_ROUTES = {
   "Battle Royale": "/battle-royale",
@@ -14,6 +28,7 @@ export const GAME_ROUTES = {
   "Pictionary": "/pictionary",
   "Checkers": "/checkers",
   "Guess Who": "/guess-who",
+  "Tambola": "/tambola",
 };
 
 // Games that only work with an exact headcount (no more, no less).
@@ -36,6 +51,7 @@ export const GAME_PLAYER_RANGE = {
   "Imposter": { min: 5, max: 7 },
   "Pictionary": { min: 5, max: 7 },
   "Guess Who": { min: 2, max: 4 },
+  "Tambola": { min: 2, max: 7 },
 };
 
 // Games with a server-authoritative session (server/games/*) -- their state
@@ -55,6 +71,7 @@ export const NETWORKED_GAMES = new Set([
   "Pictionary",
   "Checkers",
   "Guess Who",
+  "Tambola",
 ]);
 
 export function playerCountRequirementLabel(game) {

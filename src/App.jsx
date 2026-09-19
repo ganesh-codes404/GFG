@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   HashRouter,
   Routes,
@@ -6,6 +6,7 @@ import {
   Navigate,
   useNavigate,
   useLocation,
+  useSearchParams,
 } from "react-router-dom";
 import "./App.css";
 import CreateRoom from "./create_room";
@@ -17,6 +18,7 @@ import BattleRoyale from "./assets/BattleRoyale";
 import SecretAgent from "./assets/SecretAgent";
 import Chess from "./assets/Chess";
 import Connect4 from "./assets/Connect4";
+import TicTacToe from "./assets/TicTacToe";
 import Catan from "./assets/Catan";
 import OneAndOnly from "./assets/OneAndOnly";
 import AndhraBusiness from "./assets/AndhraBusiness";
@@ -31,9 +33,22 @@ import Tambola from "./assets/Tambola";
 
 function Home() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [showJoinPopup, setShowJoinPopup] = useState(false);
   const [roomCode, setRoomCode] = useState("");
+
+  // Scanning a room's QR code lands here with ?join=CODE -- jump straight
+  // into the join popup with the code already filled in, so the only thing
+  // left to do is type a nickname.
+  useEffect(() => {
+    const joinCode = searchParams.get("join");
+    if (!joinCode) return;
+
+    setRoomCode(joinCode.trim().toUpperCase());
+    setShowJoinPopup(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
 const handleJoin = () => {
   const code = roomCode.trim().toUpperCase();
@@ -232,6 +247,11 @@ export default function App() {
         <Route
           path="/connect-4"
           element={<GameShell name="Connect 4"><Connect4 /></GameShell>}
+        />
+
+        <Route
+          path="/tic-tac-toe"
+          element={<GameShell name="Tic Tac Toe"><TicTacToe /></GameShell>}
         />
 
         <Route

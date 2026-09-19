@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./create_room.css";
 import { socket } from "./socket";
-import { GAMES_BY_PLAYERS, MAX_GAMES } from "./gameConfig";
+import { GAMES_BY_PLAYERS, MAX_GAMES, GAME_ROUTES } from "./gameConfig";
 
 export default function CreateRoom() {
   const navigate = useNavigate();
@@ -11,7 +11,11 @@ export default function CreateRoom() {
   const [playerCount, setPlayerCount] = useState(null);
   const [selectedGames, setSelectedGames] = useState([]);
 
-  const games = playerCount ? GAMES_BY_PLAYERS[playerCount] : [];
+  // GAMES_BY_PLAYERS also lists games that are only planned, not built yet
+  // (see gameConfig.js) -- only offer the ones that actually have a route,
+  // so a host can never spend one of their slots on something that would
+  // sit stuck at "COMING SOON" in the lobby forever.
+  const games = playerCount ? GAMES_BY_PLAYERS[playerCount].filter((game) => GAME_ROUTES[game]) : [];
 
   const selectPlayers = (count) => {
     setPlayerCount(count);

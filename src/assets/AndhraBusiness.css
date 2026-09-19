@@ -469,6 +469,7 @@ button, input { font-family: inherit; }
 .ab-turn-timer strong { color: #ffe27a; font-size: 15px; }
 
 .ab-decision-timer { color: #ff9c9c !important; font-size: 11px !important; }
+.ab-decision-warning { color: #ffb93e !important; font-size: 11px !important; font-weight: 700; }
 
 .ab-my-status {
   display: flex;

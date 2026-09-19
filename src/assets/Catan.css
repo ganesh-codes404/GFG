@@ -242,11 +242,12 @@ select {
 }
 
 .catan-board-wrap {
+  position: relative;
   width: 100%;
   max-width: 620px;
   aspect-ratio: 1;
 
-  background: linear-gradient(180deg, #6fb3e0, #4a8fc2);
+  background: radial-gradient(120% 120% at 30% 20%, #8fc9ee, #4a8fc2 60%, #3a72a0);
   border: 5px solid #17101f;
   border-radius: 12px;
   box-shadow: 0 10px 0 rgba(23, 16, 31, 0.6);
@@ -256,6 +257,21 @@ select {
 .catan-board-svg {
   width: 100%;
   height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+/* Soft ambient vignette + sheen sitting above the board -- purely
+   decorative, so it must never intercept hex/edge/vertex clicks. */
+.catan-board-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 2;
+  background: radial-gradient(120% 100% at 50% 0%, rgba(255, 255, 255, 0.18), transparent 45%),
+    radial-gradient(140% 140% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.28) 100%);
 }
 
 .catan-hex-clickable,

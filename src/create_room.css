@@ -563,6 +563,68 @@ body {
   line-height: 1.5;
 }
 
+.room-share-button {
+  display: block;
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 14px;
+
+  font-family: "Press Start 2P";
+  font-size: 12px;
+  letter-spacing: .5px;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(0,0,0,.35);
+
+  background: linear-gradient(180deg, #7de89a, #3fb968, #1f8f47);
+  border: 3px solid #17101f;
+  border-radius: 7px;
+  box-shadow: 0 5px 0 #146332;
+
+  cursor: pointer;
+}
+
+.room-share-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 0 #146332;
+}
+
+.room-share-button:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #146332;
+}
+
+.room-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.room-qr-code {
+  padding: 10px;
+  line-height: 0;
+  background: #fdf3d9;
+  border: 4px solid #17101f;
+  border-radius: 7px;
+  box-shadow:
+    inset 0 4px 0 rgba(0,0,0,.1),
+    0 5px 0 #6b4a12;
+}
+
+.room-qr-code svg {
+  display: block;
+  width: 112px;
+  height: 112px;
+}
+
+.room-qr-label {
+  font-family: "Press Start 2P";
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #b9a6d9;
+}
+
 .selected-game-list {
   width: 100%;
 

@@ -2,12 +2,12 @@
 // initial create-room picker and the lobby's "pick more games" flow so the
 // two never drift apart.
 export const GAMES_BY_PLAYERS = {
-  2: ["Chess", "Connect 4", "One and Only", "Word Rush", "Tic Tac Toe", "Checkers", "Pong","Cricket","Guess Who","Tambola"],
-  3: ["Ludo", "One and Only", "Dots & Boxes", "Carrom", "Word Rush","Snakes and Ladders","Catan","Guess Who","Tambola"],
-  4: ["Codenames", "Andhra Business", "Trivia","Ludo","Word Rush","Snakes and Ladders","Catan","One and Only","Guess Who","Tambola"],
-  5: ["Werewolf", "Mafia", "Musical Chairs", "Quiz Battle", "Snakes and Ladders","Imposter","One and Only","Catan","Andhra Business","Word Rush","Pictionary","Tambola"],
-  6: ["Among Us", "Hide & Seek", "Team Trivia", "Bomb Tag", "Capture the Flag","Chinese Whisper","Andhra Business","Snakes and Ladders","Word Rush","Imposter","Pictionary","Battle Royale","Secret Agent","Tambola"],
-  7: ["Battle Royale", "Secret Agent", "Andhra Business","Snakes and Ladders","Word Rush","Imposter","Pictionary","Tambola"],
+  2: ["Chess", "Connect 4", "One and Only", "Word Rush", "Tic Tac Toe", "Checkers", "Guess Who", "Tambola"],
+  3: ["Ludo", "One and Only", "Word Rush", "Snakes and Ladders", "Catan", "Guess Who", "Tambola"],
+  4: ["Andhra Business", "Ludo", "Word Rush", "Snakes and Ladders", "Catan", "One and Only", "Guess Who", "Tambola"],
+  5: ["Snakes and Ladders", "Imposter", "One and Only", "Catan", "Andhra Business", "Word Rush", "Pictionary", "Tambola"],
+  6: ["Andhra Business", "Snakes and Ladders", "Word Rush", "Imposter", "Pictionary", "Battle Royale", "Secret Agent", "Tambola"],
+  7: ["Battle Royale", "Secret Agent", "Andhra Business", "Snakes and Ladders", "Word Rush", "Imposter", "Pictionary", "Tambola"],
 };
 
 export const MAX_GAMES = 4;
@@ -18,6 +18,7 @@ export const GAME_ROUTES = {
   "Secret Agent": "/secret-agent",
   "Chess": "/chess",
   "Connect 4": "/connect-4",
+  "Tic Tac Toe": "/tic-tac-toe",
   "Catan": "/catan",
   "One and Only": "/one-and-only",
   "Andhra Business": "/andhra-business",
@@ -36,6 +37,7 @@ export const GAME_EXACT_PLAYERS = {
   "Chess": 2,
   "Connect 4": 2,
   "Checkers": 2,
+  "Tic Tac Toe": 2,
 };
 
 // Games that work across a range of headcounts (min/max inclusive).
@@ -61,6 +63,7 @@ export const GAME_PLAYER_RANGE = {
 export const NETWORKED_GAMES = new Set([
   "Chess",
   "Connect 4",
+  "Tic Tac Toe",
   "Catan",
   "One and Only",
   "Andhra Business",

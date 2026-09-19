@@ -500,8 +500,6 @@ function AndhraBusinessGame({ state, mySeat, dispatch, canControl, nextGame, onN
                 ? null
                 : !hasFullSet
                 ? "Need full set to develop"
-                : (prop.landCount || 0) < 2
-                ? "Land here again to develop"
                 : prop.houses >= 5
                 ? "Hotel (max level)"
                 : `Develop for ${formatRupees(space.houseCost)}`;
@@ -563,11 +561,18 @@ function AndhraBusinessGame({ state, mySeat, dispatch, canControl, nextGame, onN
             <div className="ab-decision-panel">
               <div className="ab-section-title">{mySpace.name}</div>
               <p>Develop this property for {formatRupees(mySpace.houseCost)}?</p>
+              {(me?.cash ?? 0) < mySpace.houseCost && (
+                <p className="ab-decision-warning">Not enough cash to develop right now.</p>
+              )}
               {state.decisionDeadline && (
                 <p className="ab-decision-timer">Deciding in {formatCountdown(state.decisionDeadline - now)}s...</p>
               )}
               <div className="ab-confirm-row">
-                <button className="ab-button" onClick={() => dispatch("develop", { pos: mySpace.pos })}>
+                <button
+                  className="ab-button"
+                  disabled={(me?.cash ?? 0) < mySpace.houseCost}
+                  onClick={() => dispatch("develop", { pos: mySpace.pos })}
+                >
                   DEVELOP
                 </button>
                 <button className="ab-button secondary" onClick={() => dispatch("skip-decision", {})}>
@@ -789,7 +794,6 @@ function DevelopModal({ state, mySeat, dispatch, push, onClose }) {
   const blockReason = (pos, prop, space) => {
     if (!ownsFullGroup(state, mySeat, space.group)) return "NEED FULL SET";
     if (prop.houses >= 5) return "MAXED OUT";
-    if ((prop.landCount || 0) < 2) return "LAND AGAIN";
     if ((me?.cash ?? 0) < space.houseCost) return "CAN'T AFFORD";
     return null;
   };

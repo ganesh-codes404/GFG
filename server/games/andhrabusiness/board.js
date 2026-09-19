@@ -11,7 +11,7 @@ const GROUPS = [
     label: "North Coastal Andhra",
     color: "#8b5a2b",
     price: 6000,
-    rent: [550, 1650, 4950, 15400, 19800, 24200],
+    rent: [1100, 3300, 9900, 30800, 39600, 48400],
     houseCost: 5000,
     mortgage: 3000,
     towns: ["Srikakulam", "Vizianagaram"],
@@ -21,7 +21,7 @@ const GROUPS = [
     label: "Uttarandhra",
     color: "#6fb3e0",
     price: 10000,
-    rent: [880, 2200, 6600, 20900, 25300, 30800],
+    rent: [1760, 4400, 13200, 41800, 50600, 61600],
     houseCost: 5000,
     mortgage: 5000,
     towns: ["Visakhapatnam", "Anakapalli", "Narsipatnam"],
@@ -31,7 +31,7 @@ const GROUPS = [
     label: "Godavari Coastal",
     color: "#c76bb3",
     price: 14000,
-    rent: [1320, 3080, 8800, 23100, 28600, 34100],
+    rent: [2640, 6160, 17600, 46200, 57200, 68200],
     houseCost: 10000,
     mortgage: 7000,
     towns: ["Kakinada", "Rajahmundry", "Amalapuram"],
@@ -41,7 +41,7 @@ const GROUPS = [
     label: "West Godavari",
     color: "#e8934a",
     price: 18000,
-    rent: [1540, 3520, 9900, 25300, 31900, 39600],
+    rent: [3080, 7040, 19800, 50600, 63800, 79200],
     houseCost: 10000,
     mortgage: 9000,
     towns: ["Eluru", "Bhimavaram", "Tadepalligudem"],
@@ -51,7 +51,7 @@ const GROUPS = [
     label: "Krishna Delta",
     color: "#d9453f",
     price: 22000,
-    rent: [1760, 3960, 11000, 27500, 34100, 42900],
+    rent: [3520, 7920, 22000, 55000, 68200, 85800],
     houseCost: 15000,
     mortgage: 11000,
     towns: ["Vijayawada", "Machilipatnam", "Gudivada"],
@@ -61,7 +61,7 @@ const GROUPS = [
     label: "Guntur-Prakasam",
     color: "#e8c94a",
     price: 26000,
-    rent: [1980, 4400, 12100, 29700, 36300, 46200],
+    rent: [3960, 8800, 24200, 59400, 72600, 92400],
     houseCost: 15000,
     mortgage: 13000,
     towns: ["Bapatla", "Guntur", "Tenali", "Ongole"],
@@ -71,7 +71,7 @@ const GROUPS = [
     label: "Nellore Region",
     color: "#3fb968",
     price: 30000,
-    rent: [2200, 4840, 13200, 30800, 37400, 49500],
+    rent: [4400, 9680, 26400, 61600, 74800, 99000],
     houseCost: 20000,
     mortgage: 15000,
     towns: ["Nellore", "Kavali", "Narasaraopet", "Gudur"],
@@ -81,7 +81,7 @@ const GROUPS = [
     label: "Rayalaseema",
     color: "#7168d8",
     price: 36000,
-    rent: [3300, 7700, 19800, 38500, 44000, 66000],
+    rent: [6600, 15400, 39600, 77000, 88000, 132000],
     houseCost: 20000,
     mortgage: 18000,
     towns: ["Tirupati", "Kadapa", "Srikalahasti", "Madanapalle"],
@@ -196,13 +196,17 @@ module.exports = {
   EVENT_CARDS,
   COMMUNITY_CARDS,
   groupPositions,
-  // Tuned so games actually converge to a winner: the old
-  // 150k-starting-cash / 20k-GO-salary combo let cash accumulate far
-  // faster than rent could ever drain it -- simulated games routinely ran
-  // 15,000+ turns without a single bankruptcy. This combo (verified by
-  // simulation) reliably finishes in the low hundreds of turns for both
-  // 4-player and 7-player games.
-  STARTING_CASH: 100000,
+  // Tuned so games actually converge to a winner (and do it quickly): the
+  // original 150k-starting-cash / 20k-GO-salary combo let cash accumulate
+  // far faster than rent could ever drain it -- simulated games routinely
+  // ran 15,000+ turns without a single bankruptcy. A first pass landed on
+  // 100k starting cash with today's GROUPS.rent values, which converged but
+  // still simulated to 45-120 real minutes depending on player count. This
+  // second pass doubled every rent value (see GROUPS above) and cut
+  // starting cash to 60k, roughly halving simulated game length across the
+  // board (~20-70 min) without making the early game feel like an
+  // instant-bankruptcy coin flip.
+  STARTING_CASH: 60000,
   GO_SALARY: 8000,
   JAIL_POSITION: 12,
   JAIL_FINE: 10000,

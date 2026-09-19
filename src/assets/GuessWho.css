@@ -80,7 +80,14 @@ button { font-family: inherit; }
   box-shadow: 0 0 0 3px #ffe27a55;
 }
 
-.gw-my-character-emoji { font-size: 34px; }
+.gw-my-character-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f4ecd8;
+  border: 2px solid #17101f;
+  flex-shrink: 0;
+}
 .gw-my-character-name { font-size: 12px; color: #ffe27a; }
 
 /* PLAYERS */
@@ -109,8 +116,19 @@ button { font-family: inherit; }
 }
 
 .gw-player-card-revealed {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   font-size: 9px;
   color: #ff9c9c;
+}
+
+.gw-player-card-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f4ecd8;
+  flex-shrink: 0;
 }
 
 /* ACTION PANEL */
@@ -228,7 +246,13 @@ button { font-family: inherit; }
   overflow: hidden;
 }
 
-.gw-character-emoji { font-size: 26px; }
+.gw-character-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #17101f33;
+}
 .gw-character-name { font-size: 8px; color: #17101f; text-align: center; }
 
 .gw-character-card.crossed { opacity: 0.35; }
@@ -309,6 +333,19 @@ button { font-family: inherit; }
   border: 2px solid #17101f;
   border-radius: 6px;
   font-size: 11px;
+}
+
+.gw-final-character {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gw-final-character-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f4ecd8;
 }
 
 .gw-postgame-actions {

@@ -3,30 +3,30 @@
 // only 2-4 real players -- most are red herrings nobody was ever assigned,
 // which is exactly how the physical game works too.
 const CHARACTERS = [
-  { id: "milo", name: "Milo", emoji: "🤓", glasses: true, hat: false, facialHair: false, hairColor: "brown" },
-  { id: "beau", name: "Beau", emoji: "🧔", glasses: false, hat: false, facialHair: true, hairColor: "brown" },
-  { id: "sunny", name: "Sunny", emoji: "👱", glasses: false, hat: false, facialHair: false, hairColor: "blonde" },
-  { id: "gus", name: "Gus", emoji: "👴", glasses: false, hat: false, facialHair: false, hairColor: "gray" },
-  { id: "nell", name: "Nell", emoji: "👵", glasses: false, hat: false, facialHair: false, hairColor: "gray" },
-  { id: "rusty", name: "Rusty", emoji: "🧑‍🦰", glasses: false, hat: false, facialHair: false, hairColor: "red" },
-  { id: "coral", name: "Coral", emoji: "🧑‍🦱", glasses: false, hat: false, facialHair: false, hairColor: "black" },
-  { id: "baldwin", name: "Baldwin", emoji: "🧑‍🦲", glasses: false, hat: false, facialHair: false, hairColor: "bald" },
-  { id: "nick", name: "Nick", emoji: "🎅", glasses: false, hat: true, facialHair: true, hairColor: "gray" },
-  { id: "trench", name: "Trench", emoji: "🕵️", glasses: true, hat: true, facialHair: false, hairColor: "brown" },
-  { id: "raj", name: "Raj", emoji: "👳", glasses: false, hat: true, facialHair: false, hairColor: "black" },
-  { id: "hiro", name: "Hiro", emoji: "👲", glasses: false, hat: true, facialHair: false, hairColor: "black" },
-  { id: "tex", name: "Tex", emoji: "🤠", glasses: false, hat: true, facialHair: false, hairColor: "brown" },
-  { id: "rosa", name: "Rosa", emoji: "👸", glasses: false, hat: true, facialHair: false, hairColor: "black" },
-  { id: "leo", name: "Leo", emoji: "🤴", glasses: false, hat: true, facialHair: false, hairColor: "black" },
-  { id: "buzz", name: "Buzz", emoji: "👷", glasses: false, hat: true, facialHair: false, hairColor: "brown" },
-  { id: "percy", name: "Percy", emoji: "💂", glasses: false, hat: true, facialHair: false, hairColor: "black" },
-  { id: "kage", name: "Kage", emoji: "🥷", glasses: false, hat: true, facialHair: false, hairColor: "black" },
-  { id: "wiz", name: "Wiz", emoji: "🧙", glasses: false, hat: true, facialHair: true, hairColor: "gray" },
-  { id: "drac", name: "Drac", emoji: "🧛", glasses: false, hat: false, facialHair: false, hairColor: "black" },
-  { id: "zeke", name: "Zeke", emoji: "🧟", glasses: false, hat: false, facialHair: false, hairColor: "green" },
-  { id: "bobo", name: "Bobo", emoji: "🤡", glasses: false, hat: false, facialHair: false, hairColor: "rainbow" },
-  { id: "zorp", name: "Zorp", emoji: "👽", glasses: false, hat: false, facialHair: false, hairColor: "none" },
-  { id: "blaze", name: "Blaze", emoji: "🦸", glasses: false, hat: false, facialHair: false, hairColor: "black" },
+  { id: "milo", name: "Milo", glasses: true, hat: false, facialHair: false, hairColor: "brown" },
+  { id: "beau", name: "Beau", glasses: false, hat: false, facialHair: true, hairColor: "brown" },
+  { id: "sunny", name: "Sunny", glasses: false, hat: false, facialHair: false, hairColor: "blonde" },
+  { id: "gus", name: "Gus", glasses: false, hat: false, facialHair: false, hairColor: "gray" },
+  { id: "nell", name: "Nell", glasses: false, hat: false, facialHair: false, hairColor: "gray" },
+  { id: "rusty", name: "Rusty", glasses: false, hat: false, facialHair: false, hairColor: "red" },
+  { id: "coral", name: "Coral", glasses: false, hat: false, facialHair: false, hairColor: "black" },
+  { id: "baldwin", name: "Baldwin", glasses: false, hat: false, facialHair: false, hairColor: "bald" },
+  { id: "nick", name: "Nick", glasses: false, hat: true, facialHair: true, hairColor: "gray" },
+  { id: "trench", name: "Trench", glasses: true, hat: true, facialHair: false, hairColor: "brown" },
+  { id: "raj", name: "Raj", glasses: false, hat: true, facialHair: false, hairColor: "black" },
+  { id: "hiro", name: "Hiro", glasses: false, hat: true, facialHair: false, hairColor: "black" },
+  { id: "tex", name: "Tex", glasses: false, hat: true, facialHair: false, hairColor: "brown" },
+  { id: "rosa", name: "Rosa", glasses: false, hat: true, facialHair: false, hairColor: "black" },
+  { id: "leo", name: "Leo", glasses: false, hat: true, facialHair: false, hairColor: "black" },
+  { id: "buzz", name: "Buzz", glasses: false, hat: true, facialHair: false, hairColor: "brown" },
+  { id: "percy", name: "Percy", glasses: false, hat: true, facialHair: false, hairColor: "black" },
+  { id: "kage", name: "Kage", glasses: false, hat: true, facialHair: false, hairColor: "black" },
+  { id: "wiz", name: "Wiz", glasses: false, hat: true, facialHair: true, hairColor: "gray" },
+  { id: "dez", name: "Dez", glasses: false, hat: false, facialHair: false, hairColor: "black" },
+  { id: "zeke", name: "Zeke", glasses: false, hat: false, facialHair: false, hairColor: "green" },
+  { id: "bobo", name: "Bobo", glasses: false, hat: false, facialHair: false, hairColor: "rainbow" },
+  { id: "remy", name: "Remy", glasses: false, hat: false, facialHair: false, hairColor: "bald" },
+  { id: "blaze", name: "Blaze", glasses: false, hat: false, facialHair: false, hairColor: "black" },
 ];
 
 const QUESTIONS = [
@@ -141,7 +141,7 @@ function handleMakeGuess(state, seat, targetSeat, characterId) {
     target.eliminated = true;
     log(
       state,
-      `${playerLabel(seat)} correctly guessed ${playerLabel(targetSeat)} is ${character.name} ${character.emoji}! ${playerLabel(targetSeat)} is out.`
+      `${playerLabel(seat)} correctly guessed ${playerLabel(targetSeat)} is ${character.name}! ${playerLabel(targetSeat)} is out.`
     );
 
     const remaining = state.players.filter((p) => !p.eliminated);
@@ -154,7 +154,7 @@ function handleMakeGuess(state, seat, targetSeat, characterId) {
   } else {
     log(
       state,
-      `${playerLabel(seat)} guessed ${character.name} ${character.emoji} for ${playerLabel(targetSeat)} -- WRONG.`
+      `${playerLabel(seat)} guessed ${character.name} for ${playerLabel(targetSeat)} -- WRONG.`
     );
   }
 

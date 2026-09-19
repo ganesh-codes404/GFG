@@ -8,7 +8,13 @@ import RulesModal from "../components/RulesModal";
 import { useNotifications } from "../hooks/useNotifications";
 import { useGameTransitions } from "../hooks/useGameTransitions";
 import { nameFor, logWithNicknames } from "../utils/nicknames";
+import { characterAvatarUri } from "../utils/guessWhoAvatars";
 import "./GuessWho.css";
+
+function CharacterAvatar({ character, className }) {
+  if (!character) return null;
+  return <img className={className} src={characterAvatarUri(character)} alt={character.name} />;
+}
 
 const CURRENT_GAME = "Guess Who";
 
@@ -192,7 +198,7 @@ function GuessWhoGame({ state, mySeat, dispatch, canControl, nextGame, onNextGam
             <div className="gw-my-character">
               <div className="gw-section-title">YOUR CHARACTER</div>
               <div className="gw-my-character-card">
-                <div className="gw-my-character-emoji">{myCharacter.emoji}</div>
+                <CharacterAvatar character={myCharacter} className="gw-my-character-avatar" />
                 <div className="gw-my-character-name">{myCharacter.name}</div>
               </div>
             </div>
@@ -215,7 +221,8 @@ function GuessWhoGame({ state, mySeat, dispatch, canControl, nextGame, onNextGam
                   </div>
                   {player.eliminated ? (
                     <div className="gw-player-card-revealed">
-                      {revealedCharacter?.emoji} OUT -- was {revealedCharacter?.name}
+                      <CharacterAvatar character={revealedCharacter} className="gw-player-card-avatar" />
+                      OUT -- was {revealedCharacter?.name}
                     </div>
                   ) : (
                     <PlayerStatus isActive={state.currentSeat === player.seat} />
@@ -311,7 +318,7 @@ function GuessWhoGame({ state, mySeat, dispatch, canControl, nextGame, onNextGam
                     guessModeActive ? setSelectedCharacterId(character.id) : toggleCrossedOff(character.id)
                   }
                 >
-                  <div className="gw-character-emoji">{character.emoji}</div>
+                  <CharacterAvatar character={character} className="gw-character-avatar" />
                   <div className="gw-character-name">{character.name}</div>
                   {isCrossedOff && <div className="gw-character-strike" />}
                 </button>
@@ -345,8 +352,9 @@ function VictoryScreen({ state, mySeat, canControl, nextGame, onNextGame, onRema
                   {p.seat === mySeat ? " (you)" : ""}
                   {p.seat === state.winner ? " 👑" : ""}
                 </span>
-                <strong>
-                  {character?.emoji} {character?.name}
+                <strong className="gw-final-character">
+                  <CharacterAvatar character={character} className="gw-final-character-avatar" />
+                  {character?.name}
                 </strong>
               </div>
             );

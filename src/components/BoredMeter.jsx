@@ -19,24 +19,30 @@ export default function BoredMeter({ code, room, currentGame }) {
 
   useEffect(() => {
     if (!code) return;
-    socket.emit("join-game", { code }, (response) => {
-      if (response?.success) setMySeat(response.seat);
-    });
-  }, [code]);
 
-  useEffect(() => {
-    if (!code) return;
+    // Both of these fire on mount AND every time the socket (re)connects --
+    // a one-shot mount-only call left this widget permanently blank for
+    // the rest of the game if the connection happened to be mid-reconnect
+    // at that exact moment, with no way to recover even once it came back.
+    const resync = () => {
+      socket.emit("join-game", { code }, (response) => {
+        if (response?.success) setMySeat(response.seat);
+      });
+      socket.emit("get-bored-state", { code }, (response) => {
+        if (response?.success) setBored(response);
+      });
+    };
 
-    socket.emit("get-bored-state", { code }, (response) => {
-      if (response?.success) setBored(response);
-    });
+    resync();
 
     const handleBoredUpdate = (payload) => setBored(payload);
     const handleGameState = (payload) => setGameFinished(Boolean(payload?.finished));
 
+    socket.on("connect", resync);
     socket.on("bored-update", handleBoredUpdate);
     socket.on("game-state", handleGameState);
     return () => {
+      socket.off("connect", resync);
       socket.off("bored-update", handleBoredUpdate);
       socket.off("game-state", handleGameState);
     };
@@ -77,7 +83,13 @@ export default function BoredMeter({ code, room, currentGame }) {
 
       {bored.canSkip && !gameFinished && (
         <div className="bored-banner">
-          <span>{bored.hostBored ? "The host is bored!" : "Half the group is bored!"}</span>
+          <span>
+            {bored.totalPlayers === 2
+              ? "Both players are bored!"
+              : bored.hostBored
+              ? "The host is bored!"
+              : "Half the group is bored!"}
+          </span>
           <button onClick={handleSkip}>
             {nextGame ? `SKIP TO ${nextGame.toUpperCase()}` : "SKIP -- PICK A NEW GAME"}
           </button>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import QRCode from "react-qr-code";
 import "./create_room.css";
 import { socket } from "./socket";
 import {
@@ -19,6 +20,7 @@ export default function Lobby() {
   const [notFound, setNotFound] = useState(false);
   const [pickingGames, setPickingGames] = useState(false);
   const [selectedGames, setSelectedGames] = useState([]);
+  const [copied, setCopied] = useState(false);
 
   const roomRef = useRef(room);
   roomRef.current = room;
@@ -145,6 +147,34 @@ export default function Lobby() {
     return playerCountSatisfied(game, room.players.length, room.maxPlayers);
   };
 
+  // Web Share API hands the room code straight to whatever messaging app
+  // the player picks from their device's native share sheet (WhatsApp,
+  // iMessage/SMS, Telegram, etc.) -- the fastest possible path on mobile.
+  // Desktop browsers mostly don't support it, so fall back to a clipboard
+  // copy there (with a brief "COPIED!" confirmation, since there's no
+  // built-in share-sheet feedback to rely on).
+  const shareRoom = async () => {
+    const joinUrl = `${window.location.origin}${window.location.pathname}#/?join=${room.code}`;
+    const text = `Join my Games For Groups room! Code: ${room.code}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Games For Groups", text, url: joinUrl });
+      } catch {
+        // User backed out of the share sheet -- not worth surfacing.
+      }
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(`${text}\n${joinUrl}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard access blocked -- nothing more we can do silently.
+    }
+  };
+
   const startGame = (game) => {
     socket.emit("start-game", { code, game }, (response) => {
       if (response.success) return;
@@ -180,8 +210,11 @@ export default function Lobby() {
 
   // Games available for a room this size -- keyed by capacity, not how
   // many have actually joined yet, so the picker doesn't shrink out from
-  // under a group that's temporarily short a player.
-  const availableGames = GAMES_BY_PLAYERS[room.maxPlayers] || [];
+  // under a group that's temporarily short a player. GAMES_BY_PLAYERS also
+  // lists planned-but-not-built games (see gameConfig.js), so filter down
+  // to ones with an actual route -- otherwise picking one here would just
+  // land back on a permanent "COMING SOON" row.
+  const availableGames = (GAMES_BY_PLAYERS[room.maxPlayers] || []).filter((game) => GAME_ROUTES[game]);
 
   if (pickingGames) {
     return (
@@ -262,6 +295,21 @@ export default function Lobby() {
           <div className="room-created-title">ROOM {room.code}</div>
 
           <div className="room-code">{room.code}</div>
+
+          <button type="button" className="room-share-button" onClick={shareRoom}>
+            {copied ? "COPIED!" : "📤 SHARE ROOM CODE"}
+          </button>
+
+          <div className="room-qr">
+            <div className="room-qr-code">
+              <QRCode
+                value={`${window.location.origin}${window.location.pathname}#/?join=${room.code}`}
+                size={128}
+                viewBox="0 0 128 128"
+              />
+            </div>
+            <span className="room-qr-label">SCAN TO JOIN</span>
+          </div>
 
           <p>
             Share this code with your friends.

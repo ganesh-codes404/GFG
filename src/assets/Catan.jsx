@@ -47,6 +47,62 @@ const DEV_CARD_LABEL = {
   monopoly: "Monopoly",
 };
 
+function shade(hex, percent) {
+  const num = parseInt(hex.slice(1), 16);
+  const amt = Math.round(2.55 * percent);
+  const r = Math.min(255, Math.max(0, (num >> 16) + amt));
+  const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00ff) + amt));
+  const b = Math.min(255, Math.max(0, (num & 0x0000ff) + amt));
+  return `#${(0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1)}`;
+}
+
+// A lit-dome gradient plus a small repeating motif per terrain -- turns the
+// flat TERRAIN_COLOR fills into something with actual light and texture
+// instead of solid polygons.
+function BoardDefs() {
+  return (
+    <defs>
+      <filter id="hexBevel" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="0.015" stdDeviation="0.02" floodColor="#000" floodOpacity="0.35" />
+      </filter>
+
+      {Object.entries(TERRAIN_COLOR).map(([resource, color]) => (
+        <radialGradient key={resource} id={`terrain-${resource}`} cx="35%" cy="28%" r="75%">
+          <stop offset="0%" stopColor={shade(color, 22)} />
+          <stop offset="60%" stopColor={color} />
+          <stop offset="100%" stopColor={shade(color, -18)} />
+        </radialGradient>
+      ))}
+
+      <pattern id="texture-cattle" width="0.22" height="0.22" patternUnits="userSpaceOnUse">
+        <circle cx="0.06" cy="0.06" r="0.02" fill="#4d7a40" opacity="0.5" />
+        <circle cx="0.17" cy="0.15" r="0.015" fill="#4d7a40" opacity="0.4" />
+      </pattern>
+
+      <pattern id="texture-cement" width="0.3" height="0.16" patternUnits="userSpaceOnUse" patternTransform="rotate(6)">
+        <line x1="0" y1="0.08" x2="0.3" y2="0.08" stroke="#8f8878" strokeWidth="0.02" opacity="0.45" />
+      </pattern>
+
+      <pattern id="texture-timber" width="0.26" height="0.3" patternUnits="userSpaceOnUse">
+        <path d="M0.13 0.02 L0.22 0.2 L0.04 0.2 Z" fill="#1f4a2c" opacity="0.45" />
+      </pattern>
+
+      <pattern id="texture-grain" width="0.18" height="0.22" patternUnits="userSpaceOnUse" patternTransform="rotate(-12)">
+        <line x1="0.09" y1="0.02" x2="0.09" y2="0.18" stroke="#a9800f" strokeWidth="0.018" opacity="0.5" />
+      </pattern>
+
+      <pattern id="texture-steel" width="0.22" height="0.22" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="0" x2="0.22" y2="0.22" stroke="#586170" strokeWidth="0.018" opacity="0.45" />
+        <line x1="0.22" y1="0" x2="0" y2="0.22" stroke="#586170" strokeWidth="0.018" opacity="0.35" />
+      </pattern>
+
+      <pattern id="texture-desert" width="0.16" height="0.16" patternUnits="userSpaceOnUse">
+        <circle cx="0.08" cy="0.08" r="0.012" fill="#c9a96a" opacity="0.55" />
+      </pattern>
+    </defs>
+  );
+}
+
 function costEntries(cost) {
   return Object.entries(cost);
 }
@@ -403,19 +459,28 @@ function CatanGame({ state, mySeat, dispatch, toast, canControl, nextGame, onNex
         <section className="catan-board-col">
           <div className="catan-board-wrap">
             <svg viewBox={viewBox} className="catan-board-svg">
+              <BoardDefs />
               {Object.values(hexes).map((hex) => {
                 const tile = state.board.hexes[hex.id];
                 const isRobber = hex.id === state.board.robberHexId;
+                const points = hexPoints(hex, vertices);
 
                 return (
                   <g key={hex.id}>
                     <polygon
-                      points={hexPoints(hex, vertices)}
-                      fill={TERRAIN_COLOR[tile.resource]}
+                      points={points}
+                      fill={`url(#terrain-${tile.resource})`}
                       stroke="#17101f"
                       strokeWidth="0.04"
+                      filter="url(#hexBevel)"
                       className={state.pendingRobberMove && isMyTurn ? "catan-hex-clickable" : ""}
                       onClick={() => handleHexClick(hex.id)}
+                    />
+                    <polygon
+                      points={points}
+                      fill={`url(#texture-${tile.resource})`}
+                      stroke="none"
+                      pointerEvents="none"
                     />
                     {tile.number && (
                       <g>
@@ -538,6 +603,16 @@ function CatanGame({ state, mySeat, dispatch, toast, canControl, nextGame, onNex
                       strokeWidth="0.025"
                       className={clickable ? "catan-vertex-clickable" : ""}
                     />
+                    {building && (
+                      <circle
+                        cx={vertex.x - 0.045}
+                        cy={vertex.y - 0.045}
+                        r="0.045"
+                        fill="#fff"
+                        opacity="0.45"
+                        pointerEvents="none"
+                      />
+                    )}
                     {building?.type === "city" && (
                       <rect
                         x={vertex.x - 0.06}

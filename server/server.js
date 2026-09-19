@@ -90,9 +90,18 @@ function boredStatePayload(room) {
   const hostPlayer = room.players.find((p) => p.isHost);
   const hostSeat = hostPlayer && room.game ? room.game.seats.indexOf(hostPlayer.id) : -1;
   const hostBored = hostSeat !== -1 && boredSeats.includes(hostSeat);
-  // Half (or more) of the table, or the host alone -- either is enough to
-  // surface the "skip this?" option without waiting for a strict majority.
-  const canSkip = totalPlayers > 0 && (boredSeats.length >= Math.ceil(totalPlayers / 2) || hostBored);
+
+  // A 1v1 game (Chess, Connect 4, Checkers, or anything else that happens
+  // to be a 2-player match right now) needs BOTH players on board with
+  // skipping. "Half of two" degenerately means "any one player" -- that
+  // let either competitor unilaterally hijack their opponent's match with
+  // a single tap, worse still on turn 1 before the game had even started.
+  // The host-alone override is excluded here too, since the host is one
+  // of the only two players and shouldn't get a unilateral escape hatch
+  // their opponent doesn't have. Everyone else keeps the original rule:
+  // half (or more) of the table, or the host alone.
+  const requiredVotes = totalPlayers === 2 ? totalPlayers : Math.ceil(totalPlayers / 2);
+  const canSkip = totalPlayers > 0 && (boredSeats.length >= requiredVotes || (totalPlayers > 2 && hostBored));
 
   return { boredSeats, totalPlayers, hostBored, canSkip };
 }

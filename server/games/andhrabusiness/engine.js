@@ -47,16 +47,25 @@ function ownsFullGroup(state, seat, groupId) {
   return groupPositions(groupId).every((pos) => state.properties[pos]?.owner === seat);
 }
 
-function canDevelopHere(state, seat, pos) {
+// Structural eligibility only -- everything about the property/ownership
+// that makes developing *possible* here, deliberately excluding cash. Used
+// to decide whether to show the develop-decision prompt at all: a landing
+// that qualifies should always surface the prompt (so a cash-strapped
+// player can see and understand why they can't afford it right now)
+// instead of silently skipping the turn as if nothing was ever on offer.
+function developEligible(state, seat, pos) {
   const space = findSpace(pos);
   if (!space || space.type !== "property") return false;
   const prop = state.properties[pos];
   if (!prop || prop.owner !== seat || prop.mortgaged) return false;
   if (!ownsFullGroup(state, seat, space.group)) return false;
   if (prop.houses >= 5) return false;
-  // The first landing is what buys the property -- developing it is only
-  // on the table once you've landed on that same square again.
-  if ((prop.landCount || 0) < 2) return false;
+  return true;
+}
+
+function canDevelopHere(state, seat, pos) {
+  if (!developEligible(state, seat, pos)) return false;
+  const space = findSpace(pos);
   return state.players[seat].cash >= space.houseCost;
 }
 
@@ -74,7 +83,7 @@ function enterPostLandingPhase(state, seat) {
     return;
   }
 
-  if (canDevelopHere(state, seat, space.pos)) {
+  if (developEligible(state, seat, space.pos)) {
     state.phase = "develop-decision";
     state.decisionDeadline = Date.now() + DECISION_TIME_MS;
     return;
@@ -156,7 +165,7 @@ function createInitialState(seatCount, rng = Math.random) {
   const properties = {};
   for (const space of SPACES) {
     if (["property", "transport", "utility"].includes(space.type)) {
-      properties[space.pos] = { owner: null, houses: 0, mortgaged: false, landCount: 0 };
+      properties[space.pos] = { owner: null, houses: 0, mortgaged: false };
     }
   }
 
@@ -281,7 +290,6 @@ function resolveLanding(state, seat) {
 
   if (space.type === "property" || space.type === "transport" || space.type === "utility") {
     const prop = state.properties[space.pos];
-    prop.landCount = (prop.landCount || 0) + 1;
 
     if (prop.owner === null) {
       log(state, `${playerLabel(seat)} landed on ${space.name} (₹${space.price.toLocaleString("en-IN")}) -- up for sale.`);
@@ -357,7 +365,6 @@ function declareBankruptcy(state, seat) {
       prop.owner = null;
       prop.houses = 0;
       prop.mortgaged = false;
-      prop.landCount = 0;
     }
   }
 
@@ -511,7 +518,6 @@ function handleDevelop(state, seat, pos) {
   if (prop.mortgaged) fail("That property is mortgaged.");
   if (!ownsFullGroup(state, seat, space.group)) fail("You need the whole group to develop.");
   if (prop.houses >= 5) fail("Already fully developed.");
-  if ((prop.landCount || 0) < 2) fail("Land on this property again before developing it.");
 
   const player = state.players[seat];
   if (player.cash < space.houseCost) fail("Not enough cash to develop.");
@@ -743,5 +749,5 @@ module.exports = {
   viewFor,
   nextDeadline,
   advanceTime,
-  _internals: { rentFor, ownsFullGroup, findSpace, liquidatableValue, canDevelopHere },
+  _internals: { rentFor, ownsFullGroup, findSpace, liquidatableValue, canDevelopHere, developEligible },
 };

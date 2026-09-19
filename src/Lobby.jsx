@@ -187,6 +187,14 @@ export default function Lobby() {
     });
   };
 
+  // Lets the group tweak their lineup at any time, not just after they've
+  // burned through it -- pre-fills the picker with the current games so
+  // this reads as "edit," not "start over from nothing."
+  const openGameEditor = () => {
+    setSelectedGames(room.games);
+    setPickingGames(true);
+  };
+
   const toggleGame = (game) => {
     setSelectedGames((current) => {
       if (current.includes(game)) return current.filter((item) => item !== game);
@@ -224,13 +232,13 @@ export default function Lobby() {
         <div className="create-room-cloud create-room-cloud-2" />
 
         <section className="create-room-panel">
-          <h1 className="create-room-logo">PLAY MORE?</h1>
+          <h1 className="create-room-logo">{room.allGamesPlayed ? "PLAY MORE?" : "EDIT GAMES"}</h1>
 
           <p className="create-room-subtitle">
             {room.allGamesPlayed
               ? "You've played every game in this room's lineup! Pick up to "
               : "Pick up to "}
-            {MAX_GAMES} more for {room.maxPlayers} players.
+            {MAX_GAMES} for {room.maxPlayers} players.
           </p>
 
           <div className="game-grid">
@@ -263,18 +271,16 @@ export default function Lobby() {
             CONFIRM GAMES
           </button>
 
-          {room.allGamesPlayed && (
-            <button
-              type="button"
-              className="create-room-button secondary"
-              onClick={() => {
-                setPickingGames(false);
-                setSelectedGames([]);
-              }}
-            >
-              KEEP THE CURRENT LINEUP
-            </button>
-          )}
+          <button
+            type="button"
+            className="create-room-button secondary"
+            onClick={() => {
+              setPickingGames(false);
+              setSelectedGames([]);
+            }}
+          >
+            {room.allGamesPlayed ? "KEEP THE CURRENT LINEUP" : "CANCEL"}
+          </button>
         </section>
 
         <div className="create-room-grass" />
@@ -324,6 +330,13 @@ export default function Lobby() {
                 {player.isHost && <em>HOST</em>}
               </span>
             ))}
+          </div>
+
+          <div className="lobby-games-header">
+            <span className="create-room-label">GAMES IN THIS ROOM</span>
+            <button type="button" className="lobby-edit-games-button" onClick={openGameEditor}>
+              🎮 CHANGE GAMES
+            </button>
           </div>
 
           <div className="lobby-games">

@@ -547,7 +547,8 @@ io.on("connection", (socket) => {
       return;
     }
 
-    room.games = games.slice(0, 4);
+    // Keep in sync with MAX_GAMES in src/gameConfig.js.
+    room.games = games.slice(0, 6);
     room.playedGames = new Set();
 
     io.to(room.code).emit("room-games-updated", { games: room.games });

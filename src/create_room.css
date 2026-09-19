@@ -688,6 +688,43 @@ body {
   border-radius: 3px;
 }
 
+.lobby-games-header {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  margin-top: 18px;
+  padding-top: 18px;
+
+  border-top: 3px dashed #59446f;
+}
+
+.lobby-edit-games-button {
+  padding: 8px 12px;
+
+  font-family: "Press Start 2P";
+  font-size: 9px;
+  color: #17101f;
+  white-space: nowrap;
+
+  background: linear-gradient(180deg, #ffe27a, #ffb93e);
+  border: 3px solid #17101f;
+  border-radius: 6px;
+
+  box-shadow: 0 4px 0 #8a5a00;
+
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.lobby-edit-games-button:hover {
+  transform: translateY(-2px);
+}
+
 .lobby-games {
   width: 100%;
 
@@ -695,10 +732,7 @@ body {
   flex-direction: column;
   gap: 10px;
 
-  margin-top: 18px;
-  padding-top: 18px;
-
-  border-top: 3px dashed #59446f;
+  margin-top: 12px;
 }
 
 .lobby-game-row {

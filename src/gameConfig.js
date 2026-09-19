@@ -10,7 +10,7 @@ export const GAMES_BY_PLAYERS = {
   7: ["Battle Royale", "Secret Agent", "Andhra Business", "Snakes and Ladders", "Word Rush", "Imposter", "Pictionary", "Tambola"],
 };
 
-export const MAX_GAMES = 4;
+export const MAX_GAMES = 6;
 
 // Games with a playable page, and the route to launch them at.
 export const GAME_ROUTES = {

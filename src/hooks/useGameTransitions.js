@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { socket } from "../socket";
 import { GAME_ROUTES, NETWORKED_GAMES } from "../gameConfig";
@@ -13,8 +13,23 @@ import { GAME_ROUTES, NETWORKED_GAMES } from "../gameConfig";
 export function useGameTransitions({ code, room, currentGame }) {
   const navigate = useNavigate();
 
+  // `room` is just whatever navigation-state snapshot got handed down the
+  // chain of game-to-game redirects -- often stale by the time a game
+  // actually finishes (it doesn't get updated as playedGames accumulates).
+  // Refetch fresh so "next game" and "anything left to play" are computed
+  // from the room's real current state, not a leftover snapshot.
+  const [freshRoom, setFreshRoom] = useState(room || null);
+
   useEffect(() => {
     if (!code) return;
+
+    const refetch = () => {
+      socket.emit("get-room", { code }, (response) => {
+        if (response?.success) setFreshRoom(response.room);
+      });
+    };
+
+    refetch();
 
     const handleStarted = ({ game: startedGame }) => {
       const route = GAME_ROUTES[startedGame];
@@ -33,9 +48,13 @@ export function useGameTransitions({ code, room, currentGame }) {
       navigate(`/room/${code}`, { replace: true, state: { code, room } });
     };
 
+    // The lineup itself changed (someone edited games from the lobby
+    // mid-session) -- keep our "what's next" math in sync with it too.
+    socket.on("room-games-updated", refetch);
     socket.on("game-started", handleStarted);
     socket.on("return-to-lobby", handleReturnToLobby);
     return () => {
+      socket.off("room-games-updated", refetch);
       socket.off("game-started", handleStarted);
       socket.off("return-to-lobby", handleReturnToLobby);
     };
@@ -44,13 +63,26 @@ export function useGameTransitions({ code, room, currentGame }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code, navigate]);
 
-  const playableGames = (room?.games || []).filter((g) => NETWORKED_GAMES.has(g));
+  const playableGames = (freshRoom?.games || []).filter((g) => NETWORKED_GAMES.has(g));
+  const playedGames = new Set(freshRoom?.playedGames || []);
   const currentIndex = playableGames.indexOf(currentGame);
 
-  const nextGame =
-    playableGames.length > 1 && currentIndex !== -1
-      ? playableGames[(currentIndex + 1) % playableGames.length]
-      : null;
+  // The next game still worth playing -- the first UNPLAYED game found
+  // walking forward from here (wrapping once), not just "whatever's next
+  // by list position." Without this, finishing (or bored-skipping) the
+  // last unplayed game in the lineup would cycle back to a game already
+  // played instead of correctly recognizing nothing fresh is left and
+  // routing back to the lobby to pick a new lineup.
+  let nextGame = null;
+  if (currentIndex !== -1 && playableGames.length > 1) {
+    for (let step = 1; step < playableGames.length; step++) {
+      const candidate = playableGames[(currentIndex + step) % playableGames.length];
+      if (!playedGames.has(candidate)) {
+        nextGame = candidate;
+        break;
+      }
+    }
+  }
 
   // Any player can trigger a rematch or start the next game -- not just
   // the host. Kept as its own value (rather than inlining `true` at every

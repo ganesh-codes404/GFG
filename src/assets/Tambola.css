@@ -67,51 +67,81 @@ button { font-family: inherit; }
 /* LAYOUT */
 
 .tam-layout {
-  display: grid;
-  grid-template-columns: 230px 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
   max-width: 1300px;
   margin: 0 auto;
+}
+
+/* PLAYERS */
+
+.tam-players-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tam-player-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 9px;
+  background: #16261f;
+  border: 2px solid #0e1712;
+  border-radius: 6px;
+}
+
+.tam-player-chip.self { border-color: #ffe27a; }
+.tam-player-chip strong { color: #ffe27a; font-size: 9px; }
+
+/* MAIN GRID -- numbers board and ticket side by side on wide screens */
+
+.tam-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
   align-items: start;
 }
 
-.tam-side-col {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.tam-board-col {
+.tam-numbers-col,
+.tam-ticket-col {
   min-width: 0;
 }
 
-/* PRIZES */
+/* PRIZES -- a full-width row along the bottom */
 
-.tam-prize-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.tam-prizes-row {
+  width: 100%;
 }
 
-.tam-prize-row {
+.tam-prize-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.tam-prize-card {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  padding: 8px 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
   background: linear-gradient(180deg, #223a2c, #16261f);
   border: 2px solid #0e1712;
   border-radius: 6px;
 }
 
-.tam-prize-row.claimed { opacity: 0.7; }
+.tam-prize-card.claimed { opacity: 0.7; }
 
-.tam-prize-label { font-size: 9px; line-height: 1.4; flex: 1; }
+.tam-prize-label { font-size: 9px; line-height: 1.4; }
 
 .tam-prize-winner { font-size: 8px; color: #ffe27a; white-space: nowrap; }
 
 .tam-claim-button {
-  padding: 6px 8px;
+  width: 100%;
+  padding: 8px;
   font-size: 8px;
   color: #17101f;
   background: linear-gradient(180deg, #7de89a, #3fb968);
@@ -122,28 +152,6 @@ button { font-family: inherit; }
 }
 
 .tam-claim-button:disabled { opacity: 0.35; cursor: not-allowed; }
-
-/* PLAYERS */
-
-.tam-player-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.tam-player-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px;
-  font-size: 9px;
-  background: #16261f;
-  border: 2px solid #0e1712;
-  border-radius: 6px;
-}
-
-.tam-player-row.self { border-color: #ffe27a; }
-.tam-player-row strong { color: #ffe27a; font-size: 9px; }
 
 /* LAST CALLED */
 
@@ -222,20 +230,51 @@ button { font-family: inherit; }
   align-items: center;
   justify-content: center;
   aspect-ratio: 1;
+  padding: 0;
+  font-family: inherit;
   font-size: clamp(9px, 1.6vw, 13px);
   font-weight: 700;
   color: #17101f;
   background: #f4ecd8;
+  border: none;
   border-radius: 4px;
+  cursor: not-allowed;
 }
 
 .tam-ticket-cell.blank {
   background: transparent;
 }
 
+.tam-ticket-cell.callable {
+  cursor: pointer;
+  background: linear-gradient(180deg, #fff6cf, #ffe27a);
+  box-shadow: 0 0 0 2px #ffb93e inset;
+  animation: tamCallablePulse 1s infinite alternate;
+}
+
+.tam-ticket-cell.callable:hover {
+  filter: brightness(1.08);
+}
+
 .tam-ticket-cell.marked {
   color: #fff;
+  cursor: pointer;
   background: linear-gradient(180deg, #7de89a, #3fb968, #1f8f47);
+}
+
+@keyframes tamCallablePulse {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.15);
+  }
+}
+
+.tam-ticket-hint {
+  margin: -10px 0 10px;
+  font-size: 10px;
+  color: #a8a4d8;
 }
 
 /* POPUPS */
@@ -313,7 +352,7 @@ button { font-family: inherit; }
 }
 
 @media (max-width: 900px) {
-  .tam-layout {
+  .tam-main-grid {
     grid-template-columns: 1fr;
   }
 }

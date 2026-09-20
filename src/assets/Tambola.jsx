@@ -13,9 +13,10 @@ const CURRENT_GAME = "Tambola";
 
 const RULES_SECTIONS = [
   { heading: "Objective", body: "Be the first to complete a prize pattern on your ticket as numbers are called." },
-  { heading: "Your ticket", body: "You get one randomly generated 3x9 ticket with 15 numbers. Called numbers are marked on it automatically." },
+  { heading: "Your ticket", body: "You get one randomly generated 3x9 ticket with 15 numbers." },
   { heading: "Calling", body: "A new number is called automatically every few seconds -- no one needs to press anything for that part." },
-  { heading: "Claiming", body: "The moment your ticket completes a prize pattern, tap CLAIM. First correct claim wins that prize; a wrong or late claim just does nothing." },
+  { heading: "Marking", body: "Tap a number on your ticket to strike it off once it's been called. Nothing marks itself -- miss one and it won't count toward a prize." },
+  { heading: "Claiming", body: "The moment your STRUCK-OFF numbers complete a prize pattern, tap CLAIM. First correct claim wins that prize; a wrong or late claim just does nothing." },
   { heading: "Prizes", body: "Early Five (first 5 marked), Top/Middle/Bottom Line (a full row), and Full House (the whole ticket) -- each can only be won once." },
   { heading: "Winning", body: "Whoever claims Full House wins and ends the game." },
 ];
@@ -159,11 +160,17 @@ function TambolaGame({ state, mySeat, dispatch, canControl, nextGame, onNextGame
   }, [state.log, push]);
 
   const calledSet = new Set(state.calledNumbers);
+  const markedSet = new Set(state.myMarked);
   const myTicket = state.myTicket;
 
   const claimPrize = async (prizeId) => {
     const response = await dispatch("claim-prize", { prizeId });
     if (!response?.success) push(response?.error || "Not yet!", { tone: "danger", seat: mySeat });
+  };
+
+  const markNumber = async (number) => {
+    const response = await dispatch("mark-number", { number });
+    if (!response?.success) push(response?.error || "Can't mark that", { tone: "danger", seat: mySeat });
   };
 
   if (state.finished) {
@@ -197,14 +204,81 @@ function TambolaGame({ state, mySeat, dispatch, canControl, nextGame, onNextGame
       </header>
 
       <div className="tam-layout">
-        <aside className="tam-side-col">
+        <div className="tam-players-row">
+          {state.players.map((player) => {
+            const wonCount = Object.values(state.claims).filter((s) => s === player.seat).length;
+            return (
+              <div key={player.seat} className={`tam-player-chip ${player.seat === mySeat ? "self" : ""}`}>
+                <span>
+                  {nameFor(state, player.seat)}
+                  {player.seat === mySeat ? " (you)" : ""}
+                </span>
+                {wonCount > 0 && <strong>🏆 x{wonCount}</strong>}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="tam-main-grid">
+          <section className="tam-numbers-col">
+            <div className="tam-last-called">
+              <span>LAST CALLED</span>
+              <strong>{state.lastCalled ?? "--"}</strong>
+            </div>
+
+            <div className="tam-section-title">CALLED NUMBERS</div>
+            <div className="tam-number-board">
+              {Array.from({ length: 90 }, (_, i) => i + 1).map((n) => (
+                <div
+                  key={n}
+                  className={`tam-number-cell ${calledSet.has(n) ? "called" : ""} ${n === state.lastCalled ? "latest" : ""}`}
+                >
+                  {n}
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {myTicket && (
+            <section className="tam-ticket-col">
+              <div className="tam-section-title">MY TICKET</div>
+              <p className="tam-ticket-hint">Tap a called number to strike it off.</p>
+              <div className="tam-ticket">
+                {myTicket.map((row, rowIndex) => (
+                  <div className="tam-ticket-row" key={rowIndex}>
+                    {row.map((num, colIndex) => {
+                      const isCalled = num !== null && calledSet.has(num);
+                      const isMarked = num !== null && markedSet.has(num);
+
+                      return (
+                        <button
+                          key={colIndex}
+                          type="button"
+                          className={`tam-ticket-cell ${num === null ? "blank" : ""} ${isMarked ? "marked" : ""} ${
+                            isCalled && !isMarked ? "callable" : ""
+                          }`}
+                          disabled={num === null || !isCalled}
+                          onClick={() => markNumber(num)}
+                        >
+                          {num ?? ""}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+
+        <section className="tam-prizes-row">
           <div className="tam-section-title">PRIZES</div>
-          <div className="tam-prize-list">
+          <div className="tam-prize-grid">
             {state.prizes.map((prize) => {
               const claimedSeat = state.claims[prize.id];
-              const eligible = myTicket ? PRIZE_ELIGIBILITY[prize.id](myTicket, calledSet) : false;
+              const eligible = myTicket ? PRIZE_ELIGIBILITY[prize.id](myTicket, markedSet) : false;
               return (
-                <div key={prize.id} className={`tam-prize-row ${claimedSeat !== null ? "claimed" : ""}`}>
+                <div key={prize.id} className={`tam-prize-card ${claimedSeat !== null ? "claimed" : ""}`}>
                   <div className="tam-prize-label">{prize.label}</div>
                   {claimedSeat !== null ? (
                     <div className="tam-prize-winner">🏆 {nameFor(state, claimedSeat)}</div>
@@ -217,68 +291,9 @@ function TambolaGame({ state, mySeat, dispatch, canControl, nextGame, onNextGame
               );
             })}
           </div>
-
-          <div className="tam-section-title">PLAYERS</div>
-          <div className="tam-player-list">
-            {state.players.map((player) => {
-              const wonCount = Object.values(state.claims).filter((s) => s === player.seat).length;
-              return (
-                <div
-                  key={player.seat}
-                  className={`tam-player-row ${player.seat === mySeat ? "self" : ""}`}
-                >
-                  <span>
-                    {nameFor(state, player.seat)}
-                    {player.seat === mySeat ? " (you)" : ""}
-                  </span>
-                  {wonCount > 0 && <strong>🏆 x{wonCount}</strong>}
-                </div>
-              );
-            })}
-          </div>
-        </aside>
-
-        <section className="tam-board-col">
-          <div className="tam-last-called">
-            <span>LAST CALLED</span>
-            <strong>{state.lastCalled ?? "--"}</strong>
-          </div>
-
-          <div className="tam-number-board">
-            {Array.from({ length: 90 }, (_, i) => i + 1).map((n) => (
-              <div
-                key={n}
-                className={`tam-number-cell ${calledSet.has(n) ? "called" : ""} ${n === state.lastCalled ? "latest" : ""}`}
-              >
-                {n}
-              </div>
-            ))}
-          </div>
-
-          {myTicket && (
-            <>
-              <div className="tam-section-title">MY TICKET</div>
-              <div className="tam-ticket">
-                {myTicket.map((row, rowIndex) => (
-                  <div className="tam-ticket-row" key={rowIndex}>
-                    {row.map((num, colIndex) => (
-                      <div
-                        key={colIndex}
-                        className={`tam-ticket-cell ${num === null ? "blank" : ""} ${
-                          num !== null && calledSet.has(num) ? "marked" : ""
-                        }`}
-                      >
-                        {num ?? ""}
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          <GameLog entries={logWithNicknames(state.log, state)} title="EVENTS" />
         </section>
+
+        <GameLog entries={logWithNicknames(state.log, state)} title="EVENTS" />
       </div>
 
       {showRules && <RulesModal title="HOW TO PLAY" sections={RULES_SECTIONS} onClose={() => setShowRules(false)} />}

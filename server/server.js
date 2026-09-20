@@ -74,6 +74,11 @@ function publicRoom(room) {
     // back to the lobby (or reloads it) mid-game gets bounced straight
     // back into it instead of seeing a stale "pick a game" screen.
     activeGame: room.game && !room.game.state.finished ? room.game.type : null,
+    // Which games in the current lineup have been started at least once --
+    // lets the client work out the next UNPLAYED game (skipping over ones
+    // already done, instead of blindly cycling by list position) and
+    // whether to head back to the lobby once nothing's left.
+    playedGames: room.playedGames ? [...room.playedGames] : [],
     // True once every game in this room's current lineup has been started
     // at least once -- the lobby uses this to proactively offer a fresh
     // lineup instead of just silently cycling the same games forever.

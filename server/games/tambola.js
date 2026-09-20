@@ -23,12 +23,15 @@ const COLUMN_RANGES = [
   [80, 90],
 ];
 
+// Every check runs against the CLAIMING PLAYER'S OWN marked set, not just
+// which numbers have been called -- a prize only counts numbers that
+// player actually struck off their ticket themselves.
 const PRIZES = [
-  { id: "early-five", label: "Early Five", check: (ticket, calledSet) => countMarked(ticket, calledSet) >= 5 },
-  { id: "top-line", label: "Top Line", check: (ticket, calledSet) => lineComplete(ticket[0], calledSet) },
-  { id: "middle-line", label: "Middle Line", check: (ticket, calledSet) => lineComplete(ticket[1], calledSet) },
-  { id: "bottom-line", label: "Bottom Line", check: (ticket, calledSet) => lineComplete(ticket[2], calledSet) },
-  { id: "full-house", label: "Full House", check: (ticket, calledSet) => allMarked(ticket, calledSet) },
+  { id: "early-five", label: "Early Five", check: (ticket, markedSet) => countMarked(ticket, markedSet) >= 5 },
+  { id: "top-line", label: "Top Line", check: (ticket, markedSet) => lineComplete(ticket[0], markedSet) },
+  { id: "middle-line", label: "Middle Line", check: (ticket, markedSet) => lineComplete(ticket[1], markedSet) },
+  { id: "bottom-line", label: "Bottom Line", check: (ticket, markedSet) => lineComplete(ticket[2], markedSet) },
+  { id: "full-house", label: "Full House", check: (ticket, markedSet) => allMarked(ticket, markedSet) },
 ];
 
 function fail(message) {
@@ -139,6 +142,9 @@ function createInitialState(seatCount, rng = Math.random) {
   const players = Array.from({ length: seatCount }, (_, seat) => ({
     seat,
     ticket: generateTicket(rng),
+    // Numbers this player has struck off their OWN ticket -- separate from
+    // calledNumbers, since marking is now a manual tap, not automatic.
+    marked: new Set(),
   }));
 
   const pool = shuffle(
@@ -175,8 +181,7 @@ function handleClaimPrize(state, seat, prizeId) {
   const player = state.players[seat];
   if (!player) fail("Invalid player.");
 
-  const calledSet = new Set(state.calledNumbers);
-  if (!prize.check(player.ticket, calledSet)) fail(`You haven't completed ${prize.label} yet.`);
+  if (!prize.check(player.ticket, player.marked)) fail(`You haven't completed ${prize.label} yet.`);
 
   state.claims[prizeId] = seat;
   log(state, `${playerLabel(seat)} claims ${prize.label}!`);
@@ -188,8 +193,25 @@ function handleClaimPrize(state, seat, prizeId) {
   }
 }
 
+// Toggling lets a misclick be undone; the gates (must be called, must
+// actually be on this player's ticket) make it impossible to mark
+// something that wouldn't be a legitimate strike anyway.
+function handleMarkNumber(state, seat, number) {
+  if (state.phase !== "playing") fail("The game is already over.");
+
+  const player = state.players[seat];
+  if (!player) fail("Invalid player.");
+  if (typeof number !== "number") fail("Invalid number.");
+  if (!ticketNumbers(player.ticket).includes(number)) fail("That number isn't on your ticket.");
+  if (!state.calledNumbers.includes(number)) fail("That number hasn't been called yet.");
+
+  if (player.marked.has(number)) player.marked.delete(number);
+  else player.marked.add(number);
+}
+
 const ACTION_HANDLERS = {
   "claim-prize": (state, seat, payload) => handleClaimPrize(state, seat, payload.prizeId),
+  "mark-number": (state, seat, payload) => handleMarkNumber(state, seat, payload.number),
 };
 
 function applyAction(state, seat, action, payload) {
@@ -237,6 +259,7 @@ function viewFor(state, seat) {
     // every other player-facing list in this app.
     players: state.players.map((p) => ({ seat: p.seat })),
     myTicket: state.players[seat]?.ticket ?? null,
+    myMarked: state.players[seat] ? [...state.players[seat].marked] : [],
     calledNumbers: state.calledNumbers,
     lastCalled: state.calledNumbers[state.calledNumbers.length - 1] ?? null,
     nextCallAt: state.nextCallAt,

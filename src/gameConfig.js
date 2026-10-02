@@ -2,10 +2,10 @@
 // initial create-room picker and the lobby's "pick more games" flow so the
 // two never drift apart.
 export const GAMES_BY_PLAYERS = {
-  2: ["Chess", "Connect 4", "One and Only", "Word Rush", "Tic Tac Toe", "Checkers", "Guess Who", "Tambola"],
-  3: ["Ludo", "One and Only", "Word Rush", "Snakes and Ladders", "Catan", "Guess Who", "Tambola"],
-  4: ["Andhra Business", "Ludo", "Word Rush", "Snakes and Ladders", "Catan", "One and Only", "Guess Who", "Tambola"],
-  5: ["Snakes and Ladders", "Imposter", "One and Only", "Catan", "Andhra Business", "Word Rush", "Pictionary", "Tambola"],
+  2: ["Chess", "Connect 4", "UNO", "Word Rush", "Tic Tac Toe", "Checkers", "Guess Who", "Tambola"],
+  3: ["Ludo", "UNO", "Word Rush", "Snakes and Ladders", "Catan", "Guess Who", "Tambola"],
+  4: ["Andhra Business", "Ludo", "Word Rush", "Snakes and Ladders", "Catan", "UNO", "Guess Who", "Tambola"],
+  5: ["Snakes and Ladders", "Imposter", "UNO", "Catan", "Andhra Business", "Word Rush", "Pictionary", "Tambola"],
   6: ["Andhra Business", "Snakes and Ladders", "Word Rush", "Imposter", "Pictionary", "Battle Royale", "Secret Agent", "Tambola"],
   7: ["Battle Royale", "Secret Agent", "Andhra Business", "Snakes and Ladders", "Word Rush", "Imposter", "Pictionary", "Tambola"],
 };
@@ -20,7 +20,7 @@ export const GAME_ROUTES = {
   "Connect 4": "/connect-4",
   "Tic Tac Toe": "/tic-tac-toe",
   "Catan": "/catan",
-  "One and Only": "/one-and-only",
+  "UNO": "/uno",
   "Andhra Business": "/andhra-business",
   "Snakes and Ladders": "/snakes-and-ladders",
   "Ludo": "/ludo",
@@ -45,7 +45,7 @@ export const GAME_PLAYER_RANGE = {
   "Battle Royale": { min: 6, max: 7 },
   "Secret Agent": { min: 6, max: 7 },
   "Catan": { min: 3, max: 5 },
-  "One and Only": { min: 2, max: 5 },
+  "UNO": { min: 2, max: 5 },
   "Andhra Business": { min: 4, max: 7 },
   "Snakes and Ladders": { min: 3, max: 7 },
   "Ludo": { min: 3, max: 4 },
@@ -65,7 +65,7 @@ export const NETWORKED_GAMES = new Set([
   "Connect 4",
   "Tic Tac Toe",
   "Catan",
-  "One and Only",
+  "UNO",
   "Andhra Business",
   "Snakes and Ladders",
   "Ludo",

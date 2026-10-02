@@ -3,7 +3,7 @@ module.exports = {
   "Chess": require("./chess"),
   "Tic Tac Toe": require("./tictactoe"),
   "Catan": require("./catan/engine"),
-  "One and Only": require("./oneandonly/engine"),
+  "UNO": require("./uno/engine"),
   "Andhra Business": require("./andhrabusiness/engine"),
   "Snakes and Ladders": require("./snakesandladders/engine"),
   "Ludo": require("./ludo/engine"),

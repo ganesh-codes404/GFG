@@ -40,7 +40,6 @@ Games for Groups removes unnecessary friction by eliminating installations, sign
 
 ## Planned Games
 
-* 🃏 Uno-inspired card game
 * 🐍 Snakes and Ladders
 * 🌍 Catan-inspired strategy game
 * 🎲 Ludo

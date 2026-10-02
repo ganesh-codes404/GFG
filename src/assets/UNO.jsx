@@ -11,9 +11,9 @@ import Modal from "../components/Modal";
 import { useNotifications } from "../hooks/useNotifications";
 import { useGameTransitions } from "../hooks/useGameTransitions";
 import { nameFor, logWithNicknames } from "../utils/nicknames";
-import "./OneAndOnly.css";
+import "./UNO.css";
 
-const CURRENT_GAME = "One and Only";
+const CURRENT_GAME = "UNO";
 
 const COLOR_HEX = {
   ember: "#e0453f",
@@ -56,7 +56,7 @@ function isPlayableClient(card, discardTop, activeColor) {
   return card.value === discardTop.value;
 }
 
-export default function OneAndOnly() {
+export default function UNO() {
   const location = useLocation();
   const navigate = useNavigate();
   const code = location.state?.code;
@@ -67,7 +67,7 @@ export default function OneAndOnly() {
       <div className="ooo-screen ooo-gate">
         <div className="ooo-popup">
           <h2>MULTIPLAYER ONLY</h2>
-          <p>One and Only needs a real room with 2-5 players.</p>
+          <p>UNO needs a real room with 2-5 players.</p>
           <button className="ooo-button" onClick={() => navigate("/create-room")}>
             CREATE A ROOM
           </button>
@@ -76,10 +76,10 @@ export default function OneAndOnly() {
     );
   }
 
-  return <NetworkedOneAndOnly code={code} room={room} />;
+  return <NetworkedUNO code={code} room={room} />;
 }
 
-function NetworkedOneAndOnly({ code, room }) {
+function NetworkedUNO({ code, room }) {
   const [seat, setSeat] = useState(null);
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
@@ -132,7 +132,7 @@ function NetworkedOneAndOnly({ code, room }) {
   }
 
   return (
-    <OneAndOnlyGame
+    <UNOGame
       state={state}
       mySeat={seat}
       dispatch={dispatch}
@@ -144,7 +144,7 @@ function NetworkedOneAndOnly({ code, room }) {
   );
 }
 
-function OneAndOnlyGame({ state, mySeat, dispatch, canControl, nextGame, onNextGame, onRematch }) {
+function UNOGame({ state, mySeat, dispatch, canControl, nextGame, onNextGame, onRematch }) {
   const [showRules, setShowRules] = useState(false);
   const [pendingWildCardId, setPendingWildCardId] = useState(null);
   const { notifications, push } = useNotifications();
@@ -212,7 +212,7 @@ function OneAndOnlyGame({ state, mySeat, dispatch, canControl, nextGame, onNextG
   return (
     <div className="ooo-screen">
       <header className="ooo-header">
-        <h1 className="ooo-logo">ONE &amp; ONLY</h1>
+        <h1 className="ooo-logo">UNO</h1>
         <button className="ooo-info-button" onClick={() => setShowRules(true)}>
           ⓘ
         </button>

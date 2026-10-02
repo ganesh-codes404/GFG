@@ -20,7 +20,7 @@ import Chess from "./assets/Chess";
 import Connect4 from "./assets/Connect4";
 import TicTacToe from "./assets/TicTacToe";
 import Catan from "./assets/Catan";
-import OneAndOnly from "./assets/OneAndOnly";
+import UNO from "./assets/UNO";
 import AndhraBusiness from "./assets/AndhraBusiness";
 import SnakesAndLadders from "./assets/SnakesAndLadders";
 import Ludo from "./assets/Ludo";
@@ -260,8 +260,8 @@ export default function App() {
         />
 
         <Route
-          path="/one-and-only"
-          element={<GameShell name="One and Only"><OneAndOnly /></GameShell>}
+          path="/uno"
+          element={<GameShell name="UNO"><UNO /></GameShell>}
         />
 
         <Route

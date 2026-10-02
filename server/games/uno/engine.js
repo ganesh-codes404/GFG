@@ -1,8 +1,6 @@
-// "One and Only" -- an original shedding card game in the same family as
-// classic UNO-style games, but with its own color names, action names, and
-// deck identity. Rules follow the familiar shape (match color/number/type,
-// stack action effects, first to empty their hand wins) without copying any
-// branding, card text, or layout.
+// UNO -- a shedding card game: match color, number, or type with the top
+// of the discard pile, stack action-card effects, first to empty their
+// hand wins.
 
 const COLORS = ["ember", "tide", "verdant", "solar"];
 
@@ -132,7 +130,7 @@ function createInitialState(seatCount, rng = Math.random) {
     direction: 1,
     hasDrawnThisTurn: false,
     winner: null,
-    log: ["One and Only begins! Match by color, number, or type."],
+    log: ["UNO begins! Match by color, number, or type."],
     rng,
   };
 

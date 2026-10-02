@@ -62,9 +62,20 @@
 }
 
 @media (max-width: 480px) {
+  /* Every game's own header has its own right-aligned info button, and on
+     a narrow phone screen that lands in the same corner as this widget's
+     top-right anchor -- they'd stack on top of each other. Anchoring to
+     the bottom-right instead sidesteps every game's header entirely (none
+     of them have anything pinned down there besides a decorative,
+     non-interactive strip). column-reverse keeps the toggle button's own
+     position stable right above that corner regardless of whether a
+     banner is showing above it, instead of the whole stack shifting.
+  */
   .bored-meter {
-    top: 6px;
+    top: auto;
+    bottom: 10px;
     right: 6px;
+    flex-direction: column-reverse;
   }
 
   .bored-toggle {
